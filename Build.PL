@@ -12,7 +12,7 @@ my $builder = Module::Build->new(
     },
     requires => {
         'Object::Simple' => 0,
-    }
+    },
     add_to_cleanup      => [ 'Validator-Custom-*' ],
     create_makefile_pl => 'traditional',
 );
