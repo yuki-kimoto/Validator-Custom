@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.01_01';
+our $VERSION = '0.0201';
 
 require Carp;
 
@@ -94,7 +94,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.01_01
+Version 0.0201
 
 =cut
 
