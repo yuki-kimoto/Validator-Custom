@@ -10,10 +10,15 @@ require Carp;
     my $VALIDATORS = {};
 
     # add validator function
-    sub validators {
+    sub add_validator{
         my $self = shift;
-        if(@_) {
-            $VALIDATORS = {%{$_[0]}};
+        $VALIDATORS = {%{$VALIDATORS}, %{$_[0]}};
+    }
+    # get validator function
+    sub validators {
+        my $invocant = shift;
+        if(@_){
+            Carp::croak( "'validators' is read only")
         }
         return $VALIDATORS;
     }
@@ -33,13 +38,23 @@ sub validate {
             my($validator_expression, $error_message ) = @$validator_info;
             
             my $validator_function;
+            my $data_type = {};
             # case: expression is code reference
             if( ref $validator_expression eq 'CODE') {
                 $validator_function = $validator_expression;
             }
             
             # case: expression is string
-            else{
+            else {
+                if($validator_expression =~ /^(\@)?(.+)$/) {
+                    if($1 && $1 eq '@') {
+                    $DB::single = 1;
+                        $data_type->{array}++;
+                    }
+                    $validator_expression = $2;
+                    Carp::croak("Type name must be [A-Za-z_]")
+                        if $validator_expression =~ /\W/;
+                }
                 # get validator function
                 $validator_function
                   = $self->validators->{$validator_expression};
@@ -49,7 +64,16 @@ sub validate {
             }
             
             # validate
-            my $is_valid = $validator_function->($hash->{$key});
+            my $is_valid;
+            if($data_type->{array} && ref $hash->{$key} eq 'ARRAY') {
+                foreach my $data (@{$hash->{$key}}) {
+                    $is_valid = $validator_function->($data);
+                    last unless $is_valid;
+                }
+            }
+            else {
+                $is_valid = $validator_function->($hash->{$key});
+            }
             
             # add error if it is invalid
             unless($is_valid){
@@ -57,7 +81,6 @@ sub validate {
                 push @{$self->errors}, $error_message;
                 next VALIDATOR_LOOP;
             }
-            
         }
     }
     return $self;
@@ -110,19 +133,20 @@ Version 0.01_01
     use base 'Validator::Custom';
     
     # regist custom type
-    __PACKAGE__->validators(
+    __PACKAGE__->add_validator(
         {
             Int => sub {$_[0] =~ /^\d+$/},
             Num => sub {
                 require Scalar::Util;
                 Scalar::Util::looks_like_number($_[0]);
-            }
+            },
+            Str => sub {!ref $_[0]}
         }
     );
     
     ### How to use customized validator class
     use Validator::Custom::Yours;
-    my $hash = { age => 'aaa', weight => 'bbb' };
+    my $hash = { age => 'aaa', weight => 'bbb', favarite => [qw/sport food/};
     
     my $validator = [
         title => [
@@ -130,6 +154,9 @@ Version 0.01_01
         ],
         content => [
             ['Num', "Must be number"],
+        ],
+        favorite => [
+            ['@Str', "Must be string"]
         ]
     ];
     
@@ -140,28 +167,37 @@ Version 0.01_01
 
 =head2 validators
 
-set and get validators
+get validators
     
     # get
-    my $validators = __PACKAGE__->validators;
+    my $validators = Validator::Custom::Your->validators;
     
-    # set
-    __PACKAGE__->validators(
+
+=head2 add_validator
+
+You can use this method in custom class.
+New validator functions is added.
+    
+    package Validator::Custom::Yours;
+    use base 'Validator::Custom';
+    
+    __PACKAGE__->add_validator(
         {
             Int => sub {$_[0] =~ /^\d+$/},
         }
     );
 
-You can use this method in custom class.
-New validator function is added.
-    
-    package Validator::Custom::Yours;
+You can merge multiple custom class
+
+    package Validator::Custom::YoursNew;
     use base 'Validator::Custom';
     
-    __PACKAGE__->validators(
-        {
-            Int => sub {$_[0] =~ /^\d+$/},
-        }
+    use Validator::Custum::Yours1;
+    use Validatro::Cumtum::Yours2;
+    
+    __PACAKGE__->add_validator
+        Validator::Custom::Yours1->validators,
+        Validator::Custom::Yours2->validators
     );
 
 
@@ -179,14 +215,23 @@ validate
 
     $vc->validate($hash,$validator);
 
-validator format is the following.
+validator format is like the following.
 
     my $validator = [
+        # Function
         key1 => [
-            [ \&validator_function , "Error message1"],
+            [ \&validator_function1, "Error message1-1"],
+            [ \&validator_function2, "Error message1-2"] 
         ],
+        
+        # Custom Type
         key2 => [
-            [ 'CustomType' ,         "Error message2"],
+            [ 'CustomType' ,         "Error message2-1"],
+        ],
+        
+        # Array of Custom Type
+        key3 => [
+            [ '@CustomType',         "Error message3-1"]
         ]
     ];
 

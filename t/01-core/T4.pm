@@ -1,11 +1,7 @@
-package T1;
+package T4;
 use base 'Validator::Custom';
 
 __PACKAGE__->add_validator(
-    {
-        Int => sub{$_[0] =~ /^\d+$/},
-    },
-    
     {
         Num => sub{
             require Scalar::Util;
@@ -13,3 +9,4 @@ __PACKAGE__->add_validator(
         }
     }
 );
+
