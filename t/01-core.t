@@ -48,7 +48,31 @@ use T1;
     my $validators = T1->validators;
     ok(exists($validators->{Int}), 'get validators');
     ok(exists($validators->{Num}), 'get validators');
+}
+
+{
+    my $hash = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
+    my $validator = [
+        k1 => [
+            ['Int', "k1Error1"],
+        ],
+        k2 => [
+            ['Int', "k2Error1"],
+        ],
+        k3 => [
+            ['Num', "k3Error1"],
+        ],
+        k4 => [
+            ['Num', "k4Error1"],
+        ],
+    ];
     
+    my $t = T1->new;
+    my $errors = $t->validate($hash, $validator)->errors;
+    is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator one');
+    
+    $errors = $t->validate($hash, $validator)->errors;
+    is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator two');
     
 }
 
@@ -113,4 +137,16 @@ use T1;
     my $errors = T1->new->validate($hash, $validator)->errors;
     is_deeply($errors, [qw/k3Error1 k4Error1/], 'array validate');
 }
+
+{
+    my $hash = { k1 => 1};
+    my $validator = [
+        k1 => [
+            ['Int', "k1Error1"],
+        ],
+    ];    
+    my $errors = T1->new->validate($hash, $validator)->errors;
+    ok(!$errors, 'no error');
+}
+
 

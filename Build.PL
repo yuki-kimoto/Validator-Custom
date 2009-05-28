@@ -11,7 +11,7 @@ my $builder = Module::Build->new(
         'Test::More' => 0,
     },
     requires => {
-        'Object::Simple' => 0,
+        'Object::Simple' => 0.0202,
     },
     add_to_cleanup      => [ 'Validator-Custom-*' ],
     create_makefile_pl => 'traditional',

@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0201';
+our $VERSION = '0.0202';
 
 require Carp;
 
@@ -25,15 +25,18 @@ require Carp;
 }
 
 # validation errors
-sub errors : Attr {}
+sub errors : Attr {default => undef}
 
 # validate!
 sub validate {
     my ($self, $hash, $validator ) = @_;
     
+    $self->errors(undef);
     # process each key
     VALIDATOR_LOOP:
-    while( my ($key, $validator_infos) = splice(@$validator, 0, 2)) {
+    for (my $i = 0; $i < @{$validator}; $i += 2) {
+        my ($key, $validator_infos) = @{$validator}[$i, ($i + 1)];
+        
         foreach my $validator_info (@$validator_infos){
             my($validator_expression, $error_message ) = @$validator_info;
             
@@ -94,7 +97,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0201
+Version 0.0202
 
 =cut
 
