@@ -1,3 +1,9 @@
+0.0203
+  rename add_validator to add_constraint
+  rename validators to constraints
+  rename $VALIDATORS to $CONSTRINTS
+  catch up Object::Simple bag fix
+  
 0.0202
   bag fix: $validator is spliced
 0.0201

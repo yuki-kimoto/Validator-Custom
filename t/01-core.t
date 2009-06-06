@@ -21,6 +21,8 @@ eval"use $M";
         ]
     ];
     
+    my $p = Validator::Custom->new;
+    
     my $errors = $M->new->validate($hash, $validator)->errors;
     is_deeply($errors, [qw/k1Error2 k2Error2/], 'validator');
 }
@@ -45,9 +47,9 @@ use T1;
     my $errors = T1->new->validate($hash, $validator)->errors;
     is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator');
     
-    my $validators = T1->validators;
-    ok(exists($validators->{Int}), 'get validators');
-    ok(exists($validators->{Num}), 'get validators');
+    my $constraints = T1->constraints;
+    ok(exists($constraints->{Int}), 'get constraints');
+    ok(exists($constraints->{Num}), 'get constraints');
 }
 
 {
@@ -88,8 +90,8 @@ use T1;
 }
 
 {
-    eval{T1->validators({})};
-    like($@, qr/'validators' is read only/, 'validators is read only');
+    eval{T1->constraints({})};
+    like($@, qr/'constraints' is read only/, 'constraints is read only');
 }
 
 {
@@ -112,9 +114,9 @@ use T1;
     my $errors = T2->new->validate($hash, $validator)->errors;
     is_deeply($errors, [qw/k2Error1 k4Error1/], 'mearge Custom validator');
     
-    my $validators = T2->validators;
-    ok(exists($validators->{Int}), 'merge get validators');
-    ok(exists($validators->{Num}), 'merge get validators');
+    my $constraints = T2->constraints;
+    ok(exists($constraints->{Int}), 'merge get constraints');
+    ok(exists($constraints->{Num}), 'merge get constraints');
     
 }
 

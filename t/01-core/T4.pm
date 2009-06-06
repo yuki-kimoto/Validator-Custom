@@ -1,7 +1,7 @@
 package T4;
 use base 'Validator::Custom';
 
-__PACKAGE__->add_validator(
+__PACKAGE__->add_constraint(
     {
         Num => sub{
             require Scalar::Util;

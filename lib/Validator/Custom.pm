@@ -1,26 +1,26 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0202';
+our $VERSION = '0.0203';
 
 require Carp;
 
 {
-    # validator functions
-    my $VALIDATORS = {};
+    # constraint function
+    my $CONSTRAINTS = {};
 
     # add validator function
-    sub add_validator{
+    sub add_constraint{
         my $self = shift;
-        $VALIDATORS = {%{$VALIDATORS}, %{$_[0]}};
+        $CONSTRAINTS = {%{$CONSTRAINTS}, %{$_[0]}};
     }
     # get validator function
-    sub validators {
+    sub constraints {
         my $invocant = shift;
         if(@_){
-            Carp::croak( "'validators' is read only")
+            Carp::croak( "'constraints' is read only")
         }
-        return $VALIDATORS;
+        return $CONSTRAINTS;
     }
 }
 
@@ -60,7 +60,7 @@ sub validate {
                 }
                 # get validator function
                 $validator_function
-                  = $self->validators->{$validator_expression};
+                  = $self->constraints->{$validator_expression};
                 
                 Carp::croak("'$validator_expression' is not resisted")
                     unless ref $validator_function eq 'CODE'
@@ -97,9 +97,11 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0202
+Version 0.0203
 
-=cut
+=head1 CAUTION
+
+Validator::Custom is yew experimental stage.
 
 =head1 SYNOPSIS
     
@@ -136,7 +138,7 @@ Version 0.0202
     use base 'Validator::Custom';
     
     # regist custom type
-    __PACKAGE__->add_validator(
+    __PACKAGE__->add_constraint(
         {
             Int => sub {$_[0] =~ /^\d+$/},
             Num => sub {
@@ -168,15 +170,15 @@ Version 0.0202
     
 =head1 CLASS METHOD
 
-=head2 validators
+=head2 constraints
 
-get validators
+get constraints
     
     # get
-    my $validators = Validator::Custom::Your->validators;
+    my $constraints = Validator::Custom::Your->constraints;
     
 
-=head2 add_validator
+=head2 add_constraint
 
 You can use this method in custom class.
 New validator functions is added.
@@ -184,7 +186,7 @@ New validator functions is added.
     package Validator::Custom::Yours;
     use base 'Validator::Custom';
     
-    __PACKAGE__->add_validator(
+    __PACKAGE__->add_constraint(
         {
             Int => sub {$_[0] =~ /^\d+$/},
         }
@@ -198,9 +200,9 @@ You can merge multiple custom class
     use Validator::Custum::Yours1;
     use Validatro::Cumtum::Yours2;
     
-    __PACAKGE__->add_validator
-        Validator::Custom::Yours1->validators,
-        Validator::Custom::Yours2->validators
+    __PACAKGE__->add_constraint
+        Validator::Custom::Yours1->constraints,
+        Validator::Custom::Yours2->constraints
     );
 
 
