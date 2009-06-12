@@ -1,3 +1,6 @@
+0.0205
+  change : Build.PL requires => { Object::Simple => 2.0003 }
+
 0.0204
   catch up Object::Simple update 2.0003
   change: errors methods dereference
