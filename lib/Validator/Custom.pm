@@ -1,10 +1,11 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0203';
+our $VERSION = '0.0204';
 
 require Carp;
 
+### class method
 {
     # constraint function
     my $CONSTRAINTS = {};
@@ -12,7 +13,7 @@ require Carp;
     # add validator function
     sub add_constraint{
         my $self = shift;
-        $CONSTRAINTS = {%{$CONSTRAINTS}, %{$_[0]}};
+        $CONSTRAINTS = {%{$CONSTRAINTS}, ref $_[0] eq 'HASH' ? %{$_[0]} : @_};
     }
     # get validator function
     sub constraints {
@@ -24,14 +25,25 @@ require Carp;
     }
 }
 
+
+### attribute
+
+# validator
+sub validator : Attr { type => 'array', default => sub { [] } }
+
 # validation errors
-sub errors : Attr {default => undef}
+sub errors    : Attr { type => 'array', default => sub { [] }, deref => 1}
+
+
+### method
 
 # validate!
 sub validate {
     my ($self, $hash, $validator ) = @_;
     
-    $self->errors(undef);
+    $validator ||= $self->validator;
+    
+    $self->errors([]);
     # process each key
     VALIDATOR_LOOP:
     for (my $i = 0; $i < @{$validator}; $i += 2) {
@@ -89,7 +101,7 @@ sub validate {
     return $self;
 }
 
-Object::Simple->end; # End of Object::Simple!
+Object::Simple->build_class; # End of Object::Simple!
 
 =head1 NAME
 
@@ -97,7 +109,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0203
+Version 0.0204
 
 =head1 CAUTION
 
@@ -124,7 +136,11 @@ Validator::Custom is yew experimental stage.
     
     # validate
     my $vc = Validator::Custom->new;
-    my $errors = $vc->validate($hash,$validator)->errors;
+    my @errors = $vc->validate($hash,$validator)->errors;
+    
+    # or
+    my $vc = Validator::Custom->new( validator => $validator);
+    my @errors = $vc->validate($hash)->errors;
     
     # process in error case
     if($errors){
@@ -139,14 +155,12 @@ Validator::Custom is yew experimental stage.
     
     # regist custom type
     __PACKAGE__->add_constraint(
-        {
-            Int => sub {$_[0] =~ /^\d+$/},
-            Num => sub {
-                require Scalar::Util;
-                Scalar::Util::looks_like_number($_[0]);
-            },
-            Str => sub {!ref $_[0]}
-        }
+        Int => sub {$_[0] =~ /^\d+$/},
+        Num => sub {
+            require Scalar::Util;
+            Scalar::Util::looks_like_number($_[0]);
+        },
+        Str => sub {!ref $_[0]}
     );
     
     ### How to use customized validator class
@@ -187,9 +201,7 @@ New validator functions is added.
     use base 'Validator::Custom';
     
     __PACKAGE__->add_constraint(
-        {
-            Int => sub {$_[0] =~ /^\d+$/},
-        }
+        Int => sub {$_[0] =~ /^\d+$/}
     );
 
 You can merge multiple custom class
@@ -200,11 +212,28 @@ You can merge multiple custom class
     use Validator::Custum::Yours1;
     use Validatro::Cumtum::Yours2;
     
-    __PACAKGE__->add_constraint
-        Validator::Custom::Yours1->constraints,
-        Validator::Custom::Yours2->constraints
+    __PACAKGE__->add_constraint(
+        %{Validator::Custom::Yours1->constraints},
+        %{Validator::Custom::Yours2->constraints}
     );
 
+=head1 ACCESSORS
+
+=head2 errors
+
+You can get validator errors
+
+    my @errors = $vc->errors;
+
+You can use this method after calling validate
+
+    my @errors = $vc->validate($hash,$validator)->errors;
+
+=head2 validator
+
+You can set validator
+
+    $vc->validator($validator);
 
 =head1 METHOD
 
@@ -241,16 +270,6 @@ validator format is like the following.
     ];
 
 this method retrun self.
-
-=head2 errors
-
-You can get validator errors
-
-    my $errors = $vc->errors;
-
-You can use this method after calling validate
-
-    my $errors = $vc->validate($hash,$validator)->errors;
 
 =cut
 

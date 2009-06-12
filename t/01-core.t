@@ -25,6 +25,13 @@ eval"use $M";
     
     my $errors = $M->new->validate($hash, $validator)->errors;
     is_deeply($errors, [qw/k1Error2 k2Error2/], 'validator');
+    
+    my @errors = $M->new(validator => $validator)->validate($hash)->errors;
+    is_deeply([@errors], [qw/k1Error2 k2Error2/], 'validator');
+}
+
+{
+    is_deeply($M->new->validator, [], 'validator default');
 }
 
 use T1;
@@ -147,8 +154,8 @@ use T1;
             ['Int', "k1Error1"],
         ],
     ];    
-    my $errors = T1->new->validate($hash, $validator)->errors;
-    ok(!$errors, 'no error');
+    my @errors = T1->new->validate($hash, $validator)->errors;
+    is(scalar @errors, 0, 'no error');
 }
 
 

@@ -1,3 +1,7 @@
+0.0204
+  catch up Object::Simple update 2.0003
+  change: errors methods dereference
+  
 0.0203
   rename add_validator to add_constraint
   rename validators to constraints
