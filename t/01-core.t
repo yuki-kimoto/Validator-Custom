@@ -38,6 +38,12 @@ eval"use $M";
     is_deeply($M->new->validators, [], 'validators default');
 }
 
+{
+    my $o = $M->new;
+    $o->results(k => 1);
+    is_deeply({$o->results}, {k => 1}, 'results attribute');
+}
+
 use T1;
 {
     my $hash = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };

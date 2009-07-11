@@ -37,10 +37,13 @@ sub _inherit_constraints {
 sub validators  : Attr { type => 'array', default => sub { [] } }
 
 # validation errors
-sub errors      : Attr { type => 'array', default => sub { [] }, deref => 1}
+sub errors      : Attr { type => 'array', default => sub { [] }, deref => 1 }
 
 # error is stock?
 sub error_stock : Attr { default => 1 }
+
+# converted resutls
+sub results     : Attr { type => 'hash', default => sub{ {} }, deref => 1 }
 
 ### method
 
@@ -251,6 +254,12 @@ Default is 1.
 You can set validators
 
     $vc->validators($validators);
+
+=head2 results
+
+You can get converted result if any.
+
+    $vc->results
 
 =head1 METHOD
 
