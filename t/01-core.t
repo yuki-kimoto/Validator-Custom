@@ -9,7 +9,7 @@ eval"use $M";
 
 {
     my $hash = { k1 => 1, k2 => 2, k3 => 3 };
-    my $validator = [
+    my $validators = [
         k1 => [
             [sub{$_[0] == 1}, "k1Error1"],
             [sub{$_[0] == 2}, "k1Error2"],
@@ -23,21 +23,21 @@ eval"use $M";
     
     my $p = Validator::Custom->new;
     
-    my $errors = $M->new->validate($hash, $validator)->errors;
-    is_deeply($errors, [qw/k1Error2 k2Error2/], 'validator');
+    my $errors = $M->new->validate($hash, $validators)->errors;
+    is_deeply($errors, [qw/k1Error2 k2Error2/], 'validators');
     
-    my @errors = $M->new(validator => $validator)->validate($hash)->errors;
-    is_deeply([@errors], [qw/k1Error2 k2Error2/], 'validator');
+    my @errors = $M->new(validators => $validators)->validate($hash)->errors;
+    is_deeply([@errors], [qw/k1Error2 k2Error2/], 'validators');
 }
 
 {
-    is_deeply($M->new->validator, [], 'validator default');
+    is_deeply($M->new->validators, [], 'validators default');
 }
 
 use T1;
 {
     my $hash = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
-    my $validator = [
+    my $validators = [
         k1 => [
             ['Int', "k1Error1"],
         ],
@@ -51,7 +51,7 @@ use T1;
             ['Num', "k4Error1"],
         ],
     ];    
-    my $errors = T1->new->validate($hash, $validator)->errors;
+    my $errors = T1->new->validate($hash, $validators)->errors;
     is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator');
     
     my $constraints = T1->constraints;
@@ -61,7 +61,7 @@ use T1;
 
 {
     my $hash = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
-    my $validator = [
+    my $validators = [
         k1 => [
             ['Int', "k1Error1"],
         ],
@@ -77,34 +77,29 @@ use T1;
     ];
     
     my $t = T1->new;
-    my $errors = $t->validate($hash, $validator)->errors;
+    my $errors = $t->validate($hash, $validators)->errors;
     is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator one');
     
-    $errors = $t->validate($hash, $validator)->errors;
+    $errors = $t->validate($hash, $validators)->errors;
     is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator two');
     
 }
 
 {
     my $hash = {k1 => 1};
-    my $validator = [
+    my $validators = [
         k1 => [
             ['No', "k1Error1"],
         ],
     ];    
-    eval{T1->new->validate($hash, $validator)};
+    eval{T1->new->validate($hash, $validators)};
     like($@, qr/'No' is not resisted/, 'no custom type');
-}
-
-{
-    eval{T1->constraints({})};
-    like($@, qr/'constraints' is read only/, 'constraints is read only');
 }
 
 {
     use T2;
     my $hash = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
-    my $validator = [
+    my $validators = [
         k1 => [
             ['Int', "k1Error1"],
         ],
@@ -118,7 +113,7 @@ use T1;
             ['Num', "k4Error1"],
         ],
     ];    
-    my $errors = T2->new->validate($hash, $validator)->errors;
+    my $errors = T2->new->validate($hash, $validators)->errors;
     is_deeply($errors, [qw/k2Error1 k4Error1/], 'mearge Custom validator');
     
     my $constraints = T2->constraints;
@@ -129,7 +124,7 @@ use T1;
 
 {
     my $hash = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a'};
-    my $validator = [
+    my $validators = [
         k1 => [
             ['@Int', "k1Error1"],
         ],
@@ -143,18 +138,18 @@ use T1;
             ['@Int', "k4Error1"],
         ],
     ];    
-    my $errors = T1->new->validate($hash, $validator)->errors;
+    my $errors = T1->new->validate($hash, $validators)->errors;
     is_deeply($errors, [qw/k3Error1 k4Error1/], 'array validate');
 }
 
 {
     my $hash = { k1 => 1};
-    my $validator = [
+    my $validators = [
         k1 => [
             ['Int', "k1Error1"],
         ],
     ];    
-    my @errors = T1->new->validate($hash, $validator)->errors;
+    my @errors = T1->new->validate($hash, $validators)->errors;
     is(scalar @errors, 0, 'no error');
 }
 
