@@ -34,11 +34,13 @@ sub _inherit_constraints {
 ### attribute
 
 # validators
-sub validators : Attr { type => 'array', default => sub { [] } }
+sub validators  : Attr { type => 'array', default => sub { [] } }
 
 # validation errors
-sub errors    : Attr { type => 'array', default => sub { [] }, deref => 1}
+sub errors      : Attr { type => 'array', default => sub { [] }, deref => 1}
 
+# error is stock?
+sub error_stock : Attr { default => 1 }
 
 ### method
 
@@ -51,6 +53,8 @@ sub validate {
     $validators ||= $self->validators;
     
     $self->errors([]);
+    my $error_stock = $self->error_stock;
+    
     # process each key
     VALIDATOR_LOOP:
     for (my $i = 0; $i < @{$validators}; $i += 2) {
@@ -99,8 +103,8 @@ sub validate {
             
             # add error if it is invalid
             unless($is_valid){
-                $self->errors([]) unless $self->errors;
                 push @{$self->errors}, $error_message;
+                last VALIDATOR_LOOP unless $error_stock;
                 next VALIDATOR_LOOP;
             }
         }
@@ -108,7 +112,7 @@ sub validate {
     return $self;
 }
 
-Object::Simple->build_class; # End of Object::Simple!
+Object::Simple->build_class;
 
 =head1 NAME
 
@@ -235,6 +239,12 @@ You can get validating errors
 You can use this method after calling validate
 
     my @errors = $vc->validate($hash,$validators)->errors;
+
+=head2 error_stock
+
+If you stock error, set 1, or set 0.
+
+Default is 1. 
 
 =head2 validators
 

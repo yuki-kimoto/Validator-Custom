@@ -28,6 +28,10 @@ eval"use $M";
     
     my @errors = $M->new(validators => $validators)->validate($hash)->errors;
     is_deeply([@errors], [qw/k1Error2 k2Error2/], 'validators');
+    
+    @errors = $M->new->error_stock(0)->validate($hash, $validators)->errors;
+    is(scalar @errors, 1, 'error_stock is 0');
+    is($errors[0], 'k1Error2', 'error_stock is 0');
 }
 
 {
