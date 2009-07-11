@@ -64,26 +64,33 @@ sub validate {
         my ($key, $validator_infos) = @{$validators}[$i, ($i + 1)];
         
         foreach my $validator_info (@$validator_infos){
-            my($constraint_expression, $error_message ) = @$validator_info;
+            my($constraint_expression, $error_message, $options ) = @$validator_info;
             
             my $constraint_function;
             my $data_type = {};
-            # case: expression is code reference
+            my $args = [];
+            
+            if(ref $constraint_function eq 'ARRAY') {
+                $args = [@{$constraint_function}[1 .. @$constraint_function - 1]];
+                $constraint_function = $constraint_function->[0];
+            }
+            
+            # expression is code reference
             if( ref $constraint_expression eq 'CODE') {
                 $constraint_function = $constraint_expression;
             }
             
-            # case: expression is string
+            # expression is string
             else {
                 if($constraint_expression =~ /^(\@)?(.+)$/) {
                     if($1 && $1 eq '@') {
-                    $DB::single = 1;
                         $data_type->{array}++;
                     }
                     $constraint_expression = $2;
-                    Carp::croak("Type name must be [A-Za-z_]")
+                    Carp::croak("Type name must be [A-Za-z0-9_]")
                         if $constraint_expression =~ /\W/;
                 }
+                
                 # get validator function
                 $constraint_function
                   = $class->constraints->{$constraint_expression};
@@ -94,14 +101,28 @@ sub validate {
             
             # validate
             my $is_valid;
+            my $result;
             if($data_type->{array} && ref $hash->{$key} eq 'ARRAY') {
                 foreach my $data (@{$hash->{$key}}) {
-                    $is_valid = $constraint_function->($data);
+                    ($is_valid, $result) = $constraint_function->($data, $args, $options->{options});
                     last unless $is_valid;
+                    
+                    if (my $key = $options->{result}) {
+                        $self->results->{$key} ||= [];
+                        push @{$self->results->{$key}}, $result;
+                    }
                 }
             }
             else {
-                $is_valid = $constraint_function->($hash->{$key});
+                ($is_valid, $result) = $constraint_function->(
+                    ref $key eq 'ARRAY' ? [map { $hash->{$_} } @$key] : $hash->{$key},
+                    $args,
+                    $options->{options}
+                );
+                
+                if ($is_valid && $options->{result}) {
+                    $self->results->{$options->{result}} = $result;
+                }
             }
             
             # add error if it is invalid

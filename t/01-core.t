@@ -148,7 +148,11 @@ use T1;
             ['@Int', "k4Error1"],
         ],
     ];    
-    my $errors = T1->new->validate($hash, $validators)->errors;
+    #my $errors = T1->new->validate($hash, $validators)->errors;
+    
+    my $vc = T1->new;
+    my $errors = $vc->validate($hash, $validators)->errors;
+
     is_deeply($errors, [qw/k3Error1 k4Error1/], 'array validate');
 }
 
