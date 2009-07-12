@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0207';
+our $VERSION = '0.0205';
 
 require Carp;
 
@@ -24,8 +24,8 @@ sub _inherit_constraints {
         no strict 'refs';
         ${"${class}::ISA"}[0];
     };
-    my $constraints = eval{$super->can('constraints')} 
-                        ? $super->constraints 
+    my $constraints = eval{$super->can('constraints')}
+                        ? $super->constraints
                         : {};
                       
     $class->constraints($constraints);
@@ -50,12 +50,13 @@ sub results     : Attr { type => 'hash', default => sub{ {} }, deref => 1 }
 # validate!
 sub validate {
     my ($self, $hash, $validators ) = @_;
-    
     my $class = ref $self;
+    
     
     $validators ||= $self->validators;
     
     $self->errors([]);
+    $self->results({});
     my $error_stock = $self->error_stock;
     
     # process each key
@@ -66,15 +67,15 @@ sub validate {
         foreach my $validator_info (@$validator_infos){
             my($constraint_expression, $error_message, $options ) = @$validator_info;
             
-            my $constraint_function;
             my $data_type = {};
             my $args = [];
             
-            if(ref $constraint_function eq 'ARRAY') {
-                $args = [@{$constraint_function}[1 .. @$constraint_function - 1]];
-                $constraint_function = $constraint_function->[0];
+            if(ref $constraint_expression eq 'ARRAY') {
+                $args = [@{$constraint_expression}[1 .. @$constraint_expression - 1]];
+                $constraint_expression = $constraint_expression->[0];
             }
             
+            my $constraint_function;
             # expression is code reference
             if( ref $constraint_expression eq 'CODE') {
                 $constraint_function = $constraint_expression;
@@ -82,14 +83,13 @@ sub validate {
             
             # expression is string
             else {
-                if($constraint_expression =~ /^(\@)?(.+)$/) {
-                    if($1 && $1 eq '@') {
-                        $data_type->{array}++;
-                    }
-                    $constraint_expression = $2;
-                    Carp::croak("Type name must be [A-Za-z0-9_]")
-                        if $constraint_expression =~ /\W/;
+                if($constraint_expression =~ /^\@(.+)$/) {
+                    $data_type->{array} = 1;
+                    $constraint_expression = $1;
                 }
+                
+                Carp::croak("Constraint type '$constraint_expression' must be [A-Za-z0-9_]")
+                  if $constraint_expression =~ /\W/;
                 
                 # get validator function
                 $constraint_function
@@ -102,8 +102,10 @@ sub validate {
             # validate
             my $is_valid;
             my $result;
-            if($data_type->{array} && ref $hash->{$key} eq 'ARRAY') {
-                foreach my $data (@{$hash->{$key}}) {
+            if($data_type->{array}) {
+                my $values = ref $hash->{$key} eq 'ARRAY' ? $hash->{$key} : [$hash->{$key}];
+                
+                foreach my $data (@$values) {
                     ($is_valid, $result) = $constraint_function->($data, $args, $options->{options});
                     last unless $is_valid;
                     
@@ -144,7 +146,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0207
+Version 0.0205
 
 =head1 CAUTION
 
@@ -216,6 +218,30 @@ Validator::Custom is yew experimental stage.
     
     my $vc = Validator::Custom::Yours->new;
     my $errors = $vc->validate($hash,$validators)->errors;
+    
+    # corelative check
+    my $validators => [
+        [qw/password1 password2/] => [
+            ['Same', 'passwor is not same']
+        ]
+    ]
+    
+    # pass options
+    my $validators => [
+        title => [
+            ['INT', 'Error', { options => { a => 1 } }]
+        ]
+    ]
+    
+    # get result
+    my $validators => [
+        title => [
+            ['INT', 'Error', { result => 'title' }]
+        ]
+    ];
+    
+    my %results = $vc->resuts;
+    
     
 =head1 CLASS METHOD
 

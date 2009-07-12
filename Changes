@@ -1,5 +1,10 @@
 0.0205
-  change : Build.PL requires => { Object::Simple => 2.0003 }
+  change : Build.PL requires => { Object::Simple => 2.0018 }
+  add : can pass option to constraint function
+  add : results attribute
+  add : can inheritable customize
+  add : error_stock attribute
+  add : correlation check
 
 0.0204
   catch up Object::Simple update 2.0003

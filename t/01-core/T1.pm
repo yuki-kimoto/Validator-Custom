@@ -6,6 +6,10 @@ __PACKAGE__->add_constraint(
     Num => sub{
         require Scalar::Util;
         Scalar::Util::looks_like_number($_[0]);
+    },
+    C1 => sub {
+        my ($value, $args, $options) = @_;
+        return (1, $value * 2);
     }
 );
 

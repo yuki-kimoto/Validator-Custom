@@ -148,13 +148,29 @@ use T1;
             ['@Int', "k4Error1"],
         ],
     ];    
-    #my $errors = T1->new->validate($hash, $validators)->errors;
     
     my $vc = T1->new;
     my $errors = $vc->validate($hash, $validators)->errors;
 
     is_deeply($errors, [qw/k3Error1 k4Error1/], 'array validate');
 }
+
+{
+    my $hash = {k1 => [1,2]};
+    my $validators = [
+        k1 => [
+            ['@C1', "k1Error1", {result => 'k1'}],
+        ],
+    ];    
+    
+    my $vc = T1->new;
+    my $errors = $vc->validate($hash, $validators)->errors;
+    is_deeply($errors, [], 'no error');
+    
+    my $results = $vc->results;
+    is_deeply($results, {k1 => [2,4]}, 'array validate');
+}
+
 
 {
     my $hash = { k1 => 1};
@@ -166,5 +182,31 @@ use T1;
     my @errors = T1->new->validate($hash, $validators)->errors;
     is(scalar @errors, 0, 'no error');
 }
+
+{
+    use T5;
+    my $hash = { k1 => 1, k2 => 'a'};
+    my $validators = [
+        [qw/k1 k2/] => [
+            [ ['C1', 3, 4], "k1Error1", { options => {opt => 5}, result => 'result1'}],
+        ],
+        [qw/k1 k2/] => [
+            [ ['C2', 3, 4], "k2Error1", { options => {opt => 5}, result => 'result2'}],
+        ],
+    ];
+    
+    my $t = T5->new;
+    my @errors = $t->validate($hash, $validators)->errors;
+    is_deeply([@errors], ['k2Error1'], 'variouse options');
+    
+    is_deeply($t->results->{result1},[[1, 'a'], [3, 4], {opt => 5}], 'result');
+    ok(!$t->results->{result2}, 'result not exist in error case');
+    
+    # clear
+    $t->validate;
+    is_deeply([$t->errors], [], 'clear error');
+    is_deeply(scalar $t->results, {}, 'clear results');
+}
+
 
 
