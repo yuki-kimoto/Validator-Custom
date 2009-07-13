@@ -3,14 +3,45 @@ use base 'Validator::Custom';
 
 __PACKAGE__->add_constraint(
     C1 => sub {
-        my ($value, $args, $options) = @_;
+        my ($value, $args) = @_;
         
-        return (1, [$value, $args, $options]);
+        return (1, [$value, $args]);
     },
+    
     C2 => sub {
-        my ($value, $args, $options) = @_;
+        my ($value, $args) = @_;
         
-        return (0, [$value, $args, $options]);
+        return (0, [$value, $args]);
+    },
+    
+    TRIM_LEAD => sub {
+        my $value = shift;
+        
+        $value =~ s/^ +//;
+        
+        return (1, $value);
+    },
+    
+    TRIM_TRAIL => sub {
+        my $value = shift;
+        
+        $value =~ s/ +$//;
+        
+        return (1, $value);
+    },
+    
+    NO_ERROR => sub {
+        return (0, 'a');
+    },
+    
+    C3 => sub {
+        my ($values, $args) = @_;
+        if ($values->[0] == $values->[1] && $values->[0] == $args->[0]) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
     }
 );
 

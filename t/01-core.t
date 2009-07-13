@@ -44,6 +44,11 @@ eval"use $M";
     is_deeply({$o->results}, {k => 1}, 'results attribute');
 }
 
+{
+    eval{$M->new->validate({k => 1}, [ k => [['===', 'error']]])->validate};
+    like($@, qr/\QConstraint type '===' must be [A-Za-z0-9_]/, 'constraint invalid name')
+}
+
 use T1;
 {
     my $hash = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
@@ -159,7 +164,8 @@ use T1;
     my $hash = {k1 => [1,2]};
     my $validators = [
         k1 => [
-            ['@C1', "k1Error1", {result => 'k1'}],
+            ['@C1', "k1Error1"],
+            ['@C1', "k1Error1"]
         ],
     ];    
     
@@ -168,7 +174,7 @@ use T1;
     is_deeply($errors, [], 'no error');
     
     my $results = $vc->results;
-    is_deeply($results, {k1 => [2,4]}, 'array validate');
+    is_deeply($results, {k1 => [4,8]}, 'array validate2');
 }
 
 
@@ -185,28 +191,41 @@ use T1;
 
 {
     use T5;
-    my $hash = { k1 => 1, k2 => 'a'};
+    my $hash = { k1 => 1, k2 => 'a', k3 => '  3  ', k4 => 4, k5 => 5, k6 => 5};
     my $validators = [
-        [qw/k1 k2/] => [
-            [ ['C1', 3, 4], "k1Error1", { options => {opt => 5}, result => 'result1'}],
+        k1 => [
+            [['C1', 3, 4], "k1Error1"],
         ],
-        [qw/k1 k2/] => [
-            [ ['C2', 3, 4], "k2Error1", { options => {opt => 5}, result => 'result2'}],
+        k2 => [
+            [['C2', 3, 4], "k2Error1" ],
         ],
+        k3 => [
+            [ 'TRIM_LEAD'  ],
+            [ 'TRIM_TRAIL' ]
+        ],
+        k4 => [
+            ['NO_ERROR']
+        ],
+        [qw/k5 k6/] => [
+            [['C3', 5], 'k5 k6 Error']
+        ]
     ];
     
     my $t = T5->new;
     my @errors = $t->validate($hash, $validators)->errors;
     is_deeply([@errors], ['k2Error1'], 'variouse options');
     
-    is_deeply($t->results->{result1},[[1, 'a'], [3, 4], {opt => 5}], 'result');
-    ok(!$t->results->{result2}, 'result not exist in error case');
-    
+    is_deeply($t->results->{k1},[1, [3, 4]], 'result');
+    ok(!$t->results->{k2}, 'result not exist in error case');
+    cmp_ok($t->results->{k3}, 'eq', 3, 'filter');
+    ok(!$t->results->{k4}, 'result not set in case error');
+        
     # clear
     $t->validate;
     is_deeply([$t->errors], [], 'clear error');
     is_deeply(scalar $t->results, {}, 'clear results');
 }
+
 
 
 

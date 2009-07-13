@@ -10,7 +10,7 @@ __PACKAGE__->add_constraint(
     C1 => sub {
         my ($value, $args, $options) = @_;
         return (1, $value * 2);
-    }
+    },
 );
 
 1;

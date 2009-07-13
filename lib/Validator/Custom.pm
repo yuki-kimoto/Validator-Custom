@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0205';
+our $VERSION = '0.0206';
 
 require Carp;
 
@@ -64,8 +64,10 @@ sub validate {
     for (my $i = 0; $i < @{$validators}; $i += 2) {
         my ($key, $validator_infos) = @{$validators}[$i, ($i + 1)];
         
+        my $value;
+        my $result;
         foreach my $validator_info (@$validator_infos){
-            my($constraint_expression, $error_message, $options ) = @$validator_info;
+            my($constraint_expression, $error_message ) = @$validator_info;
             
             my $data_type = {};
             my $args = [];
@@ -101,39 +103,45 @@ sub validate {
             
             # validate
             my $is_valid;
-            my $result;
             if($data_type->{array}) {
-                my $values = ref $hash->{$key} eq 'ARRAY' ? $hash->{$key} : [$hash->{$key}];
                 
-                foreach my $data (@$values) {
-                    ($is_valid, $result) = $constraint_function->($data, $args, $options->{options});
+                $value = ref $hash->{$key} eq 'ARRAY' ? $hash->{$key} : [$hash->{$key}]
+                  unless defined $value;
+                
+                my $first_validation = 1;
+                foreach my $data (@$value) {
+                    my $result_item;
+                    ($is_valid, $result_item) = $constraint_function->($data, $args);
                     last unless $is_valid;
                     
-                    if (my $key = $options->{result}) {
-                        $self->results->{$key} ||= [];
-                        push @{$self->results->{$key}}, $result;
+                    if (defined $result_item) {
+                        if ($first_validation) {
+                            $result = [];
+                            $first_validation = 0;
+                        }
+                        push @{$result}, $result_item;
                     }
                 }
+                $value = $result if defined $result;
             }
             else {
-                ($is_valid, $result) = $constraint_function->(
-                    ref $key eq 'ARRAY' ? [map { $hash->{$_} } @$key] : $hash->{$key},
-                    $args,
-                    $options->{options}
-                );
                 
-                if ($is_valid && $options->{result}) {
-                    $self->results->{$options->{result}} = $result;
-                }
+                $value = ref $key eq 'ARRAY' ? [map { $hash->{$_} } @$key] : $hash->{$key}
+                  unless defined $value;
+                
+                ($is_valid, $result) = $constraint_function->($value, $args);
+                $value = $result if $is_valid && defined $result;
             }
             
             # add error if it is invalid
             unless($is_valid){
-                push @{$self->errors}, $error_message;
+                $result = undef;
+                push @{$self->errors}, $error_message if defined $error_message;
                 last VALIDATOR_LOOP unless $error_stock;
                 next VALIDATOR_LOOP;
             }
         }
+        $self->results->{$key} = $result if defined $result;
     }
     return $self;
 }
@@ -146,7 +154,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0205
+Version 0.0206
 
 =head1 CAUTION
 
@@ -225,23 +233,6 @@ Validator::Custom is yew experimental stage.
             ['Same', 'passwor is not same']
         ]
     ]
-    
-    # pass options
-    my $validators => [
-        title => [
-            ['INT', 'Error', { options => { a => 1 } }]
-        ]
-    ]
-    
-    # get result
-    my $validators => [
-        title => [
-            ['INT', 'Error', { result => 'title' }]
-        ]
-    ];
-    
-    my %results = $vc->resuts;
-    
     
 =head1 CLASS METHOD
 
