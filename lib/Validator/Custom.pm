@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0206';
+our $VERSION = '0.0207';
 
 require Carp;
 
@@ -37,13 +37,19 @@ sub _inherit_constraints {
 sub validators  : Attr { type => 'array', default => sub { [] } }
 
 # validation errors
-sub errors      : Attr { type => 'array', default => sub { [] }, deref => 1 }
+sub errors      : Attr { type => 'array', deref => 1 }
+
+# invalid keys
+sub invalid_keys      : Attr { type => 'hash', deref => 1 }
+
+# invalid positions
+sub invalid_positions : Attr { type => 'hash', deref => 1 }
 
 # error is stock?
 sub error_stock : Attr { default => 1 }
 
 # converted resutls
-sub results     : Attr { type => 'hash', default => sub{ {} }, deref => 1 }
+sub results     : Attr { type => 'hash', deref => 1 }
 
 ### method
 
@@ -57,6 +63,9 @@ sub validate {
     
     $self->errors([]);
     $self->results({});
+    $self->invalid_keys({});
+    $self->invalid_positions({});
+    
     my $error_stock = $self->error_stock;
     
     # process each key
@@ -137,6 +146,8 @@ sub validate {
             unless($is_valid){
                 $result = undef;
                 push @{$self->errors}, $error_message if defined $error_message;
+                $self->invalid_keys->{$key} = 1;
+                $self->invalid_positions->{int($i/2)} = 1;
                 last VALIDATOR_LOOP unless $error_stock;
                 next VALIDATOR_LOOP;
             }
@@ -154,7 +165,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0206
+Version 0.0207
 
 =head1 CAUTION
 
@@ -280,6 +291,26 @@ You can get validating errors
 You can use this method after calling validate
 
     my @errors = $vc->validate($hash,$validators)->errors;
+
+=head2 invalid_keys
+
+You can get invalid keys by hash
+
+    my $invalid_keys = $c->invalid_keys;
+
+You can use this method after calling validate
+
+    my $invalid_keys = $vc->validate($hash,$validators)->invalid_keys;
+
+=head2 invalid_positions
+
+You can get invalid position by hash
+
+    my $invalid_positions = $c->invalid_positions;
+
+You can use this method after calling validate
+
+    my $invalid_positions = $vc->validate($hash,$validators)->invalid_positions;
 
 =head2 error_stock
 
