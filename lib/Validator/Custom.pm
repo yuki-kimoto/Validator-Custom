@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0208';
+our $VERSION = '0.0209';
 
 require Carp;
 
@@ -10,6 +10,11 @@ require Carp;
 # add validator function
 sub add_constraint {
     my $class = shift;
+    my $caller_class = caller;
+    
+    Carp::croak("'add_constraint' must be called from $class")
+      unless $class eq $caller_class;
+    
     my %old_constraints = $class->constraints;
     my %new_constraints = ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
     $class->constraints(%old_constraints, %new_constraints);
@@ -39,6 +44,9 @@ sub validators  : Attr { type => 'array', default => sub { [] } }
 # validation errors
 sub errors      : Attr { type => 'array', default => sub { [] }, deref => 1 }
 
+# invalid keys
+sub invalid_keys      : Attr { type => 'array', deref => 1 }
+
 # error is stock?
 sub error_stock : Attr { default => 1 }
 
@@ -49,7 +57,7 @@ sub results     : Attr { type => 'hash', default => sub{ {} }, deref => 1 }
 
 # validate!
 sub validate {
-    my ($self, $hash, $validators ) = @_;
+    my ($self, $data, $validators ) = @_;
     my $class = ref $self;
     
     
@@ -57,6 +65,7 @@ sub validate {
     
     $self->errors([]);
     $self->results({});
+    $self->invalid_keys([]);
     my $error_stock = $self->error_stock;
     
     # process each key
@@ -64,17 +73,25 @@ sub validate {
     for (my $i = 0; $i < @{$validators}; $i += 2) {
         my ($key, $validator_infos) = @{$validators}[$i, ($i + 1)];
         
+        # rearrange key
+        my $result_key = $key;
+        ($result_key, $key) = each %$key if ref $key eq 'HASH';
+        
         my $value;
         my $result;
         foreach my $validator_info (@$validator_infos){
-            my($constraint_expression, $error_message ) = @$validator_info;
+            
+            # rearrange validator information
+            $validator_info = [$validator_info]
+              if ref $validator_info ne 'ARRAY'; 
+            
+            my($constraint_expression, $error_message, $options) = @$validator_info;
             
             my $data_type = {};
             my $args = [];
             
-            if(ref $constraint_expression eq 'ARRAY') {
-                $args = [@{$constraint_expression}[1 .. @$constraint_expression - 1]];
-                $constraint_expression = $constraint_expression->[0];
+            if(ref $constraint_expression eq 'HASH') {
+                ($constraint_expression, $args) = each %$constraint_expression;
             }
             
             my $constraint_function;
@@ -105,7 +122,7 @@ sub validate {
             my $is_valid;
             if($data_type->{array}) {
                 
-                $value = ref $hash->{$key} eq 'ARRAY' ? $hash->{$key} : [$hash->{$key}]
+                $value = ref $data->{$key} eq 'ARRAY' ? $data->{$key} : [$data->{$key}]
                   unless defined $value;
                 
                 my $first_validation = 1;
@@ -125,8 +142,7 @@ sub validate {
                 $value = $result if defined $result;
             }
             else {
-                
-                $value = ref $key eq 'ARRAY' ? [map { $hash->{$_} } @$key] : $hash->{$key}
+                $value = ref $key eq 'ARRAY' ? [map { $data->{$_} } @$key] : $data->{$key}
                   unless defined $value;
                 
                 ($is_valid, $result) = $constraint_function->($value, $args);
@@ -136,12 +152,15 @@ sub validate {
             # add error if it is invalid
             unless($is_valid){
                 $result = undef;
+                
                 push @{$self->errors}, $error_message if defined $error_message;
+                push @{$self->invalid_keys}, $result_key;
+                
                 last VALIDATOR_LOOP unless $error_stock;
                 next VALIDATOR_LOOP;
             }
         }
-        $self->results->{$key} = $result if defined $result;
+        $self->results->{$result_key} = $result if defined $result;
     }
     return $self;
 }
@@ -154,7 +173,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0206
+Version 0.0209
 
 =head1 CAUTION
 
@@ -165,7 +184,7 @@ Validator::Custom is yew experimental stage.
     ### How to use Validator::Custom
     
     # data
-    my $hash = { title => 'aaa', content => 'bbb' };
+    my $data = { title => 'aaa', content => 'bbb' };
     
     # validator functions
     my $validators = [
@@ -181,11 +200,11 @@ Validator::Custom is yew experimental stage.
     
     # validate
     my $vc = Validator::Custom->new;
-    my @errors = $vc->validate($hash,$validators)->errors;
+    my @errors = $vc->validate($data,$validators)->errors;
     
     # or
     my $vc = Validator::Custom->new( validators => $validators);
-    my @errors = $vc->validate($hash)->errors;
+    my @errors = $vc->validate($data)->errors;
     
     # process in error case
     if($errors){
@@ -210,8 +229,9 @@ Validator::Custom is yew experimental stage.
     
     ### How to use customized validator class
     use Validator::Custom::Yours;
-    my $hash = { age => 'aaa', weight => 'bbb', favarite => [qw/sport food/};
+    my $data = { age => 'aaa', weight => 'bbb', favarite => [qw/sport food/};
     
+    # validator normal syntax
     my $validators = [
         title => [
             ['Int', "Must be integer"],
@@ -224,8 +244,22 @@ Validator::Custom is yew experimental stage.
         ]
     ];
     
+    # validator light syntax
+    my $validators = [
+        title => [
+            'Int',
+        ],
+        content => [
+            'Num',
+        ],
+        favorite => [
+            '@Str'
+        ]
+    ];
+    
     my $vc = Validator::Custom::Yours->new;
-    my $errors = $vc->validate($hash,$validators)->errors;
+    my @errors = $vc->validate($data,$validators)->errors;
+    my @invalid_keys = $vc->invalid_keys;
     
     # corelative check
     my $validators => [
@@ -233,6 +267,14 @@ Validator::Custom is yew experimental stage.
             ['Same', 'passwor is not same']
         ]
     ]
+    
+    # specify keys
+    my $validators => [
+        { password_check => [qw/password1 password2/]} => [
+            ['Same', 'passwor is not same']
+        ]
+    ]    
+    
     
 =head1 CLASS METHOD
 
@@ -279,7 +321,17 @@ You can get validating errors
 
 You can use this method after calling validate
 
-    my @errors = $vc->validate($hash,$validators)->errors;
+    my @errors = $vc->validate($data,$validators)->errors;
+
+=head2 invalid_keys
+
+You can get invalid keys by hash
+
+    my $invalid_keys = $c->invalid_keys;
+
+You can use this method after calling validate
+
+    my $invalid_keys = $vc->validate($hash,$validators)->invalid_keys;
 
 =head2 error_stock
 
@@ -311,7 +363,7 @@ create instance
 
 validate
 
-    $vc->validate($hash,$validators);
+    $vc->validate($data,$validators);
 
 validator format is like the following.
 
