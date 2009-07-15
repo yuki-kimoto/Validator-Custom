@@ -42,6 +42,14 @@ __PACKAGE__->add_constraint(
         else {
             return 0;
         }
+    },
+    C4 => sub {
+        my ($value, $arg) = @_;
+        return defined $arg ? 1 : 0;
+    },
+    C5 => sub {
+        my ($value, $arg) = @_;
+        return (1, $arg);
     }
 );
 

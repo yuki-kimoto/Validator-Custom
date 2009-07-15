@@ -214,18 +214,25 @@ use T1;
         k7 => [
             {'C2' => [3, 4]},
         ],
+        k8 => [
+            'C4'
+        ],
+        k9 => [
+            {'C5' => 2}
+        ]
     ];
     
     my $t = T5->new;
     my @errors = $t->validate($hash, $validators)->errors;
     is_deeply([@errors], ['k2Error1'], 'variouse options');
-    is_deeply([$t->invalid_keys], [qw/k2 k4 k7/], 'invalid key');
+    is_deeply([$t->invalid_keys], [qw/k2 k4 k7 k8/], 'invalid key');
     
     is_deeply($t->results->{k1},[1, [3, 4]], 'result');
     ok(!$t->results->{k2}, 'result not exist in error case');
     cmp_ok($t->results->{k3}, 'eq', 3, 'filter');
     ok(!$t->results->{k4}, 'result not set in case error');
-        
+    is($t->results->{k9}, 2, 'arg');
+    
     # clear
     $t->validate;
     is_deeply([$t->errors], [], 'clear error');
