@@ -21,9 +21,9 @@ eval"use $M";
         ]
     ];
     
-    my $o = Validator::Custom->new;
+    my $p = Validator::Custom->new;
     
-    my $errors = $o->validate($hash, $validators)->errors;
+    my $errors = $M->new->validate($hash, $validators)->errors;
     is_deeply($errors, [qw/k1Error2 k2Error2/], 'validators');
     
     my @errors = $M->new(validators => $validators)->validate($hash)->errors;
@@ -65,17 +65,9 @@ use T1;
         k4 => [
             ['Num', "k4Error1"],
         ],
-    ];
-    
-    my $o = T1->new->validate($hash, $validators);
-    my $errors = $o->errors;
+    ];    
+    my $errors = T1->new->validate($hash, $validators)->errors;
     is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator');
-    
-    is_deeply(scalar $o->invalid_keys, {k2 => 1, k4 => 1}, 'invalid keys hash');
-    is_deeply({$o->invalid_keys}, {k2 => 1, k4 => 1}, 'invalid keys hash');
-    
-    is_deeply(scalar $o->invalid_positions, {1 => 1, 3 => 1}, 'invalid positions hash');
-    is_deeply({$o->invalid_positions}, {1 => 1, 3 => 1}, 'invalid positions hash');
     
     my $constraints = T1->constraints;
     ok(exists($constraints->{Int}), 'get constraints');
@@ -232,8 +224,6 @@ use T1;
     $t->validate;
     is_deeply([$t->errors], [], 'clear error');
     is_deeply(scalar $t->results, {}, 'clear results');
-    is_deeply({$t->invalid_keys}, {}, 'clear error');
-    is_deeply({$t->invalid_positions}, {}, 'clear error');
 }
 
 

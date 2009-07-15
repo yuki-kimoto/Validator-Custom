@@ -1,6 +1,3 @@
-0.0207
-  add   : invalid_positions accessor
-  add   : invalid_keys accessor
 0.0206
   change: options delete
   change: the way to get result is changed
@@ -12,14 +9,17 @@
   add : can inheritable customize
   add : error_stock attribute
   add : correlation check
+
 0.0204
   catch up Object::Simple update 2.0003
   change: errors methods dereference
+  
 0.0203
   rename add_validator to add_constraint
   rename validators to constraints
   rename $VALIDATORS to $CONSTRINTS
   catch up Object::Simple bag fix
+  
 0.0202
   bag fix: $validator is spliced
 0.0201
