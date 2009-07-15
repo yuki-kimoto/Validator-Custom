@@ -39,19 +39,19 @@ sub _inherit_constraints {
 ### attribute
 
 # validators
-sub validators  : Attr { type => 'array', default => sub { [] } }
+sub validators   : Attr { type => 'array', default => sub { [] } }
 
 # validation errors
-sub errors      : Attr { type => 'array', default => sub { [] }, deref => 1 }
+sub errors       : Attr { type => 'array', deref => 1 }
 
 # invalid keys
-sub invalid_keys      : Attr { type => 'array', deref => 1 }
+sub invalid_keys : Attr { type => 'array', deref => 1 }
 
 # error is stock?
-sub error_stock : Attr { default => 1 }
+sub error_stock  : Attr { default => 1 }
 
 # converted resutls
-sub results     : Attr { type => 'hash', default => sub{ {} }, deref => 1 }
+sub results      : Attr { type => 'hash', deref => 1 }
 
 ### method
 
