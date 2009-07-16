@@ -128,7 +128,7 @@ sub validate {
                 my $first_validation = 1;
                 foreach my $data (@$value) {
                     my $result_item;
-                    ($is_valid, $result_item) = $constraint_function->($data, $arg);
+                    ($is_valid, $result_item) = $constraint_function->($data, $arg, $self);
                     last unless $is_valid;
                     
                     if (defined $result_item) {
@@ -145,7 +145,7 @@ sub validate {
                 $value = ref $key eq 'ARRAY' ? [map { $data->{$_} } @$key] : $data->{$key}
                   unless defined $value;
                 
-                ($is_valid, $result) = $constraint_function->($value, $arg);
+                ($is_valid, $result) = $constraint_function->($value, $arg, $self);
                 $value = $result if $is_valid && defined $result;
             }
             

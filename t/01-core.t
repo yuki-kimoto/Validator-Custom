@@ -193,7 +193,7 @@ use T1;
 
 {
     use T5;
-    my $hash = { k1 => 1, k2 => 'a', k3 => '  3  ', k4 => 4, k5 => 5, k6 => 5, k7 => 'a'};
+    my $hash = { k1 => 1, k2 => 'a', k3 => '  3  ', k4 => 4, k5 => 5, k6 => 5, k7 => 'a', k11 => [1,2]};
     my $validators = [
         k1 => [
             [{'C1' => [3, 4]}, "k1Error1"],
@@ -219,6 +219,12 @@ use T1;
         ],
         k9 => [
             {'C5' => 2}
+        ],
+        k10 => [
+            'C6'
+        ],
+        k11 => [
+            '@C6'
         ]
     ];
     
@@ -232,7 +238,9 @@ use T1;
     cmp_ok($t->results->{k3}, 'eq', 3, 'filter');
     ok(!$t->results->{k4}, 'result not set in case error');
     is($t->results->{k9}, 2, 'arg');
-    
+    isa_ok($t->results->{k10}, 'T5');
+    isa_ok($t->results->{k11}->[0], 'T5');
+    isa_ok($t->results->{k11}->[1], 'T5');
     # clear
     $t->validate;
     is_deeply([$t->errors], [], 'clear error');
