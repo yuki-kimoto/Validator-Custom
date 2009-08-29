@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0210';
+our $VERSION = '0.0211';
 
 require Carp;
 
@@ -41,17 +41,20 @@ sub _inherit_constraints {
 # validators
 sub validators   : Attr { type => 'array', default => sub { [] } }
 
-# validation errors
-sub errors       : Attr { type => 'array', deref => 1 }
-
-# invalid keys
-sub invalid_keys : Attr { type => 'array', deref => 1 }
-
 # error is stock?
 sub error_stock  : Attr { default => 1 }
 
+# invalid keys
+sub invalid_keys    : Attr   { type => 'array', deref => 1 }
+sub invalid_keys_to : Output { target => 'invalid_keys' }
+
+# validation errors
+sub errors       : Attr   { type => 'array', deref => 1 }
+sub errors_to    : Output { target => 'errors' }
+
 # converted resutls
-sub results      : Attr { type => 'hash', deref => 1 }
+sub results      : Attr   { type => 'hash', deref => 1 }
+sub results_to   : Output { target => 'results' }
 
 ### method
 
@@ -199,18 +202,23 @@ Validator::Custom is yew experimental stage.
     ];
     
     # validate
-    my $vc = Validator::Custom->new;
-    my @errors = $vc->validate($data,$validators)->errors;
+    Validator::Custom
+      ->new
+      ->validate($data,$validators)
+      ->errors_to(\my $errors);
+    ;
     
     # or
-    my $vc = Validator::Custom->new( validators => $validators);
-    my @errors = $vc->validate($data)->errors;
+    Validator::Custom
+      ->new
+      ->validators($validators)
+      ->validate($data)
+      ->errors_to(\my $errors)
+    ;
     
-    # process in error case
-    if($errors){
-        foreach my $error (@$errors) {
-            # process all errors
-        }
+    # handle errors
+    foreach my $error (@$errors) {
+        # ...
     }
     
     ### How to costomize Validator::Custom
@@ -257,9 +265,12 @@ Validator::Custom is yew experimental stage.
         ]
     ];
     
-    my $vc = Validator::Custom::Yours->new;
-    my @errors = $vc->validate($data,$validators)->errors;
-    my @invalid_keys = $vc->invalid_keys;
+    Validator::Custom::Yours
+      ->new
+      ->validate($data,$validators)
+      ->errors_to(\my $errors)
+      ->invalid_keys_to(\my $invalid_keys)
+    ;
     
     # corelative check
     my $validators => [
@@ -351,6 +362,22 @@ You can get converted result if any.
 
     $vc->results
 
+=head1 OUTPUT
+
+=head2 validate method output
+
+=head3 errors_to
+
+$vc->errors_to(\my $errors);
+
+=head3 invalid_keys_to
+
+$vc->invalid_keys_to(\my $invalid_keys);
+
+=head3 results_to
+
+$vc->results_to(\my $results);
+
 =head1 METHOD
 
 =head2 new
@@ -385,7 +412,15 @@ validator format is like the following.
         ]
     ];
 
-this method retrun self.
+This method retrun self.
+
+Output is saved to 'errors', 'invalid_keys', and 'results'.
+
+Error messages is saved to 'errors' if some error occured.
+
+Invalid keys is saved to 'invalid_keys' if some error occured.
+
+Conversion results is saved to 'results' if convertion is excuted.
 
 =cut
 

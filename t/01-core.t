@@ -241,6 +241,17 @@ use T1;
     isa_ok($t->results->{k10}, 'T5');
     isa_ok($t->results->{k11}->[0], 'T5');
     isa_ok($t->results->{k11}->[1], 'T5');
+    
+    $t
+      ->errors_to(\my $output_errors)
+      ->invalid_keys_to(\my $output_invalid_keys)
+      ->results_to(\my $output_results)
+    ;
+    
+    is_deeply(scalar $t->errors, $output_errors, 'output errors');
+    is_deeply(scalar $t->invalid_keys, $output_invalid_keys, 'output invalid keys');
+    is_deeply(scalar $t->results, $output_results, 'output results');
+    
     # clear
     $t->validate;
     is_deeply([$t->errors], [], 'clear error');

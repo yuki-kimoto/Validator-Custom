@@ -1,3 +1,5 @@
+0.0211
+  add output accessor. errors_to, invalid_keys_to, results_to.
 0.0210
   bag fix : validator args is passed as empty array ref when args don't exists
 0.0209
@@ -35,3 +37,4 @@
   first release
 0.01_01
   first develope release
+a
