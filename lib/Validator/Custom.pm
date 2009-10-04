@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0211';
+our $VERSION = '0.0301';
 
 require Carp;
 
@@ -38,8 +38,8 @@ sub _inherit_constraints {
 
 ### attribute
 
-# validators
-sub validators   : Attr { type => 'array', default => sub { [] } }
+# validation rule
+sub validation_rule : Attr { type => 'array', default => sub { [] } }
 
 # error is stock?
 sub error_stock  : Attr { default => 1 }
@@ -60,11 +60,11 @@ sub results_to   : Output { target => 'results' }
 
 # validate!
 sub validate {
-    my ($self, $data, $validators ) = @_;
+    my ($self, $data, $validation_rule ) = @_;
     my $class = ref $self;
     
     
-    $validators ||= $self->validators;
+    $validation_rule ||= $self->validation_rule;
     
     $self->errors([]);
     $self->results({});
@@ -73,8 +73,8 @@ sub validate {
     
     # process each key
     VALIDATOR_LOOP:
-    for (my $i = 0; $i < @{$validators}; $i += 2) {
-        my ($key, $validator_infos) = @{$validators}[$i, ($i + 1)];
+    for (my $i = 0; $i < @{$validation_rule}; $i += 2) {
+        my ($key, $validator_infos) = @{$validation_rule}[$i, ($i + 1)];
         
         # rearrange key
         my $result_key = $key;
@@ -170,13 +170,15 @@ sub validate {
 
 Object::Simple->build_class;
 
+1;
+
 =head1 NAME
 
 Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0210
+Version 0.0301
 
 =head1 CAUTION
 
@@ -190,7 +192,7 @@ Validator::Custom is yew experimental stage.
     my $data = { title => 'aaa', content => 'bbb' };
     
     # validator functions
-    my $validators = [
+    my $validation_rule = [
         title => [
             [sub{$_[0]},              "Specify title"],
             [sub{length $_[0] < 128}, "Too long title"]
@@ -204,14 +206,14 @@ Validator::Custom is yew experimental stage.
     # validate
     Validator::Custom
       ->new
-      ->validate($data,$validators)
+      ->validate($data,$validation_rule)
       ->errors_to(\my $errors);
     ;
     
     # or
     Validator::Custom
       ->new
-      ->validators($validators)
+      ->validation_rule($validation_rule)
       ->validate($data)
       ->errors_to(\my $errors)
     ;
@@ -240,7 +242,7 @@ Validator::Custom is yew experimental stage.
     my $data = { age => 'aaa', weight => 'bbb', favarite => [qw/sport food/};
     
     # validator normal syntax
-    my $validators = [
+    my $validation_rule = [
         title => [
             ['Int', "Must be integer"],
         ],
@@ -253,7 +255,7 @@ Validator::Custom is yew experimental stage.
     ];
     
     # validator light syntax
-    my $validators = [
+    my $validation_rule = [
         title => [
             'Int',
         ],
@@ -267,20 +269,20 @@ Validator::Custom is yew experimental stage.
     
     Validator::Custom::Yours
       ->new
-      ->validate($data,$validators)
+      ->validate($data,$validation_rule)
       ->errors_to(\my $errors)
       ->invalid_keys_to(\my $invalid_keys)
     ;
     
     # corelative check
-    my $validators => [
+    my $validation_rule => [
         [qw/password1 password2/] => [
             ['Same', 'passwor is not same']
         ]
     ]
     
     # specify keys
-    my $validators => [
+    my $validation_rule => [
         { password_check => [qw/password1 password2/]} => [
             ['Same', 'passwor is not same']
         ]
@@ -332,7 +334,7 @@ You can get validating errors
 
 You can use this method after calling validate
 
-    my @errors = $vc->validate($data,$validators)->errors;
+    my @errors = $vc->validate($data,$validation_rule)->errors;
 
 =head2 invalid_keys
 
@@ -342,7 +344,7 @@ You can get invalid keys by hash
 
 You can use this method after calling validate
 
-    my $invalid_keys = $vc->validate($hash,$validators)->invalid_keys;
+    my $invalid_keys = $vc->validate($hash,$validation_rule)->invalid_keys;
 
 =head2 error_stock
 
@@ -350,11 +352,11 @@ If you stock error, set 1, or set 0.
 
 Default is 1. 
 
-=head2 validators
+=head2 validation_rule
 
-You can set validators
+You can set validation_rule
 
-    $vc->validators($validators);
+    $vc->validation_rule($validation_rule);
 
 =head2 results
 
@@ -390,11 +392,11 @@ create instance
 
 validate
 
-    $vc->validate($data,$validators);
+    $vc->validate($data,$validation_rule);
 
 validator format is like the following.
 
-    my $validators = [
+    my $validation_rule = [
         # Function
         key1 => [
             [ \&validator_function1, "Error message1-1"],
