@@ -101,9 +101,6 @@ sub validate {
         foreach my $constraint (@$constraints){
             
             # Rearrange validator information
-            $constraint = [$constraint]
-              if ref $constraint ne 'ARRAY'; 
-            
             my ($constraint, $error_message, $options)
               = ref $constraint eq 'ARRAY' ? @$constraint : ($constraint);
             
