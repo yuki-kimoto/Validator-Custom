@@ -253,7 +253,7 @@ use T1;
     is_deeply(scalar $t->results, $output_results, 'output results');
     
     # clear
-    $t->validate;
+    $t->validate({});
     is_deeply([$t->errors], [], 'clear error');
     is_deeply(scalar $t->results, {}, 'clear results');
     is_deeply({$t->invalid_keys}, {}, 'clear error');
