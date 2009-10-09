@@ -38,9 +38,9 @@ eval"use Validator::Custom";
 }
 
 {
-    my $o = Validator::Custom->new;
-    $o->results(k => 1);
-    is_deeply({$o->results}, {k => 1}, 'results attribute');
+    my $o = Validator::Custom::Result->new;
+    $o->products(k => 1);
+    is_deeply({$o->products}, {k => 1}, 'products attribute');
 }
 
 {
@@ -66,10 +66,10 @@ use T1;
         ],
     ];
     my $o = T1->new;
-    my $errors = $o->validate($hash, $validation_rule)->errors;
-    is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator');
-    is_deeply(scalar $o->invalid_keys, [qw/k2 k4/], 'invalid keys hash');
-    is_deeply([$o->invalid_keys], [qw/k2 k4/], 'invalid keys hash');    
+    my $r = $o->validate($hash, $validation_rule);
+    is_deeply([$r->errors], [qw/k2Error1 k4Error1/], 'Custom validator');
+    is_deeply(scalar $r->invalid_keys, [qw/k2 k4/], 'invalid keys hash');
+    is_deeply([$r->invalid_keys], [qw/k2 k4/], 'invalid keys hash');    
     
     my $constraints = T1->constraints;
     ok(exists($constraints->{Int}), 'get constraints');
@@ -172,11 +172,10 @@ use T1;
     ];    
     
     my $vc = T1->new;
-    my $errors = $vc->validate($hash, $validation_rule)->errors;
-    is_deeply($errors, [], 'no error');
+    my $r = $vc->validate($hash, $validation_rule);
+    is_deeply(scalar $r->errors, [], 'no error');
     
-    my $results = $vc->results;
-    is_deeply($results, {k1 => [4,8]}, 'array validate2');
+    is_deeply(scalar $r->products, {k1 => [4,8]}, 'array validate2');
 }
 
 
@@ -228,35 +227,30 @@ use T1;
         ]
     ];
     
-    my $t = T5->new;
-    my @errors = $t->validate($hash, $validation_rule)->errors;
-    is_deeply([@errors], ['k2Error1'], 'variouse options');
-    is_deeply([$t->invalid_keys], [qw/k2 k4 k7 k8/], 'invalid key');
+    my $o = T5->new;
+    my $r = $o->validate($hash, $validation_rule);
+    is_deeply([$r->errors], ['k2Error1'], 'variouse options');
+    is_deeply([$r->invalid_keys], [qw/k2 k4 k7 k8/], 'invalid key');
     
-    is_deeply($t->results->{k1},[1, [3, 4]], 'result');
-    ok(!$t->results->{k2}, 'result not exist in error case');
-    cmp_ok($t->results->{k3}, 'eq', 3, 'filter');
-    ok(!$t->results->{k4}, 'result not set in case error');
-    is($t->results->{k9}, 2, 'arg');
-    isa_ok($t->results->{k10}, 'T5');
-    isa_ok($t->results->{k11}->[0], 'T5');
-    isa_ok($t->results->{k11}->[1], 'T5');
+    is_deeply($r->products->{k1},[1, [3, 4]], 'product');
+    ok(!$r->products->{k2}, 'product not exist in error case');
+    cmp_ok($r->products->{k3}, 'eq', 3, 'filter');
+    ok(!$r->products->{k4}, 'product not set in case error');
+    is($r->products->{k9}, 2, 'arg');
+    isa_ok($r->products->{k10}, 'T5');
+    isa_ok($r->products->{k11}->[0], 'T5');
+    isa_ok($r->products->{k11}->[1], 'T5');
     
-    $t
+    $r
       ->errors_to(\my $output_errors)
       ->invalid_keys_to(\my $output_invalid_keys)
-      ->results_to(\my $output_results)
+      ->products_to(\my $output_products)
     ;
     
-    is_deeply(scalar $t->errors, $output_errors, 'output errors');
-    is_deeply(scalar $t->invalid_keys, $output_invalid_keys, 'output invalid keys');
-    is_deeply(scalar $t->results, $output_results, 'output results');
+    is_deeply(scalar $r->errors, $output_errors, 'output errors');
+    is_deeply(scalar $r->invalid_keys, $output_invalid_keys, 'output invalid keys');
+    is_deeply(scalar $r->products, $output_products, 'output products');
     
-    # clear
-    $t->validate({},[]);
-    is_deeply([$t->errors], [], 'clear error');
-    is_deeply(scalar $t->results, {}, 'clear results');
-    is_deeply({$t->invalid_keys}, {}, 'clear error');
 }
 
 {

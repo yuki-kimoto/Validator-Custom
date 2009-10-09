@@ -1,3 +1,6 @@
+0.0401
+  validate method return Validator::Custom::Result object, not $self (not backword compatible)
+  resutls method is renamed to products (not backword compatible)
 0.0303
   bag fix: second validation is fail when hash specify as constraint
 0.0302

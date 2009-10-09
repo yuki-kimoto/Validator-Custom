@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0303';
+our $VERSION = '0.0401';
 
 require Carp;
 
@@ -37,8 +37,6 @@ sub _inherit_constraints {
     $class->constraints($constraints);
 }
 
-
-
 ### Accessors
 
 # Validation rule
@@ -46,20 +44,6 @@ sub validation_rule : Attr {}
 
 # Error is stock?
 sub error_stock  : Attr { default => 1 }
-
-# Invalid keys
-sub invalid_keys    : Attr   { type => 'array', deref => 1 }
-sub invalid_keys_to : Output { target => 'invalid_keys' }
-
-# Validation errors
-sub errors       : Attr   { type => 'array', deref => 1 }
-sub errors_to    : Output { target => 'errors' }
-
-# Resutls after conversion
-sub results      : Attr   { type => 'hash', deref => 1 }
-sub results_to   : Output { target => 'results' }
-
-
 
 ### Methods
 
@@ -80,10 +64,8 @@ sub validate {
               . $self->_validation_rule_usage($validation_rule))
       unless ref $validation_rule eq 'ARRAY';
     
-    # Initialize attributes for output
-    $self->errors([]);
-    $self->results({});
-    $self->invalid_keys([]);
+    # Result object
+    my $result = Validator::Custom::Result->new;
     
     # Error is stock?
     my $error_stock = $self->error_stock;
@@ -98,16 +80,16 @@ sub validate {
           unless ref $constraints eq 'ARRAY';
         
         # Rearrange key
-        my $result_key = $key;
+        my $product_key = $key;
         
         if (ref $key eq 'HASH') {
             # Clear each iterator
             keys %$key;
-            ($result_key, $key) = each %$key;
+            ($product_key, $key) = each %$key;
         }
         
         my $value;
-        my $result;
+        my $products;
         foreach my $constraint (@$constraints) {
             
             # Rearrange validator information
@@ -155,42 +137,42 @@ sub validate {
                 
                 my $first_validation = 1;
                 foreach my $data (@$value) {
-                    my $result_item;
-                    ($is_valid, $result_item) = $constraint_function->($data, $arg, $self);
+                    my $product;
+                    ($is_valid, $product) = $constraint_function->($data, $arg, $self);
                     last unless $is_valid;
                     
-                    if (defined $result_item) {
+                    if (defined $product) {
                         if ($first_validation) {
-                            $result = [];
+                            $products = [];
                             $first_validation = 0;
                         }
-                        push @{$result}, $result_item;
+                        push @{$products}, $product;
                     }
                 }
-                $value = $result if defined $result;
+                $value = $products if defined $products;
             }
             else {
                 $value = ref $key eq 'ARRAY' ? [map { $data->{$_} } @$key] : $data->{$key}
                   unless defined $value;
                 
-                ($is_valid, $result) = $constraint_function->($value, $arg, $self);
-                $value = $result if $is_valid && defined $result;
+                ($is_valid, $products) = $constraint_function->($value, $arg, $self);
+                $value = $products if $is_valid && defined $products;
             }
             
             # Add error if it is invalid
             unless($is_valid){
-                $result = undef;
+                $products = undef;
                 
-                push @{$self->errors}, $error_message if defined $error_message;
-                push @{$self->invalid_keys}, $result_key;
+                push @{$result->errors}, $error_message if defined $error_message;
+                push @{$result->invalid_keys}, $product_key;
                 
                 last VALIDATOR_LOOP unless $error_stock;
                 next VALIDATOR_LOOP;
             }
         }
-        $self->results->{$result_key} = $result if defined $result;
+        $result->products->{$product_key} = $products if defined $products;
     }
-    return $self;
+    return $result;
 }
 
 my $SYNTAX_OF_VALIDATION_RULE = <<'EOS';
@@ -239,13 +221,38 @@ sub _validation_rule_usage {
 # Build class
 Object::Simple->build_class;
 
+
+
+package Validator::Custom::Result;
+use Object::Simple;
+
+# Invalid keys
+sub invalid_keys    : Attr   { type => 'array', default => sub{ [] }, deref => 1 }
+sub invalid_keys_to : Output { target => 'invalid_keys' }
+
+# Validation errors
+sub errors       : Attr   { type => 'array', default => sub{ [] }, deref => 1 }
+sub errors_to    : Output { target => 'errors' }
+
+# Resutls after conversion
+sub products      : Attr   { type => 'hash', default => sub{ {} }, deref => 1 }
+sub products_to   : Output { target => 'products' }
+
+# Build class
+Object::Simple->build_class;
+
+
+
+package Validator::Custom;
+1;
+
 =head1 NAME
 
 Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0303
+Version 0.0401
 
 =head1 CAUTION
 
@@ -255,40 +262,26 @@ Validator::Custom is yew experimental stage.
     
     ### How to use Validator::Custom
     
-    # data
+    # Data
     my $data = { title => 'aaa', content => 'bbb' };
     
-    # validator functions
-    my $validation_rule = [
-        title => [
-            [sub{$_[0]},              "Specify title"],
-            [sub{length $_[0] < 128}, "Too long title"]
-        ],
-        content => [
-            [sub{$_[0]},               "Specify content"],
-            [sub{length $_[0] < 1024}, "Too long content"]
-        ]
-    ];
+    # Validate
+    my $result = Validator::Custom->new->validate($data,$validation_rule);
     
-    # validate
-    Validator::Custom
-      ->new
-      ->validate($data,$validation_rule)
-      ->errors_to(\my $errors);
-    ;
+    # Get errors
+    my @errors = $result->errors;
     
-    # or
-    Validator::Custom
-      ->new
-      ->validation_rule($validation_rule)
-      ->validate($data)
-      ->errors_to(\my $errors)
-    ;
-    
-    # handle errors
+    # Handle errors
     foreach my $error (@$errors) {
         # ...
     }
+    
+    # Get invalid keys
+    my @invalid_keys = $result->invalid_keys;
+    
+    # Get converted value
+    my $products = $result->products;
+    $product = $products->{key1};
     
     ### How to costomize Validator::Custom
     package Validator::Custom::Yours;
@@ -334,13 +327,6 @@ Validator::Custom is yew experimental stage.
         ]
     ];
     
-    Validator::Custom::Yours
-      ->new
-      ->validate($data,$validation_rule)
-      ->errors_to(\my $errors)
-      ->invalid_keys_to(\my $invalid_keys)
-    ;
-    
     # Corelative check
     my $validation_rule => [
         [qw/password1 password2/] => [
@@ -353,7 +339,7 @@ Validator::Custom is yew experimental stage.
         {password_check => [qw/password1 password2/]} => [
             ['Same', 'passwor is not same']
         ]
-    ]    
+    ]
     
     
 =head1 CLASS METHOD
@@ -393,26 +379,6 @@ You can merge multiple custom class
 
 =head1 ACCESSORS
 
-=head2 errors
-
-You can get validating errors
-
-    my @errors = $vc->errors;
-
-You can use this method after calling validate
-
-    my @errors = $vc->validate($data,$validation_rule)->errors;
-
-=head2 invalid_keys
-
-You can get invalid keys by hash
-
-    my $invalid_keys = $c->invalid_keys;
-
-You can use this method after calling validate
-
-    my $invalid_keys = $vc->validate($hash,$validation_rule)->invalid_keys;
-
 =head2 error_stock
 
 If you stock error, set 1, or set 0.
@@ -425,27 +391,36 @@ You can set validation_rule
 
     $vc->validation_rule($validation_rule);
 
-=head2 results
+Validation rule is the following
 
-You can get converted result if any.
-
-    $vc->results
-
-=head1 OUTPUT
-
-=head2 validate method output
-
-=head3 errors_to
-
-$vc->errors_to(\my $errors);
-
-=head3 invalid_keys_to
-
-$vc->invalid_keys_to(\my $invalid_keys);
-
-=head3 results_to
-
-$vc->results_to(\my $results);
+    ### Syntax of validation rule         
+    my $validation_rule = [               # 1.Validation rule must be array ref
+        key1 => [                         # 2.Constraints must be array ref
+            'constraint1_1',              # 3.Constraint can be string
+            ['constraint1_2', 'error1_2'],#     or arrya ref (error message)
+            {'constraint1_3' => 'string'} #     or hash ref (arguments)
+              
+        ],
+        key2 => [
+            {'constraint2_1'              # 4.Argument can be string
+              => 'string'},               #
+            {'constraint2_2'              #     or array ref
+              => ['arg1', 'arg2']},       #
+            {'constraint1_3'              #     or hash ref
+              => {k1 => 'v1', k2 => 'v2}} #
+        ],
+        key3 => [                           
+            [{constraint3_1' => 'string'},# 5.Combination argument
+             'error3_1' ]                 #     and error message
+        ],
+        { key4 => ['key4_1', 'key4_2'] }  # 6.Multi key validation
+            => [
+                'constraint4_1'
+               ]
+        key5 => [
+            '@constraint5_1'              # 7. array ref each value validation
+        ]
+    ];
 
 =head1 METHOD
 
@@ -459,37 +434,55 @@ create instance
 
 validate
 
-    $vc->validate($data,$validation_rule);
+    my $result = $vc->validate($data,$validation_rule);
 
-validator format is like the following.
+Validation rule is like the following.
 
     my $validation_rule = [
-        # Function
-        key1 => [
-            [ \&validator_function1, "Error message1-1"],
-            [ \&validator_function2, "Error message1-2"] 
-        ],
-        
         # Custom Type
-        key2 => [
+        key1 => [
             [ 'CustomType' ,         "Error message2-1"],
         ],
         
         # Array of Custom Type
-        key3 => [
+        key2 => [
             [ '@CustomType',         "Error message3-1"]
         ]
     ];
 
-This method retrun self.
-
-Output is saved to 'errors', 'invalid_keys', and 'results'.
+$result is Validator::Custom::Result object.
+This have 'errors', 'invalid_keys', and 'products' methods.
 
 Error messages is saved to 'errors' if some error occured.
-
 Invalid keys is saved to 'invalid_keys' if some error occured.
+Conversion products is saved to 'products' if convertion is excuted.
 
-Conversion results is saved to 'results' if convertion is excuted.
+
+=head1 Validator::Custom::Result object
+
+=head2 errors
+
+You can get validation errors
+    
+    $errors = $result->errors
+    @errors = $result->errors
+
+=head2 invalid_keys
+
+You can get invalid keys
+
+    @invalid_keys = $result->invalid_keys
+    $invalid_keys = $result->invalid_keys
+
+=head2 products
+
+You can get converted data.
+
+    $products = $result->products
+
+This is hash ref. You can get each product by specify key.
+
+    $product = $products->{key}
 
 =cut
 
@@ -497,47 +490,11 @@ Conversion results is saved to 'results' if convertion is excuted.
 
 Yuki Kimoto, C<< <kimoto.yuki at gmail.com> >>
 
-=head1 BUGS
+=head1 BUG REPORT
 
-Please report any bugs or feature requests to C<bug-validator-custom at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Validator-Custom>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+I develope this module L<http://github.com/yuki-kimoto/Validator-Custom>
 
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Validator::Custom
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Validator-Custom>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Validator-Custom>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Validator-Custom>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Validator-Custom/>
-
-=back
-
-
-=head1 ACKNOWLEDGEMENTS
-
+Please send message if you find bug.
 
 =head1 COPYRIGHT & LICENSE
 
@@ -545,7 +502,6 @@ Copyright 2009 Yuki Kimoto, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
-
 
 =cut
 
