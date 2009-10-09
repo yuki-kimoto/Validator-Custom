@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0302';
+our $VERSION = '0.0303';
 
 require Carp;
 
@@ -99,21 +99,26 @@ sub validate {
         
         # Rearrange key
         my $result_key = $key;
-        ($result_key, $key) = each %$key if ref $key eq 'HASH';
+        
+        if (ref $key eq 'HASH') {
+            # Clear each iterator
+            keys %$key;
+            ($result_key, $key) = each %$key;
+        }
         
         my $value;
         my $result;
-        for (my $i = 0; $i < @$constraints; $i++) {
-            my $constraint_tmp = $constraints->[$i];
+        foreach my $constraint (@$constraints) {
             
             # Rearrange validator information
             my ($constraint, $error_message)
-              = ref $constraint_tmp eq 'ARRAY' ? @$constraint_tmp : ($constraint_tmp);
+              = ref $constraint eq 'ARRAY' ? @$constraint : ($constraint);
             
             my $data_type = {};
             my $arg;
             
             if(ref $constraint eq 'HASH') {
+                keys %$constraint;
                 ($constraint, $arg) = each %$constraint;
             }
             
@@ -240,7 +245,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0302
+Version 0.0303
 
 =head1 CAUTION
 

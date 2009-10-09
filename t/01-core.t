@@ -297,3 +297,25 @@ use T1;
     like($@, qr/Constraints of validation rule must be array ref/, 'Constraints of key not array ref');
 }
 
+use T6;
+{
+    my $o = T6->new;
+    
+    my $data = {
+        name => 'zz' x 30,
+        age => 'zz',
+    };
+    
+    my $validation_rule = [
+        name => [
+            {length => [1, 2]}
+        ]
+    ];
+    
+    my @invalid_keys = $o->validation_rule($validation_rule)->validate($data)->invalid_keys;
+    is_deeply([@invalid_keys], ['name'], 'constraint argument first');
+    
+    @invalid_keys = $o->validation_rule($validation_rule)->validate($data)->invalid_keys;
+    is_deeply([@invalid_keys], ['name'], 'constraint argument second');
+}
+
