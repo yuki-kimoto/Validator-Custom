@@ -92,6 +92,9 @@ sub validate {
     for (my $i = 0; $i < @{$validation_rule}; $i += 2) {
         my ($key, $constraints) = @{$validation_rule}[$i, ($i + 1)];
         
+        Carp::croak("constraints must be array ref")
+          unless ref $constraints eq 'ARRAY';
+        
         # Rearrange key
         my $result_key = $key;
         ($result_key, $key) = each %$key if ref $key eq 'HASH';
