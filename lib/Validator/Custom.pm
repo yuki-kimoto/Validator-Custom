@@ -104,36 +104,37 @@ sub validate {
             $constraint = [$constraint]
               if ref $constraint ne 'ARRAY'; 
             
-            my($constraint_expression, $error_message, $options) = @$constraint;
+            my ($constraint, $error_message, $options)
+              = ref $constraint eq 'ARRAY' ? @$constraint : ($constraint);
             
             my $data_type = {};
             my $arg;
             
-            if(ref $constraint_expression eq 'HASH') {
-                ($constraint_expression, $arg) = each %$constraint_expression;
+            if(ref $constraint eq 'HASH') {
+                ($constraint, $arg) = each %$constraint;
             }
             
             my $constraint_function;
             # Expression is code reference
-            if( ref $constraint_expression eq 'CODE') {
-                $constraint_function = $constraint_expression;
+            if( ref $constraint eq 'CODE') {
+                $constraint_function = $constraint;
             }
             
             # Expression is string
             else {
-                if($constraint_expression =~ /^\@(.+)$/) {
+                if($constraint =~ /^\@(.+)$/) {
                     $data_type->{array} = 1;
-                    $constraint_expression = $1;
+                    $constraint = $1;
                 }
                 
-                Carp::croak("Constraint type '$constraint_expression' must be [A-Za-z0-9_]")
-                  if $constraint_expression =~ /\W/;
+                Carp::croak("Constraint type '$constraint' must be [A-Za-z0-9_]")
+                  if $constraint =~ /\W/;
                 
                 # Get validator function
                 $constraint_function
-                  = $class->constraints->{$constraint_expression};
+                  = $class->constraints->{$constraint};
                 
-                Carp::croak("'$constraint_expression' is not resisted")
+                Carp::croak("'$constraint' is not resisted")
                     unless ref $constraint_function eq 'CODE'
             }
             
