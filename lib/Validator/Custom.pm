@@ -42,7 +42,7 @@ sub _inherit_constraints {
 ### Accessors
 
 # Validation rule
-sub validation_rule : Attr { type => 'array', default => sub { [] } }
+sub validation_rule : Attr {}
 
 # Error is stock?
 sub error_stock  : Attr { default => 1 }
@@ -72,11 +72,12 @@ sub validate {
     $validation_rule ||= $self->validation_rule;
     
     # Data must be hash ref
-    Carp::croak("data must be hash ref")
+    Carp::croak("Data which passed to validate method must be hash ref")
       unless ref $data eq 'HASH';
     
     # Validation rule must be array ref
-    Carp::croak("validation_rule must be array ref")
+    Carp::croak("Validation rule must be array ref\n"
+              . $self->_validation_rule_usage($validation_rule))
       unless ref $validation_rule eq 'ARRAY';
     
     # Initialize attributes for output
@@ -92,7 +93,8 @@ sub validate {
     for (my $i = 0; $i < @{$validation_rule}; $i += 2) {
         my ($key, $constraints) = @{$validation_rule}[$i, ($i + 1)];
         
-        Carp::croak("constraints must be array ref")
+        Carp::croak("Constraints of validation rule must be array ref\n"
+                  . $self->_validation_rule_usage($validation_rule))
           unless ref $constraints eq 'ARRAY';
         
         # Rearrange key
@@ -101,11 +103,12 @@ sub validate {
         
         my $value;
         my $result;
-        foreach my $constraint (@$constraints){
+        for (my $i = 0; $i < @$constraints; $i++) {
+            my $constraint_tmp = $constraints->[$i];
             
             # Rearrange validator information
-            my ($constraint, $error_message, $options)
-              = ref $constraint eq 'ARRAY' ? @$constraint : ($constraint);
+            my ($constraint, $error_message)
+              = ref $constraint_tmp eq 'ARRAY' ? @$constraint_tmp : ($constraint_tmp);
             
             my $data_type = {};
             my $arg;
@@ -185,10 +188,51 @@ sub validate {
     return $self;
 }
 
+my $SYNTAX_OF_VALIDATION_RULE = <<'EOS';
+
+### Syntax of validation rule         
+my $validation_rule = [               # 1.Validation rule must be array ref
+    key1 => [                         # 2.Constraints must be array ref
+        'constraint1_1',              # 3.Constraint can be string
+        ['constraint1_2', 'error1_2'],#     or arrya ref (error message)
+        {'constraint1_3' => 'string'} #     or hash ref (arguments)
+          
+    ],
+    key2 => [
+        {'constraint2_1'              # 4.Argument can be string
+          => 'string'},               #
+        {'constraint2_2'              #     or array ref
+          => ['arg1', 'arg2']},       #
+        {'constraint1_3'              #     or hash ref
+          => {k1 => 'v1', k2 => 'v2}} #
+    ],
+    key3 => [                           
+        [{constraint3_1' => 'string'},# 5.Combination argument
+         'error3_1' ]                 #     and error message
+    ],
+    { key4 => ['key4_1', 'key4_2'] }  # 6.Multi key validation
+        => [
+            'constraint4_1'
+           ]
+];
+
+EOS
+
+# Validation rule usage
+sub _validation_rule_usage {
+    my ($self, $validation_rule) = @_;
+    
+    my $message = $SYNTAX_OF_VALIDATION_RULE;
+    
+    require Data::Dumper;
+    $message .= "### Your validation rule:\n";
+    $message .= Data::Dumper->Dump([$validation_rule], ['$validation_rule']);
+    $message .= "\n";
+    return $message;
+}
+
 # Build class
 Object::Simple->build_class;
-
-1;
 
 =head1 NAME
 
@@ -259,7 +303,7 @@ Validator::Custom is yew experimental stage.
     use Validator::Custom::Yours;
     my $data = { age => 'aaa', weight => 'bbb', favarite => [qw/sport food/};
     
-    # validator normal syntax
+    # Validation rule normal syntax
     my $validation_rule = [
         title => [
             ['Int', "Must be integer"],
@@ -272,7 +316,7 @@ Validator::Custom is yew experimental stage.
         ]
     ];
     
-    # validator light syntax
+    # Validation rule light syntax
     my $validation_rule = [
         title => [
             'Int',
@@ -292,16 +336,16 @@ Validator::Custom is yew experimental stage.
       ->invalid_keys_to(\my $invalid_keys)
     ;
     
-    # corelative check
+    # Corelative check
     my $validation_rule => [
         [qw/password1 password2/] => [
             ['Same', 'passwor is not same']
         ]
     ]
     
-    # specify keys
+    # Specify keys
     my $validation_rule => [
-        { password_check => [qw/password1 password2/]} => [
+        {password_check => [qw/password1 password2/]} => [
             ['Same', 'passwor is not same']
         ]
     ]    

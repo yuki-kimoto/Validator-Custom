@@ -34,7 +34,7 @@ eval"use Validator::Custom";
 }
 
 {
-    is_deeply(Validator::Custom->new->validation_rule, [], 'validation_rule default');
+    ok(!Validator::Custom->new->validation_rule, 'validation_rule default');
 }
 
 {
@@ -253,7 +253,7 @@ use T1;
     is_deeply(scalar $t->results, $output_results, 'output results');
     
     # clear
-    $t->validate({});
+    $t->validate({},[]);
     is_deeply([$t->errors], [], 'clear error');
     is_deeply(scalar $t->results, {}, 'clear results');
     is_deeply({$t->invalid_keys}, {}, 'clear error');
@@ -280,5 +280,20 @@ use T1;
     my $o = Validator::Custom->new;
     my @errors = $o->validate($hash, $validation_rule)->errors;
     is_deeply([@errors], ['error_k1_2'], 'specify key');
+}
+
+{
+    eval{Validator::Custom->new->validate([])};
+    like($@, qr/Data which passed to validate method must be hash ref/, 'Data not hash ref');
+}
+
+{
+    eval{Validator::Custom->new->validation_rule({})->validate({})};
+    like($@, qr/Validation rule must be array ref/, 'Validation rule not array ref');
+}
+
+{
+    eval{Validator::Custom->new->validation_rule([key => 'Int'])->validate({})};
+    like($@, qr/Constraints of validation rule must be array ref/, 'Constraints of key not array ref');
 }
 
