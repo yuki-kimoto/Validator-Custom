@@ -435,6 +435,7 @@ create instance
 validate
 
     my $result = $vc->validate($data,$validation_rule);
+    my $result = $vc->validate($data) # $self->validation_rule is used
 
 Validation rule is like the following.
 
