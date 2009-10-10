@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0401';
+our $VERSION = '0.0501';
 
 require Carp;
 
@@ -238,6 +238,12 @@ sub errors_to    : Output { target => 'errors' }
 sub products      : Attr   { type => 'hash', default => sub{ {} }, deref => 1 }
 sub products_to   : Output { target => 'products' }
 
+# Check valid or not
+sub is_valid {
+    my $self = shift;
+    return @{$self->invalid_keys} ? 0 : 1;
+}
+
 # Build class
 Object::Simple->build_class;
 
@@ -252,7 +258,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0401
+Version 0.0501
 
 =head1 CAUTION
 
@@ -282,6 +288,11 @@ Validator::Custom is yew experimental stage.
     # Get converted value
     my $products = $result->products;
     $product = $products->{key1};
+    
+    # Check valid or not
+    if($result->is_valid) {
+        # ...
+    }
     
     ### How to costomize Validator::Custom
     package Validator::Custom::Yours;
@@ -484,6 +495,12 @@ You can get converted data.
 This is hash ref. You can get each product by specify key.
 
     $product = $products->{key}
+
+=head2 is_valid
+
+You can check data is valid or not
+
+    my $is_valid = $result->is_valid;
 
 =cut
 

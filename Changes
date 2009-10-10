@@ -1,3 +1,5 @@
+0.0501
+  add 'is_valid' method to Validator::Custom::Result
 0.0401
   validate method return Validator::Custom::Result object, not $self (not backword compatible)
   resutls method is renamed to products (not backword compatible)

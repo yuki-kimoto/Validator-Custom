@@ -69,7 +69,8 @@ use T1;
     my $r = $o->validate($hash, $validation_rule);
     is_deeply([$r->errors], [qw/k2Error1 k4Error1/], 'Custom validator');
     is_deeply(scalar $r->invalid_keys, [qw/k2 k4/], 'invalid keys hash');
-    is_deeply([$r->invalid_keys], [qw/k2 k4/], 'invalid keys hash');    
+    is_deeply([$r->invalid_keys], [qw/k2 k4/], 'invalid keys hash');  
+    ok(!$r->is_valid, 'is_valid');
     
     my $constraints = T1->constraints;
     ok(exists($constraints->{Int}), 'get constraints');
@@ -311,5 +312,10 @@ use T6;
     
     @invalid_keys = $o->validation_rule($validation_rule)->validate($data)->invalid_keys;
     is_deeply([@invalid_keys], ['name'], 'constraint argument second');
+}
+
+{
+    my $result = Validator::Custom->new->validation_rule([])->validate({key => 1});
+    ok($result->is_valid, 'is_valid ok');
 }
 
