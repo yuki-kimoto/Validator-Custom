@@ -255,11 +255,6 @@ use T1;
 }
 
 {
-    eval{Validator::Custom->add_constraint()};
-    like($@, qr/\Q'add_constraint' must be called from Validator::Custom/, 'cannot call different class');
-}
-
-{
     my $hash = { k1 => 1, k2 => 2};
     my $constraint = sub {
         my $values = shift;
@@ -317,5 +312,38 @@ use T6;
 {
     my $result = Validator::Custom->new->validation_rule([])->validate({key => 1});
     ok($result->is_valid, 'is_valid ok');
+}
+
+{
+    my $o = T1->new;
+    $o->add_constraint(
+       'C1' => sub {
+            my $value = shift;
+            return $value > 1 ? 1 : 0;
+        },
+       'C2' => sub {
+            my $value = shift;
+            return $value > 5 ? 1 : 0;
+        }
+    );
+    
+    my $d = {k1_1 => 1, k1_2 => 2, k2_1 => 5, k2_2 => 6};
+    
+    $o->validation_rule([
+        k1_1 => [
+            'C1'
+        ],
+        k1_2 => [
+            'C1'
+        ],
+        k2_1 => [
+            'C2'
+        ],
+        k2_2 => [
+            'C2'
+        ]
+    ]);
+    
+    is_deeply([$o->validate($d)->invalid_keys], [qw/k1_1 k2_1/], 'add_constraints object');
 }
 

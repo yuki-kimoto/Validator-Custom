@@ -1,3 +1,6 @@
+0.0601
+  add_constraint method can be used as object method and class method
+  constraints method can be used as object mehtod and class mehtod
 0.0501
   add 'is_valid' method to Validator::Custom::Result
 0.0401

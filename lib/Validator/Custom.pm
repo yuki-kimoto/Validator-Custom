@@ -1,40 +1,41 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0501';
+our $VERSION = '0.0601';
 
 require Carp;
 
 ### Class methods
 
 # Get constraint functions
-sub constraints : ClassAttr { type => 'hash', deref => 1,  auto_build => \&_inherit_constraints }
+sub constraints : ClassObjectAttr { type => 'hash', deref => 1,  auto_build => \&_inherit_constraints }
 
 # Add constraint function
 sub add_constraint {
-    my $class = shift;
-    my $caller_class = caller;
+    my $invocant = shift;
     
-    Carp::croak("'add_constraint' must be called from $class")
-      unless $class eq $caller_class;
-    
-    my %old_constraints = $class->constraints;
+    my %old_constraints = $invocant->constraints;
     my %new_constraints = ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
-    $class->constraints(%old_constraints, %new_constraints);
+    $invocant->constraints(%old_constraints, %new_constraints);
 }
 
 # Inherit super class constraint functions
 sub _inherit_constraints {
-    my $class = shift;
+    my $invocant = shift;
+    
+    # Called from object
+    $invocant->constraints({}) if ref $invocant;
+    
+    # Called from class
     my $super =  do {
         no strict 'refs';
-        ${"${class}::ISA"}[0];
+        ${"${invocant}::ISA"}[0];
     };
     my $constraints = eval{$super->can('constraints')}
                         ? $super->constraints
                         : {};
                       
-    $class->constraints($constraints);
+    $invocant->constraints($constraints);
 }
 
 ### Accessors
@@ -122,7 +123,7 @@ sub validate {
                 
                 # Get validator function
                 $constraint_function
-                  = $class->constraints->{$constraint};
+                  = $self->constraints->{$constraint} || $class->constraints->{$constraint};
                 
                 Carp::croak("'$constraint' is not resisted")
                     unless ref $constraint_function eq 'CODE'
@@ -201,6 +202,9 @@ my $validation_rule = [               # 1.Validation rule must be array ref
         => [
             'constraint4_1'
            ]
+    key5 => [
+        '@constraint5_1'              # 7.Array each value validation
+    ]
 ];
 
 EOS
@@ -258,7 +262,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0501
+Version 0.0601
 
 =head1 CAUTION
 
@@ -269,10 +273,25 @@ Validator::Custom is yew experimental stage.
     ### How to use Validator::Custom
     
     # Data
-    my $data = { title => 'aaa', content => 'bbb' };
+    my $data = { k1 => 1, k2 => 2 };
     
     # Validate
-    my $result = Validator::Custom->new->validate($data,$validation_rule);
+    my $vc = Validator::Custom->new
+    
+    $vc->add_constraints(
+        int => sub { my $value = shift; return $value =~ /^\d+$/; }
+    );
+    
+    $vc->validation_rule([
+        k1 => [
+            'int'
+        ],
+        k2 => [
+            'int'
+        ]
+    ]);
+    
+    my $result = $vc->validate($data,$validation_rule);
     
     # Get errors
     my @errors = $result->errors;
@@ -389,6 +408,18 @@ You can merge multiple custom class
     );
 
 =head1 ACCESSORS
+
+=head2 constraints
+
+You can also set constraint functions to object
+
+    $vc->constraints($constraints);
+
+=head2 add_constraint
+
+You can add constraint to object
+
+    $vc->add_constraint($constraint);
 
 =head2 error_stock
 
