@@ -1,14 +1,21 @@
 package Validator::Custom;
 use Object::Simple;
 
-our $VERSION = '0.0601';
+our $VERSION = '0.0604';
 
 require Carp;
 
 ### Class methods
 
 # Get constraint functions
-sub constraints : ClassObjectAttr { type => 'hash', deref => 1,  auto_build => \&_inherit_constraints }
+sub constraints : ClassObjectAttr {
+    type => 'hash',
+    deref => 1,
+    initialize => {
+        clone   => 'hash',
+        default => sub { {} }
+    }
+}
 
 # Add constraint function
 sub add_constraint {
@@ -17,25 +24,6 @@ sub add_constraint {
     my %old_constraints = $invocant->constraints;
     my %new_constraints = ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
     $invocant->constraints(%old_constraints, %new_constraints);
-}
-
-# Inherit super class constraint functions
-sub _inherit_constraints {
-    my $invocant = shift;
-    
-    # Called from object
-    $invocant->constraints({}) if ref $invocant;
-    
-    # Called from class
-    my $super =  do {
-        no strict 'refs';
-        ${"${invocant}::ISA"}[0];
-    };
-    my $constraints = eval{$super->can('constraints')}
-                        ? $super->constraints
-                        : {};
-                      
-    $invocant->constraints($constraints);
 }
 
 ### Accessors
@@ -122,8 +110,7 @@ sub validate {
                   if $constraint =~ /\W/;
                 
                 # Get validator function
-                $constraint_function
-                  = $self->constraints->{$constraint} || $class->constraints->{$constraint};
+                $constraint_function = $self->constraints->{$constraint};
                 
                 Carp::croak("'$constraint' is not resisted")
                     unless ref $constraint_function eq 'CODE'
@@ -262,7 +249,7 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0601
+Version 0.0604
 
 =head1 CAUTION
 
