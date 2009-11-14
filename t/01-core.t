@@ -4,6 +4,16 @@ use strict;
 use warnings;
 use lib 't/01-core';
 
+# function for test name
+my $test;
+sub test {
+    $test = shift;
+}
+
+# Constant variables for tests
+my $SCRIPT_NAME = 't/01-core';
+
+
 eval"use Validator::Custom";
 
 {
@@ -242,16 +252,6 @@ use T1;
     isa_ok($r->products->{k11}->[0], 'T5');
     isa_ok($r->products->{k11}->[1], 'T5');
     
-    $r
-      ->errors_to(\my $output_errors)
-      ->invalid_keys_to(\my $output_invalid_keys)
-      ->products_to(\my $output_products)
-    ;
-    
-    is_deeply(scalar $r->errors, $output_errors, 'output errors');
-    is_deeply(scalar $r->invalid_keys, $output_invalid_keys, 'output invalid keys');
-    is_deeply(scalar $r->products, $output_products, 'output products');
-    
 }
 
 {
@@ -279,12 +279,14 @@ use T1;
 
 {
     eval{Validator::Custom->new->validation_rule({})->validate({})};
-    like($@, qr/Validation rule must be array ref/, 'Validation rule not array ref');
+    like($@, qr/Validation rule must be array ref.+rule 1/sm,
+             'Validation rule not array ref');
 }
 
 {
     eval{Validator::Custom->new->validation_rule([key => 'Int'])->validate({})};
-    like($@, qr/Constraints of validation rule must be array ref/, 'Constraints of key not array ref');
+    like($@, qr/Constraints of validation rule must be array ref.+rule 2/sm, 
+             'Constraints of key not array ref');
 }
 
 use T6;
@@ -347,3 +349,27 @@ use T6;
     is_deeply([$o->validate($d)->invalid_keys], [qw/k1_1 k2_1/], 'add_constraints object');
 }
 
+use T7;
+test 'Constraint function croak';
+{
+    
+    my $o = T7->new;
+    my $d = {a => 1};
+    my $validation_rule = [
+        a => [
+            'c1'
+        ]
+    ];
+    eval{$o->validate($d, $validation_rule)};
+    like($@, qr/$SCRIPT_NAME/, "$test : scalar");
+    
+    $d = {a => [1, 2]};
+    $validation_rule = [
+        a => [
+            '@c1'
+        ]
+    ];
+    eval{$o->validate($d, $validation_rule)};
+    like($@, qr/$SCRIPT_NAME/, "$test : scalar");
+    
+}
