@@ -1,42 +1,29 @@
 package Validator::Custom;
-use Object::Simple;
+use base 'Object::Simple::Base';
 
 use strict;
 use warnings;
 use Carp 'croak';
 
-our $VERSION = '0.0606';
+use Validator::Custom::Result;
 
-### Class methods
+__PACKAGE__->hybrid_attr(constraints =>
+    type => 'hash', build => sub {{}}, clone => 'hash', deref => 1);
 
-# Get constraint functions
-sub constraints : ClassObjectAttr {
-    type => 'hash',
-    deref => 1,
-    initialize => {
-        clone   => 'hash',
-        default => sub { {} }
-    }
-}
+__PACKAGE__->attr('validation_rule');
+__PACKAGE__->attr(error_stock => 1);
+
+### Methods
 
 # Add constraint function
 sub add_constraint {
     my $invocant = shift;
     
-    my %old_constraints = $invocant->constraints;
-    my %new_constraints = ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
-    $invocant->constraints(%old_constraints, %new_constraints);
+    my $constraints = ref $_[0] eq 'HASH' ? $_[0] : {@_};
+    $invocant->constraints(%{$invocant->constraints}, %$constraints);
+    
+    return $invocant;
 }
-
-### Accessors
-
-# Validation rule
-sub validation_rule : Attr {}
-
-# Error is stock?
-sub error_stock  : Attr { default => 1 }
-
-### Methods
 
 # Validate
 sub validate {
@@ -78,6 +65,9 @@ sub validate {
         if (ref $key eq 'HASH') {
             my $first_key = (keys %$key)[0];
             ($product_key, $key) = ($first_key, $key->{$first_key});
+        }
+        elsif (ref $key eq 'ARRAY') {
+            $product_key = "$key";
         }
         
         my $value;
@@ -129,9 +119,12 @@ sub validate {
                 my $first_validation = 1;
                 foreach my $data (@$value) {
                     my $product;
-                    ($is_valid, $product) = eval{$constraint_function->($data, $arg, $self)};
+                    eval {
+                        ($is_valid, $product) = $constraint_function->($data, $arg, $self);
+                    };
                     
-                    croak $@ if $@;
+                    croak "Constraint exception(Key '$product_key'). Error message: $@\n"
+                      if $@;
                     
                     last unless $is_valid;
                     
@@ -149,9 +142,12 @@ sub validate {
                 $value = ref $key eq 'ARRAY' ? [map { $data->{$_} } @$key] : $data->{$key}
                   unless defined $value;
                 
-                ($is_valid, $products) = eval{$constraint_function->($value, $arg, $self)};
+                eval {
+                    ($is_valid, $products) = $constraint_function->($value, $arg, $self);
+                };
                 
-                croak $@ if $@;
+                croak "Constraint exception(Key '$product_key'). Error message: $@\n"
+                  if $@;
                 
                 $value = $products if $is_valid && defined $products;
             }
@@ -160,8 +156,9 @@ sub validate {
             unless($is_valid){
                 $products = undef;
                 
-                push @{$result->errors}, $error_message if defined $error_message;
-                push @{$result->invalid_keys}, $product_key;
+                # Resist error info
+                push @{$result->_errors},
+                     {invalid_key => $product_key, message => $error_message};
                 
                 last VALIDATOR_LOOP unless $error_stock;
                 next VALIDATOR_LOOP;
@@ -172,8 +169,7 @@ sub validate {
     return $result;
 }
 
-my $SYNTAX_OF_VALIDATION_RULE = <<'EOS';
-
+sub syntax {return <<'EOS' }
 ### Syntax of validation rule         
 my $validation_rule = [               # 1.Validation rule must be array ref
     key1 => [                         # 2.Constraints must be array ref
@@ -209,7 +205,7 @@ EOS
 sub _validation_rule_usage {
     my ($self, $validation_rule) = @_;
     
-    my $message = $SYNTAX_OF_VALIDATION_RULE;
+    my $message = $self->syntax;
     
     require Data::Dumper;
     $message .= "### Your validation rule:\n";
@@ -218,193 +214,146 @@ sub _validation_rule_usage {
     return $message;
 }
 
-# Build class
-Object::Simple->build_class;
-
-package Validator::Custom::Result;
-use Object::Simple;
-
-# Invalid keys
-sub invalid_keys : Attr   { type => 'array', default => sub{ [] }, deref => 1 }
-
-# Validation errors
-sub errors       : Attr   { type => 'array', default => sub{ [] }, deref => 1 }
-
-# Resutls after conversion
-sub products     : Attr   { type => 'hash', default => sub{ {} }, deref => 1 }
-
-# Check valid or not
-sub is_valid {
-    my $self = shift;
-    return @{$self->invalid_keys} ? 0 : 1;
-}
-
-# Build class
-Object::Simple->build_class;
-
-
-
-package Validator::Custom;
-1;
-
 =head1 NAME
 
 Validator::Custom - Custom validator
 
-=head1 Version
+=head1 VERSION
 
-Version 0.0606
+Version 0.0702
 
-=head1 Synopsis
+=cut
+
+our $VERSION = '0.0702';
+
+=head1 SYNOPSYS
     
-    ### How to use Validator::Custom
-    
-    # Data
-    my $data = { k1 => 1, k2 => 2 };
-    
-    # Validate
+    # New
     my $vc = Validator::Custom->new
     
-    $vc->add_constraints(
-        int => sub { my $value = shift; return $value =~ /^\d+$/; }
+    # Constraint
+    $vc->add_constraint(
+        int => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^\d+$/;
+            return $is_valid;
+        },
+        ascii => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^[\x21-\x7E]+$/;
+            return $is_valid;
+        },
+        not_blank => sub {
+            my $value = shift;
+            my $is_valid = $value ne '';
+            return $is_valid;
+        }
+        length => sub {
+            my ($value, $args) = @_;
+            my ($min, $max) = @$args;
+            my $is_valid = $min <= $length && $length <= $max;
+            return $is_valid;
+        }
     );
     
+    # Data
+    my $data = { age => 19, names => ['abc', 'def'] };
+    
+    # Validation rule
     $vc->validation_rule([
-        k1 => [
+        age => [
             'int'
         ],
-        k2 => [
-            'int'
+        '@names' => [
+            ['not_blank',          "name must exist"],
+            ['ascii',              "name must be ascii"],
+            [{'length' => [1, 5]}, "name must be 1 to 5"]
         ]
     ]);
     
-    my $result = $vc->validate($data,$validation_rule);
+    # Validation
+    my $result = $vc->validate($data, $validation_rule);
     
     # Get errors
     my @errors = $result->errors;
     
     # Handle errors
-    foreach my $error (@$errors) {
+    foreach my $error (@errors) {
         # ...
     }
     
     # Get invalid keys
     my @invalid_keys = $result->invalid_keys;
     
-    # Get converted value
+    # Get producted value
     my $products = $result->products;
-    $product = $products->{key1};
     
     # Check valid or not
     if($result->is_valid) {
         # ...
     }
     
-    ### How to costomize Validator::Custom
-    package Validator::Custom::Yours;
-    use base 'Validator::Custom';
-    
-    # regist custom type
-    __PACKAGE__->add_constraint(
-        Int => sub {$_[0] =~ /^\d+$/},
-        Num => sub {
-            require Scalar::Util;
-            Scalar::Util::looks_like_number($_[0]);
-        },
-        Str => sub {!ref $_[0]}
-    );
-    
-    ### How to use customized validator class
-    use Validator::Custom::Yours;
-    my $data = { age => 'aaa', weight => 'bbb', favarite => [qw/sport food/};
-    
-    # Validation rule normal syntax
-    my $validation_rule = [
-        title => [
-            ['Int', "Must be integer"],
-        ],
-        content => [
-            ['Num', "Must be number"],
-        ],
-        favorite => [
-            ['@Str', "Must be string"]
-        ]
-    ];
-    
-    # Validation rule light syntax
-    my $validation_rule = [
-        title => [
-            'Int',
-        ],
-        content => [
-            'Num',
-        ],
-        favorite => [
-            '@Str'
-        ]
-    ];
-    
     # Corelative check
     my $validation_rule => [
         [qw/password1 password2/] => [
-            ['Same', 'passwor is not same']
+            ['duplicate', 'Passwor is not same']
         ]
     ]
     
-    # Specify keys
+    # Specify key
     my $validation_rule => [
         {password_check => [qw/password1 password2/]} => [
-            ['Same', 'passwor is not same']
+            ['duplicate', 'Passwor is not same']
         ]
     ]
     
-    
-=head1 Class-Object accessors
-
-Class-Object accessor is accessor for both class attribute and object attribute.
+=head1 Accessors
 
 =head2 constraints
 
 get constraints
     
-    # Set and get constraint functions
-    $class       = Validator::Custom->constraints($constraints);
-    $constraints = Validator::Custom->constraints;
-    
-    $self        = $vc->constraints($constraints);
+Set and get constraint functions
+
+    $vc          = $vc->constraints($constraints); # hash or hash ref
     $constraints = $vc->constraints;
 
-$constraints muset be hash or hash reference
+constraints sample
 
-    # Sample (hash)
     $vc->constraints(
         int    => sub { ... },
         string => sub { ... }
     );
-    
-    # Sample (hash reference)
-    $vc->constraints({
-        int    => sub { ... },
-        string => sub { ... }
-    });
 
-See also add_constraint for adding constraint function
-
-=head1 Object accessors
+See also 'add_constraint' method
 
 =head2 error_stock
 
-If you stock error, set 1, or set 0.
+Set and get whether error is stocked or not.
 
-Default is 1. 
+    $vc          = $vc->error_stock(1);
+    $error_stock = $vc->error_stcok;
+    
+If you set stock_error 1, occured error on validation is stocked,
+and you can get all errors by errors mehtods.
+
+If you set stock_error 0, you can get only first error by errors method.
+
+This is very high performance if you know only whether error occur or not.
+
+    $vc->stock_error(0);
+    $is_valid = $vc->validate($data, $validation_rule)->is_valid;
+
+error_stock default is 1. 
 
 =head2 validation_rule
 
-You can set validation_rule
+Set and get validation rule
 
-    $vc->validation_rule($validation_rule);
+    $vc              = $vc->validation_rule($validation_rule);
+    $validation_rule = $vc->validation_rule;
 
-Validation rule is the following
+Validation rule has the following syntax
 
     ### Syntax of validation rule         
     my $validation_rule = [               # 1.Validation rule must be array ref
@@ -434,110 +383,151 @@ Validation rule is the following
             '@constraint5_1'              # 7. array ref each value validation
         ]
     ];
-
-=head1 Class-Object mehtods
-
-=head2 add_constraint
-
-    # add constraint
-    $class = Validator::Custom->constraint($constraint);
-    $self  = $vc->constraint($constraint);
-
-You can use this method in custom class.
-New validator functions is added.
     
-    package Validator::Custom::Yours;
-    use base 'Validator::Custom';
-    
-    __PACKAGE__->add_constraint(
-        Int => sub {$_[0] =~ /^\d+$/}
-    );
+You can see this syntax using 'syntax' method
 
-You can merge multi custom class
+    print $vc->syntax;
 
-    package Validator::Custom::Yours3;
-    use base 'Validator::Custom';
-    
-    use Validator::Custum::Yours1;
-    use Validatro::Cumtum::Yours2;
-    
-    __PACAKGE__->add_constraint(
-        Validator::Custom::Yours1->constraints,
-        Validator::Custom::Yours2->constraints
-    );
-
-=head1 Object methods
+=head1 Mehtods
 
 =head2 new
-    # Create objct
-    my $vc = Validator::Costom->new;
 
+Create object
+
+    $vc = Validator::Costom->new;
 
 =head2 validate
 
-validate
+validate data
 
-    # Do validation
-    my $result = $vc->validate($data,$validation_rule);
-    my $result = $vc->validate($data)
+    # Validation
+    $result = $vc->validate($data, $validation_rule);
+    $result = $vc->validate($data);
 
 If you omit $validation_rule, $vc->validation_rule is used.
- 
-Validation rule is like the following.
 
-    my $validation_rule = [
-        # Custom Type
-        key1 => [
-            [ 'CustomType' ,         "Error message2-1"],
-        ],
-        
-        # Array of Custom Type
-        key2 => [
-            [ '@CustomType',         "Error message3-1"]
-        ]
-    ];
+See 'validation_rule' description about validation rule.
 
-$result is Validator::Custom::Result object.
-This have 'errors', 'invalid_keys', and 'products' methods.
+This method return L<Validator::Custom::Result> object,
 
-Error messages is saved to 'errors' if some error occured.
-Invalid keys is saved to 'invalid_keys' if some error occured.
-Conversion products is saved to 'products' if convertion is excuted.
+See also L<Validator::Custom::Result>.
 
+=head2 add_constraint
 
-=head1 Validator::Custom::Result object
+Add constraint
 
-=head2 errors
+    $vc->add_constraint($constraint); # hash or hash ref
 
-You can get validation errors
+'add_constraint' sample
     
-    $errors = $result->errors
-    @errors = $result->errors
+    $vc->add_constraint(
+        int => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^\-?[\d]+$/;
+            return $is_valid;
+        },
+        ascii => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^[\x21-\x7E]+$/;
+            return $is_valid;
+        }
+    );
 
-=head2 invalid_keys
+=head2 syntax
 
-You can get invalid keys
+Set and get syntax of validation rule
 
-    @invalid_keys = $result->invalid_keys
-    $invalid_keys = $result->invalid_keys
+    $vc     = $vc->syntax($syntax);
+    $syntax = $vc->syntax;
 
-=head2 products
+=head1 Validator::Custom::Result
 
-You can get converted data.
+'validate' method return L<Validator::Custom::Result> object.
 
-    $products = $result->products
+See L<Validator::Custom::Result>.
 
-This is hash ref. You can get each product by specify key.
+The following is L<Validator::Custom::Result> sample
 
-    $product = $products->{key}
+    # Restlt
+    $result = $vc->validate($data, $validation_rule);
+    
+    # Error message
+    @errors = $result->errors;
+    
+    # Invalid keys
+    @invalid_keys = $result->invalid_keys;
+    
+    # Producted values
+    $products = $result->products;
+    $product  = $products->{key1};
+    
+    # Is it valid?
+    $is_valid = $result->is_valid;
 
-=head2 is_valid
+=head1 Constraint function
 
-You can check data is valid or not
+You can resist your constraint function using 'add_constraint' method.
 
-    my $is_valid = $result->is_valid;
+canstrant function can receive two argument.
 
-=cut
+    1. value in validating data
+    2. argument passed in validation rule
+
+I explain using sample. You can pass argument in validation rule.
+and you can receive the argument in constraint function
+
+    my $data = {key => 'value'}; # 1. value
+    my $validation_rule => {
+        key => [
+            {'name' => $args} # 2. arguments
+        ],
+    }
+
+    $vc->add_constraint(name => sub {
+        my ($value, $args) = @_;
+        
+        # ...
+        
+        return $is_valid;
+    });
+
+constraint function also can return producted value.
+
+    $vc->add_constraint(name => sub {
+        my ($value, $args) = @_;
+        
+        # ...
+        
+        return ($is_valid, $product);
+    });
+
+L<Validator::Custom::HTML::Form> 'time' constraint function is good sample.
+
+=head1 Create custom class extending Validator::Custom 
+
+You can create your custom class extending Validator::Custom.
+
+    package Validator::Custom::Yours;
+    use base 'Validator::Custom';
+
+    __PACKAGE__->add_constraint(
+        int => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^\-?[\d]+$/;
+            return $is_valid;
+        },
+        ascii => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^[\x21-\x7E]+$/;
+            return $is_valid;
+        }
+    );
+
+This class is avalilable same way as Validator::Custom
+
+   $vc = Validator::Custom::Yours->new;
+
+L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good sample.
 
 =head1 Author
 
@@ -546,8 +536,6 @@ Yuki Kimoto, C<< <kimoto.yuki at gmail.com> >>
 Github L<http://github.com/yuki-kimoto>
 
 I develope this module at L<http://github.com/yuki-kimoto/Validator-Custom>
-
-Please send message if you find bug or want to suggest something.
 
 I also support at IRC irc.perl.org#validator-custom
 
@@ -560,4 +548,4 @@ under the same terms as Perl itself.
 
 =cut
 
-1; # End of Validator::Custom
+1;
