@@ -1,8 +1,10 @@
 package Validator::Custom::Result;
-use Object::Simple;
+use base 'Object::Simple::Base';
 
-# Errors
-sub _errors : Attr   { type => 'array', default => sub {[]} }
+my $p = __PACKAGE__;
+
+$p->attr(_errors  => (type => 'array', default => sub { []} ))
+  ->attr(products => (type => 'hash',  default => sub { {} }, deref => 1));
 
 # Invalid keys 
 sub invalid_keys {
@@ -34,9 +36,6 @@ sub errors {
     return wantarray ? @errors : \@errors;
 }
 
-# Resutls after conversion
-sub products     : Attr   { type => 'hash', default => sub{{}}, deref => 1 }
-
 # Check valid or not
 sub is_valid {
     my ($self, $key) = @_;
@@ -65,10 +64,6 @@ sub error {
     
     return;
 }
-
-# Build class
-Object::Simple->build_class;
-
 
 =head1 Validator::Custom::Result
 

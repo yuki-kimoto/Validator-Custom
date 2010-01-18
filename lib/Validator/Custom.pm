@@ -1,5 +1,5 @@
 package Validator::Custom;
-use Object::Simple;
+use base 'Object::Simple::Base';
 
 use strict;
 use warnings;
@@ -7,13 +7,11 @@ use Carp 'croak';
 
 use Validator::Custom::Result;
 
-# Get constraint functions
-sub constraints : HybridAttr {
-    type  => 'hash',
-    build => sub {{}},
-    clone => 'hash',
-    deref => 1,
-}
+__PACKAGE__->attr('validation_rule');
+__PACKAGE__->attr(error_stock => 1);
+
+__PACKAGE__->dual_attr('constraints', type  => 'hash', default => sub { {} },
+                                      clone => 'hash', deref => 1);
 
 # Add constraint function
 sub add_constraint {
@@ -24,16 +22,6 @@ sub add_constraint {
     
     return $invocant;
 }
-
-### Accessors
-
-# Validation rule
-sub validation_rule : Attr {}
-
-# Error is stock?
-sub error_stock  : Attr { default => 1 }
-
-### Methods
 
 # Validate
 sub validate {
@@ -224,20 +212,17 @@ sub _validation_rule_usage {
     return $message;
 }
 
-# Build class
-Object::Simple->build_class;
-
 =head1 NAME
 
 Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0703
+Version 0.0705
 
 =cut
 
-our $VERSION = '0.0703';
+our $VERSION = '0.0705';
 
 =head1 SYNOPSYS
     
