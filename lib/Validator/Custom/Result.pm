@@ -1,10 +1,10 @@
 package Validator::Custom::Result;
 use base 'Object::Simple::Base';
 
-my $p = __PACKAGE__;
+__PACKAGE__->attr('_errors', type => 'array', default => sub { []});
 
-$p->attr(_errors  => (type => 'array', default => sub { []} ))
-  ->attr(products => (type => 'hash',  default => sub { {} }, deref => 1));
+__PACKAGE__->attr('products', type => 'hash',  default => sub { {} },
+                              deref => 1);
 
 # Invalid keys 
 sub invalid_keys {
