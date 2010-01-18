@@ -10,15 +10,14 @@ use Validator::Custom::Result;
 __PACKAGE__->attr('validation_rule');
 __PACKAGE__->attr(error_stock => 1);
 
-__PACKAGE__->dual_attr('constraints', type  => 'hash', default => sub { {} },
-                                      clone => 'hash', deref => 1);
+__PACKAGE__->dual_attr('constraints', default => sub { {} }, clone => 'hash');
 
 # Add constraint function
 sub add_constraint {
     my $invocant = shift;
     
     my $constraints = ref $_[0] eq 'HASH' ? $_[0] : {@_};
-    $invocant->constraints(%{$invocant->constraints}, %$constraints);
+    $invocant->constraints({%{$invocant->constraints}, %$constraints});
     
     return $invocant;
 }

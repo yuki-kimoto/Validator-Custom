@@ -4,15 +4,10 @@ use strict;
 use warnings;
 use lib 't/01-core';
 
-# function for test name
 my $test;
-sub test {
-    $test = shift;
-}
+sub test {$test = shift}
 
-# Constant variables for tests
 my $SCRIPT_NAME = 't/01-core';
-
 
 eval"use Validator::Custom";
 
