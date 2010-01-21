@@ -7,8 +7,6 @@ use lib 't/01-core';
 my $test;
 sub test {$test = shift}
 
-my $SCRIPT_NAME = 't/01-core';
-
 eval"use Validator::Custom";
 
 {
@@ -366,7 +364,7 @@ test 'Constraint function croak';
         ]
     ];
     eval{$o->validate($d, $validation_rule)};
-    like($@, qr/Key 'a'.+$SCRIPT_NAME/ms, "$test : scalar");
+    like($@, qr/Key 'a'.+01-core/ms, "$test : scalar");
     
     $d = {a => [1, 2]};
     $validation_rule = [
@@ -375,6 +373,6 @@ test 'Constraint function croak';
         ]
     ];
     eval{$o->validate($d, $validation_rule)};
-    like($@, qr/Key 'a'.+$SCRIPT_NAME/ms, "$test : array");
+    like($@, qr/Key 'a'.+01-core/ms, "$test : array");
     
 }
