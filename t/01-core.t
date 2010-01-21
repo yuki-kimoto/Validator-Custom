@@ -44,8 +44,8 @@ eval"use Validator::Custom";
 
 {
     my $o = Validator::Custom::Result->new;
-    $o->products(k => 1);
-    is_deeply({$o->products}, {k => 1}, 'products attribute');
+    $o->products({k => 1});
+    is_deeply($o->products, {k => 1}, 'products attribute');
 }
 
 {

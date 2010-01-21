@@ -1,10 +1,9 @@
 package Validator::Custom::Result;
 use base 'Object::Simple::Base';
 
-__PACKAGE__->attr('_errors', type => 'array', default => sub { []});
+__PACKAGE__->attr(_errors  => sub { [] });
 
-__PACKAGE__->attr('products', type => 'hash',  default => sub { {} },
-                              deref => 1);
+__PACKAGE__->attr(products => sub { {} });
 
 # Invalid keys 
 sub invalid_keys {
@@ -44,7 +43,7 @@ sub is_valid {
     return @{$self->invalid_keys} ? 0 : 1 unless defined $key;
     
     # Specified key is invalid
-    foreach my $error ($self->_errors) {
+    foreach my $error (@{$self->_errors}) {
         
         return if $error->{invalid_key} eq $key;
         
@@ -56,7 +55,7 @@ sub is_valid {
 sub error {
     my ($self, $key) = @_;
     
-    foreach my $error ($self->_errors) {
+    foreach my $error (@{$self->_errors}) {
     
         return $error->{message} if $error->{invalid_key} eq $key;
     
