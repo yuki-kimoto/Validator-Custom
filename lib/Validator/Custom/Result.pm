@@ -1,5 +1,5 @@
 package Validator::Custom::Result;
-use base 'Object::Simple::Base';
+use base 'Object::Simple';
 
 __PACKAGE__->attr(_errors  => sub { [] });
 
@@ -63,6 +63,8 @@ sub error {
     
     return;
 }
+
+1;
 
 =head1 Validator::Custom::Result
 

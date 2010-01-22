@@ -1,5 +1,5 @@
 package Validator::Custom;
-use base 'Object::Simple::Base';
+use base 'Object::Simple';
 
 use strict;
 use warnings;
@@ -10,7 +10,8 @@ use Validator::Custom::Result;
 __PACKAGE__->attr('validation_rule');
 __PACKAGE__->attr(error_stock => 1);
 
-__PACKAGE__->dual_attr('constraints', default => sub { {} }, inherit => 'hash');
+__PACKAGE__->dual_attr('constraints', default => sub { {} },
+                                      inherit => 'hash_copy');
 
 # Add constraint function
 sub add_constraint {
@@ -217,11 +218,11 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0706
+Version 0.0707
 
 =cut
 
-our $VERSION = '0.0706';
+our $VERSION = '0.0707';
 
 =head1 SYNOPSYS
     
