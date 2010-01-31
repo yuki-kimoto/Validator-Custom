@@ -218,11 +218,11 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0707
+Version 0.0708
 
 =cut
 
-our $VERSION = '0.0707';
+our $VERSION = '0.0708';
 
 =head1 SYNOPSYS
     
