@@ -1,3 +1,8 @@
+0.0801
+  "rule" is added in place of "validaton_rule"
+  "validation_rule" is deprecated
+  updata document
+  "error_infos" and "add_error_info" is added to Validation::Custom::Result
 0.0708
   catch up with 'Object::Simple' update
 0.0706
