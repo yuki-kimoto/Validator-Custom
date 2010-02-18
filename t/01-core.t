@@ -1,4 +1,4 @@
-use Test::More tests => 45;
+use Test::More no_plan;#tests => 45;
 
 use strict;
 use warnings;
@@ -22,8 +22,10 @@ eval"use Validator::Custom";
             [sub{$_[0] == 3}, "k2Error2"]
         ]
     ];
+    my $validator = Validator::Custom->new;
+    my $vresult   = $validator->validate($data, $rule);
+    my $errors    = $vresult->errors;
     
-    my $errors = Validator::Custom->new->validate($data, $rule)->errors;
     is_deeply($errors, [qw/k1Error2 k2Error2/], 'rule');
     
     my @errors = Validator::Custom->new(rule => $rule)->validate($data)->errors;
@@ -374,3 +376,61 @@ test 'Constraint function croak';
     like($@, qr/Key 'a'.+01-core/ms, "$test : array");
     
 }
+
+my $validator;
+my $params;
+my $rule;
+my $vresult;
+my $errors;
+my @errors;
+
+
+test 'or expression';
+$validator = T1->new;
+$rule = [
+    key0 => [
+        ['Int', 'Error-key0']
+    ],
+    key1 => [
+        ['Int', 'Error-key1-0'],
+        'Int'
+    ],
+    key1 => [
+        ['aaa', 'Error-key1-1'],
+        'aaa'
+    ],
+    key1 => [
+        ['bbb', 'Error-key1-2']
+    ],
+    key2 => [
+        ['Int', 'Error-key2']
+    ]
+];
+$params = {key1 => 1, key0 => 1, key2 => 2};
+$vresult = $validator->validate($params, $rule);
+ok($vresult->is_valid, "$test : first key");
+
+$params = {key1 => 'aaa', key0 => 1, key2 => 2};
+$vresult = $validator->validate($params, $rule);
+ok($vresult->is_valid, "$test : second key");
+
+$params = {key1 => 'bbb', key0 => 1, key2 => 2};
+$vresult = $validator->validate($params, $rule);
+ok($vresult->is_valid, "$test : third key");
+ok(!$vresult->error_reason('key1'), "$test : third key : error reason");
+
+$params = {key1 => 'ccc', key0 => 1, key2 => 2};
+$vresult = $validator->validate($params, $rule);
+ok(!$vresult->is_valid, "$test : invalid");
+is_deeply([$vresult->invalid_keys], ['key1'], "$test : invalid_keys");
+is_deeply([$vresult->errors], ['Error-key1-0'], "$test : errors");
+is($vresult->error_reason('key1'), 'Int', "$test : error reason");
+
+$validator = T1->new(error_stock => 0);
+$params = {key1 => 'ccc', key0 => 1, key2 => 'no_num'};
+$vresult = $validator->validate($params, $rule);
+ok(!$vresult->is_valid, "$test : invalid");
+is_deeply([$vresult->invalid_keys], ['key1'], "$test : invalid_keys");
+is_deeply([$vresult->errors], ['Error-key1-0'], "$test : errors");
+is($vresult->error_reason('key1'), 'Int', "$test : error reason");
+

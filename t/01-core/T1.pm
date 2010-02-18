@@ -11,6 +11,8 @@ __PACKAGE__->add_constraint(
         my ($value, $args, $options) = @_;
         return (1, $value * 2);
     },
+    aaa => sub {$_[0] eq 'aaa'},
+    bbb => sub {$_[0] eq 'bbb'}
 );
 
 1;

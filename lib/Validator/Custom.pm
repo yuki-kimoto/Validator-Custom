@@ -80,9 +80,18 @@ sub validate {
     # Error is stock?
     my $error_stock = $self->error_stock;
     
+    # Valid keys
+    my $valid_keys = {};
+    
+    # Error position
+    my $position = 0;
+    
     # Process each key
     OUTER_LOOP:
     for (my $i = 0; $i < @{$rule}; $i += 2) {
+        
+        # Increment position
+        $position++;
         
         # Key and constraints
         my ($key, $constraints) = @{$rule}[$i, ($i + 1)];
@@ -103,6 +112,9 @@ sub validate {
         elsif (ref $key eq 'ARRAY') {
             $product_key = "$key";
         }
+        
+        # Already valid
+        next if $valid_keys->{$product_key};
         
         # Validation
         my $value;
@@ -211,18 +223,40 @@ sub validate {
             }
             
             # Add error if it is invalid
-            unless($is_valid){
+            unless ($is_valid){
                 $products = undef;
                 
                 # Resist error info
-                $result->add_error_info({invalid_key => $product_key,
-                                         message     => $message});
+                $result->add_error_info(
+                    $product_key => {message  => $message,
+                                     position => $position,
+                                     reason   => $constraint})
+                  unless exists $result->error_infos->{$product_key};
                 
-                last OUTER_LOOP unless $error_stock;
+                # No Error strock
+                unless ($error_stock) {
+                    # Check rest constraint
+                    my $found;
+                    for (my $k = $i + 2; $k < @{$rule}; $k += 2) {
+                        my $key = $rule->[$k];
+                        $key = (keys %$key)[0] if ref $key eq 'HASH';
+                        $found = 1 if $key eq $product_key;
+                    }
+                    last OUTER_LOOP unless $found;
+                }
                 next OUTER_LOOP;
             }
         }
+        
+        # Product
         $result->products->{$product_key} = $products if defined $products;
+        
+        # Key is valid
+        $valid_keys->{$product_key} = 1;
+        
+        # Remove invalid key
+        $result->remove_error_info($product_key);
+        
     }
     return $result;
 }
@@ -245,11 +279,15 @@ Validator::Custom - Custom validator
 
 =head1 VERSION
 
-Version 0.0801
+Version 0.0901
 
 =cut
 
-our $VERSION = '0.0801';
+our $VERSION = '0.0901';
+
+=head1 STATE
+
+This module is not stable. APIs will be changed for a while.
 
 =head1 SYNOPSYS
     
@@ -332,21 +370,21 @@ our $VERSION = '0.0801';
         
 =head1 ATTRIBUTES
 
-=head2 constraints
+=head2 C<constraints>
 
 Constraint functions
 
     $vc          = $vc->constraints($constraints);
     $constraints = $vc->constraints;
 
-Sample
+Example
 
     $vc->constraints(
         int    => sub { ... },
         string => sub { ... }
     );
     
-=head2 error_stock
+=head2 C<error_stock>
 
 Are errors stocked?
 
@@ -359,7 +397,7 @@ This is faster than stocking all errors.
 
 Default is 1. All errors are stocked.
 
-=head2 rule
+=head2 C<rule>
 
 Validation rule
 
@@ -397,9 +435,9 @@ Validation rule has the following syntax.
         ]
     ];
 
-("validation_rule" is deprecated. It is renamed to "rule")
+'validation_rule' is deprecated. It is renamed to 'rule'
 
-=head2 syntax
+=head2 C<syntax>
 
 Syntax of validation rule
 
@@ -408,21 +446,21 @@ Syntax of validation rule
 
 =head1 MEHTODS
 
-=head2 new
+=head2 C<new>
 
 Constructor
 
     $vc = Validator::Costom->new;
     $vc = Validator::Costom->new(rule => [ .. ]);
 
-=head2 add_constraint
+=head2 C<add_constraint>
 
 Add constraint function
 
     $vc->add_constraint(%constraint);
     $vc->add_constraint(\%constraint);
     
-Sample
+Example
     
     $vc->add_constraint(
         int => sub {
@@ -437,7 +475,7 @@ Sample
         }
     );
 
-=head2 validate
+=head2 C<validate>
 
 Validation
 
@@ -535,6 +573,31 @@ This class is avalilable same way as Validator::Custom
    $vc = Validator::Custom::Yours->new;
 
 L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good sample.
+
+=head1 OR VALIDATION
+
+This module also provide 'or' validation.
+You write key constaraint in a rule repeateadly.
+one of the constraint is valid, the key is valid.
+
+$validator->rule(
+    key1 => ['constraint'],
+    key1 => ['constraint2']
+);
+
+C<Example>
+
+If 'email' is blank or email address, email is valid.
+    
+    $validator->rule(
+        email => [
+            'blank'
+        ],
+        email => [
+            'not_blank',
+            'email'
+        ]
+    );
 
 =head1 AUTHOR
 

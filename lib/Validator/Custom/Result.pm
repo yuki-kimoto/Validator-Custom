@@ -5,36 +5,34 @@ use warnings;
 
 use base 'Object::Simple';
 
-__PACKAGE__->attr(error_infos => sub { [] });
-__PACKAGE__->attr(products    => sub { {} });
+__PACKAGE__->attr(error_infos    => sub { {} });
+__PACKAGE__->attr(products       => sub { {} });
 
 sub add_error_info {
-    my ($self, $error_info) = @_;
+    my $self = shift;
     
-    # Add error information
-    push @{$self->error_infos}, $error_info;
+    # Merge
+    my $error_infos = ref $_[0] eq 'HASH' ? $_[0] : {@_};
+    $self->error_infos({%{$self->error_infos}, %$error_infos});
     
     return $self;
 }
 
-sub error {
-    my ($self, $key) = @_;
-    
-    # Error message
-    foreach my $error (@{$self->error_infos}) {
-        return $error->{message} if $error->{invalid_key} eq $key;
-    }
-    
-    return;
-}
+sub error        { shift->error_infos->{$_[0]}{message} }
+sub error_reason { shift->error_infos->{$_[0]}{reason} }
 
 sub errors {
     my $self = shift;
-    
-    # Error messages
+
+    # Errors
     my @errors;
-    foreach my $error (@{$self->error_infos}) {
-        push @errors, $error->{message} if defined $error->{message};
+    my $error_infos = $self->error_infos;
+    my @keys = sort { $error_infos->{$a}{position} <=>
+                      $error_infos->{$b}{position} }
+               keys %$error_infos;
+    foreach my $key (@keys) {
+        my $message = $error_infos->{$key}{message};
+        push @errors, $message if defined $message;
     }
     
     return wantarray ? @errors : \@errors;
@@ -44,10 +42,10 @@ sub invalid_keys {
     my $self = shift;
     
     # Invalid keys
-    my @invalid_keys;
-    foreach my $error (@{$self->error_infos}) {
-        push @invalid_keys, $error->{invalid_key};
-    }
+    my $error_infos = $self->error_infos;
+    my @invalid_keys = sort { $error_infos->{$a}{position} <=>
+                              $error_infos->{$b}{position} }
+                             keys %$error_infos;
     
     return wantarray ? @invalid_keys : \@invalid_keys;
 }
@@ -56,14 +54,19 @@ sub is_valid {
     my ($self, $key) = @_;
     
     # Error is nothing
-    return @{$self->invalid_keys} ? 0 : 1 unless defined $key;
+    return keys %{$self->error_infos} ? 0 : 1 unless defined $key;
     
     # Specified key is invalid
-    foreach my $error (@{$self->error_infos}) {
-        return if $error->{invalid_key} eq $key;
-    }
+    return exists $self->error_infos->{$key} ? 0 : 1;
+}
+
+sub remove_error_info {
+    my ($self, $key) = @_;
     
-    return 1;
+    # Remove
+    delete $self->error_infos->{$key};
+    
+    return $self;
 }
 
 1;
@@ -113,7 +116,7 @@ Error infos
 
 =head1 METHODS
 
-=head2 add_error_info
+=head2 C<add_error_info>
 
 Add error informations
 
@@ -124,7 +127,7 @@ Sample
     $result->add_error_info({invalid_key => $product_key,
                              message     => $message});
 
-=head2 is_valid
+=head2 C<is_valid>
 
 Check if result is valid.
 
@@ -134,24 +137,36 @@ Check if the data corresponding to the key is valid.
 
     $is_valid = $result->is_valid('title');
 
-=head2 error
+=head2 C<error>
 
 Get error message corresponding to a key.
 
     $error = $result->error('title');
 
-=head2 errors
+=head2 C<errors>
 
 Get all error messages
 
     $errors = $result->errors;
     @errors = $result->errors;
 
-=head2 invalid_keys
+=head2 C<error_reason>
+
+Get error reason. this is same as constraint name.
+
+    $error_reason = $result->error_reason($key);
+
+=head2 C<invalid_keys>
 
 Get invalid keys
 
     @invalid_keys = $result->invalid_keys;
     $invalid_keys = $result->invalid_keys;
+
+=head2 C<remove_error_info>
+
+Remove error information
+
+    $result->remove_error_info($key);
     
 =cut

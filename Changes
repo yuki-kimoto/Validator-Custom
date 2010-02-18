@@ -1,3 +1,8 @@
+0.0901
+  Validator::Custom error_infos data structure is changed(array ref to hash ref)
+  add or validation
+0.0802
+  fix pod-coverage.t
 0.0801
   "rule" is added in place of "validaton_rule"
   "validation_rule" is deprecated
