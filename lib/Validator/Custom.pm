@@ -169,30 +169,41 @@ sub validate {
                   unless ref $constraint_function eq 'CODE'
             }
             
-            # Validate
+            # Is valid?
             my $is_valid;
+            
+            # Data is array
             if($data_type->{array}) {
                 
+                # Set value
                 unless (defined $value) {
                     $value = ref $data->{$key} eq 'ARRAY' 
                            ? $data->{$key}
                            : [$data->{$key}]
                 }
                 
+                # Is first validation?
                 my $first_validation = 1;
+                
+                # Validation loop
                 foreach my $data (@$value) {
+                    
+                    # Product
                     my $product;
+                    
+                    # Validation
                     eval {
                         ($is_valid, $product)
                           = $constraint_function->($data, $arg, $self);
                     };
-                    
                     croak "Constraint exception(Key '$product_key')." .
                           " Error message: $@\n"
                       if $@;
                     
+                    # Validation error
                     last unless $is_valid;
                     
+                    # Add product
                     if (defined $product) {
                         if ($first_validation) {
                             $products = [];
@@ -201,24 +212,31 @@ sub validate {
                         push @{$products}, $product;
                     }
                 }
+                
+                # Update value
                 $value = $products if defined $products;
             }
+            
+            # Data is scalar
             else {
+                
+                # Set value
                 unless (defined $value) {
                     $value = ref $key eq 'ARRAY'
                            ? [map { $data->{$_} } @$key]
                            : $data->{$key}
                 }
                 
+                # Validation
                 eval {
                     ($is_valid, $products)
                       = $constraint_function->($value, $arg, $self);
                 };
-                
                 croak "Constraint exception(Key '$product_key'). " .
                       "Error message: $@\n"
                   if $@;
                 
+                # Update value
                 $value = $products if $is_valid && defined $products;
             }
             
@@ -256,7 +274,6 @@ sub validate {
         
         # Remove invalid key
         $result->remove_error_info($product_key);
-        
     }
     return $result;
 }
@@ -275,15 +292,15 @@ sub _rule_syntax {
 
 =head1 NAME
 
-Validator::Custom - Custom validator
+Validator::Custom - Custamizable validator
 
 =head1 VERSION
 
-Version 0.0901
+Version 0.0902
 
 =cut
 
-our $VERSION = '0.0901';
+our $VERSION = '0.0902';
 
 =head1 STATE
 
@@ -361,10 +378,22 @@ This module is not stable. APIs will be changed for a while.
     # Is a data valid
     $ret = $result->is_valid('age');
     
-    # Corelative check
+    # Corelative validation
     my $rule = [
         {password_check => [qw/password1 password2/]} => [
             ['duplicate', 'Passwor is not same']
+        ]
+    ];
+    
+    # "or" validation
+    $rule = [
+        email => [
+            'blank'
+        ],
+        # or
+        email => [
+            'not_blank',
+            'email'
         ]
     ];
         
@@ -587,17 +616,20 @@ $validator->rule(
 
 C<Example>
 
-If 'email' is blank or email address, email is valid.
+"email" is valid, if 'email' is blank or mail address, 
+To understand "or validation" easily,
+it is good practice to add "# or" comment to your code.
     
-    $validator->rule(
+    $validator->rule([
         email => [
             'blank'
         ],
+        # or
         email => [
             'not_blank',
             'email'
         ]
-    );
+    ]);
 
 =head1 AUTHOR
 
