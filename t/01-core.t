@@ -277,7 +277,7 @@ use T1;
 
 {
     eval{Validator::Custom->new->validate([])};
-    like($@, qr/Data which passed to validate method must be hash ref/, 'Data not hash ref');
+    like($@, qr/First argument must be hash ref/, 'Data not hash ref');
 }
 
 {
@@ -434,3 +434,21 @@ is_deeply([$vresult->invalid_keys], ['key1'], "$test : invalid_keys");
 is_deeply([$vresult->errors], ['Error-key1-0'], "$test : errors");
 is($vresult->error_reason('key1'), 'Int', "$test : error reason");
 
+
+test 'data_filter';
+$validator = T1->new;
+$params = {key1 => 1};
+$validator->data_filter(sub {
+    my $data = shift;
+    
+    $data->{key1} = 'a';
+    
+    return $data;
+});
+$validator->rule([
+    key1 => [
+        'Int'
+    ]
+]);
+$vresult = $validator->validate($params);
+is_deeply([$vresult->invalid_keys], ['key1'], "$test: basic");

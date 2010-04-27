@@ -10,6 +10,7 @@ use Validator::Custom::Result;
 
 __PACKAGE__->dual_attr('constraints', default => sub { {} },
                                       inherit => 'hash_copy');
+__PACKAGE__->attr('data_filter');
 __PACKAGE__->attr(error_stock => 1);
 __PACKAGE__->attr('rule');
 __PACKAGE__->attr(syntax => <<'EOS');
@@ -64,8 +65,12 @@ sub validate {
     # Validation rule
     $rule ||= $self->rule || $self->validation_rule;
     
+    # Data filter
+    my $filter = $self->data_filter;
+    $data = $filter->($data) if $filter;
+    
     # Check data
-    croak "Data which passed to validate method must be hash ref"
+    croak "First argument must be hash ref"
       unless ref $data eq 'HASH';
     
     # Check rule

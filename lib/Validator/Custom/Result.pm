@@ -71,11 +71,9 @@ sub remove_error_info {
 
 1;
 
-=head1 Validator::Custom::Result
-
 =head1 NAME
 
-Validator::Custom::Result - Validator::Custom validation result
+Validator::Custom::Result - Validator::Custom result
 
 =head1 SYNOPSYS
     
