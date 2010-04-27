@@ -5,8 +5,12 @@ use warnings;
 
 use base 'Object::Simple';
 
+use Carp 'croak';
+
 __PACKAGE__->attr(error_infos    => sub { {} });
 __PACKAGE__->attr(products       => sub { {} });
+
+our $DEFAULT_MESSAGE = 'Error message not specified';
 
 sub add_error_info {
     my $self = shift;
@@ -18,8 +22,34 @@ sub add_error_info {
     return $self;
 }
 
-sub error        { shift->error_infos->{$_[0]}{message} }
-sub error_reason { shift->error_infos->{$_[0]}{reason} }
+sub error {
+    my ($self, $name) = @_;
+    
+    # Key name not specifed
+    croak 'Key name must be specified'
+      unless $name;
+    
+    # Error infomations
+    my $error_infos = $self->error_infos;
+    
+    # Error
+    my $error = exists $error_infos->{$name}
+              ? $error_infos->{$name}{message} || $DEFAULT_MESSAGE
+              : undef;
+    
+    return $error;
+}
+
+sub error_reason {
+    my ($self, $name) = @_;
+    
+    # Key name not specifed
+    croak 'Key name must be specified'
+      unless $name;
+    
+    # Error reason
+    return $self->error_infos->{$name}{reason};
+}
 
 sub errors {
     my $self = shift;
@@ -31,11 +61,27 @@ sub errors {
                       $error_infos->{$b}{position} }
                keys %$error_infos;
     foreach my $key (@keys) {
-        my $message = $error_infos->{$key}{message};
+        my $message = $error_infos->{$key}{message} || $DEFAULT_MESSAGE;
         push @errors, $message if defined $message;
     }
     
     return wantarray ? @errors : \@errors;
+}
+
+sub errors_to_hash {
+    my $self = shift;
+    
+    # Error informations
+    my $error_infos = $self->error_infos;
+    
+    # Errors
+    my $errors = {};
+    foreach my $name (keys %$error_infos) {
+        $errors->{$name} = $error_infos->{$name}{message} || 
+                           $DEFAULT_MESSAGE;
+    }
+    
+    return $errors;
 }
 
 sub invalid_keys {
@@ -77,11 +123,14 @@ Validator::Custom::Result - Validator::Custom result
 
 =head1 SYNOPSYS
     
-    # All error messages
+    # Error messages
     @errors = $result->errors;
     
-    # A error message
+    # One error message
     $error = $result->error('title');
+    
+    # Error messages as hash ref
+    $errors = $result->errors_to_hash;
     
     # Invalid keys
     @invalid_keys = $result->invalid_keys;
@@ -90,20 +139,13 @@ Validator::Custom::Result - Validator::Custom result
     $products = $result->products;
     $product  = $products->{key1};
     
-    # Is All data valid?
+    # Is the result valid?
     $is_valid = $result->is_valid;
     
-    # Is a data valid?
+    # Is one data valid?
     $is_valid = $result->is_valid('title');
 
 =head1 ATTRIBUTES
-
-=head2 products
-
-Producted values
-
-    $result   = $result->products($products);
-    $products = $result->products;
 
 =head2 error_infos
 
@@ -111,6 +153,13 @@ Error infos
 
     $result      = $result->error_infos($error_infos);
     $error_infos = $result->error_infos;
+
+=head2 products
+
+Producted values
+
+    $result   = $result->products($products);
+    $products = $result->products;
 
 =head1 METHODS
 
@@ -120,7 +169,7 @@ Add error informations
 
     $result->add_error_info($error_info);
 
-Sample
+Example
 
     $result->add_error_info({invalid_key => $product_key,
                              message     => $message});
@@ -137,13 +186,13 @@ Check if the data corresponding to the key is valid.
 
 =head2 C<error>
 
-Get error message corresponding to a key.
+Get one error message.
 
     $error = $result->error('title');
 
 =head2 C<errors>
 
-Get all error messages
+Get error messages
 
     $errors = $result->errors;
     @errors = $result->errors;
@@ -153,6 +202,12 @@ Get all error messages
 Get error reason. this is same as constraint name.
 
     $error_reason = $result->error_reason($key);
+
+=head2 C<errors_to_hash>
+
+Get error messages as hash ref
+
+    $errors = $result->errors_to_hash;
 
 =head2 C<invalid_keys>
 

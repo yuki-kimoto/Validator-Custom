@@ -1,13 +1,15 @@
-use Test::More no_plan;#tests => 45;
+use Test::More tests => 64;
 
 use strict;
 use warnings;
-use lib 't/01-core';
+use lib 't/validator-custom';
 
 my $test;
 sub test {$test = shift}
 
-eval"use Validator::Custom";
+use Validator::Custom;
+
+our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
 
 {
     my $data = { k1 => 1, k2 => 2, k3 => 3 };
@@ -24,9 +26,12 @@ eval"use Validator::Custom";
     ];
     my $validator = Validator::Custom->new;
     my $vresult   = $validator->validate($data, $rule);
-    my $errors    = $vresult->errors;
+    
+    my $errors      = $vresult->errors;
+    my $errors_hash = $vresult->errors_to_hash;
     
     is_deeply($errors, [qw/k1Error2 k2Error2/], 'rule');
+    is_deeply($errors_hash, {k1 => 'k1Error2', k2 => 'k2Error2'}, 'rule errors hash');
     
     my @errors = Validator::Custom->new(rule => $rule)->validate($data)->errors;
     is_deeply([@errors], [qw/k1Error2 k2Error2/], 'rule');
@@ -233,7 +238,11 @@ use T1;
     
     my $vc = T5->new;
     my $result= $vc->validate($data, $rule);
-    is_deeply([$result->errors], ['k2Error1'], 'variouse options');
+    is_deeply([$result->errors], 
+              ['k2Error1', 'Error message not specified',
+               'Error message not specified', 'Error message not specified'
+              ], 'variouse options');
+    
     is_deeply([$result->invalid_keys], [qw/k2 k4 k7 k8/], 'invalid key');
     
     is_deeply($result->products->{k1},[1, [3, 4]], 'product');
@@ -307,8 +316,15 @@ use T6;
         ]
     ];
     
-    my @invalid_keys = $vc->rule($rule)->validate($data)->invalid_keys;
+    my $vresult = $vc->rule($rule)->validate($data);
+    my @invalid_keys = $vresult->invalid_keys;
     is_deeply([@invalid_keys], ['name'], 'constraint argument first');
+    
+    my $errors_hash = $vresult->errors_to_hash;
+    is_deeply($errors_hash, {name => $DEFAULT_MESSAGE},
+              'errors_to_hash message not specified');
+    
+    is($vresult->error('name'), $DEFAULT_MESSAGE, 'error default message');
     
     @invalid_keys = $vc->rule($rule)->validate($data)->invalid_keys;
     is_deeply([@invalid_keys], ['name'], 'constraint argument second');
@@ -364,7 +380,7 @@ test 'Constraint function croak';
         ]
     ];
     eval{$vc->validate($data, $rule)};
-    like($@, qr/Key 'a'.+01-core/ms, "$test : scalar");
+    like($@, qr/Key 'a'.+validator-custom/ms, "$test : scalar");
     
     $data = {a => [1, 2]};
     $rule = [
@@ -373,7 +389,7 @@ test 'Constraint function croak';
         ]
     ];
     eval{$vc->validate($data, $rule)};
-    like($@, qr/Key 'a'.+01-core/ms, "$test : array");
+    like($@, qr/Key 'a'.+validator-custom/ms, "$test : array");
     
 }
 
@@ -418,6 +434,8 @@ $params = {key1 => 'bbb', key0 => 1, key2 => 2};
 $vresult = $validator->validate($params, $rule);
 ok($vresult->is_valid, "$test : third key");
 ok(!$vresult->error_reason('key1'), "$test : third key : error reason");
+eval { $vresult->error_reason };
+like($@, qr/Key name must be specified/, 'error_reason not key name');
 
 $params = {key1 => 'ccc', key0 => 1, key2 => 2};
 $vresult = $validator->validate($params, $rule);
@@ -425,6 +443,9 @@ ok(!$vresult->is_valid, "$test : invalid");
 is_deeply([$vresult->invalid_keys], ['key1'], "$test : invalid_keys");
 is_deeply([$vresult->errors], ['Error-key1-0'], "$test : errors");
 is($vresult->error_reason('key1'), 'Int', "$test : error reason");
+is($vresult->error('key1'), 'Error-key1-0', "$test: error");
+eval{ $vresult->error };
+like($@, qr/Key name must be specified/, 'error not key name');
 
 $validator = T1->new(error_stock => 0);
 $params = {key1 => 'ccc', key0 => 1, key2 => 'no_num'};

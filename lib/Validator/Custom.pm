@@ -13,6 +13,7 @@ __PACKAGE__->dual_attr('constraints', default => sub { {} },
 __PACKAGE__->attr('data_filter');
 __PACKAGE__->attr(error_stock => 1);
 __PACKAGE__->attr('rule');
+
 __PACKAGE__->attr(syntax => <<'EOS');
 ### Syntax of validation rule
     my $rule = [                          # 1. Rule is array ref
@@ -44,6 +45,7 @@ __PACKAGE__->attr(syntax => <<'EOS');
     ];
 
 EOS
+
 __PACKAGE__->attr('validation_rule'); # Deprecated
 
 sub add_constraint {
@@ -301,11 +303,12 @@ Validator::Custom - Custamizable validator
 
 =head1 VERSION
 
-Version 0.0902
+Version 0.1001
 
 =cut
 
-our $VERSION = '0.0902';
+our $VERSION = '0.1001';
+$VERSION = eval $VERSION;
 
 =head1 STATE
 
@@ -316,10 +319,10 @@ This module is not stable. APIs will be changed for a while.
     use Validator::Custom;
 
     # New
-    my $vc = Validator::Custom->new;
+    my $validator = Validator::Custom->new;
     
     # Add Constraint
-    $vc->add_constraint(
+    $validator->add_constraint(
         int => sub {
             my $value    = shift;
             my $is_valid = $value =~ /^\d+$/;
@@ -351,7 +354,7 @@ This module is not stable. APIs will be changed for a while.
     };
     
     # Validation rule
-    $vc->rule([
+    $validator->rule([
         age => [
             'int'
         ],
@@ -362,25 +365,39 @@ This module is not stable. APIs will be changed for a while.
         ]
     ]);
     
-    # Validation
-    my $result = $vc->validate($data);
+    # Data filter
+    $validator->data_filter(
+        sub { 
+            my $data = shift;
+            
+            # Do something
+            
+            return $data;
+        }
+    );
     
-    # Get all error messages
+    # Validation
+    my $result = $validator->validate($data);
+    
+    # Error messages
     my @errors = $result->errors;
     
-    # Get a error message
+    # One error message
     my $error = $result->error('age');
-    
-    # Get invalid keys
+
+    # Error messages by hash ref
+    my $errors = $result->errors_to_hash;
+
+    # Invalid keys
     my @invalid_keys = $result->invalid_keys;
     
-    # Get producted value
+    # Producted value
     my $products = $result->products;
     
-    # Is all data valid?
+    # Is the result valid?
     my $ret = $result->is_valid;
     
-    # Is a data valid
+    # Is one data valid
     $ret = $result->is_valid('age');
     
     # Corelative validation
@@ -408,12 +425,12 @@ This module is not stable. APIs will be changed for a while.
 
 Constraint functions
 
-    $vc          = $vc->constraints($constraints);
-    $constraints = $vc->constraints;
+    $validator          = $validator->constraints($constraints);
+    $constraints = $validator->constraints;
 
 Example
 
-    $vc->constraints(
+    $validator->constraints(
         int    => sub { ... },
         string => sub { ... }
     );
@@ -422,8 +439,8 @@ Example
 
 Are errors stocked?
 
-    $vc          = $vc->error_stock(0);
-    $error_stock = $vc->error_stcok;
+    $validator   = $validator->error_stock(0);
+    $error_stock = $validator->error_stcok;
     
 If you set 0, validation errors is not stocked.
 Validation is finished when one error is occured.
@@ -431,12 +448,33 @@ This is faster than stocking all errors.
 
 Default is 1. All errors are stocked.
 
+=head2 C<data_filter>
+
+Data filtering function
+
+    $validator = $validator->data_filter($filter);
+    $filter    = $validator->data_filter;
+
+Data filtering function is available.
+This function receive data, which is first argument of validate().
+and return converted data.
+
+    $validator->data_filter(
+        sub {
+            my $data = shift;
+            
+            # Do someting
+            
+            return $data;
+        }
+    )
+
 =head2 C<rule>
 
 Validation rule
 
-    $vc   = $vc->rule($rule);
-    $rule = $vc->rule;
+    $validator   = $validator->rule($rule);
+    $rule        = $validator->rule;
 
 Validation rule has the following syntax.
 
@@ -475,8 +513,8 @@ Validation rule has the following syntax.
 
 Syntax of validation rule
 
-    $vc     = $vc->syntax($syntax);
-    $syntax = $vc->syntax;
+    $validator = $validator->syntax($syntax);
+    $syntax    = $validator->syntax;
 
 =head1 MEHTODS
 
@@ -484,19 +522,19 @@ Syntax of validation rule
 
 Constructor
 
-    $vc = Validator::Costom->new;
-    $vc = Validator::Costom->new(rule => [ .. ]);
+    $validator = Validator::Costom->new;
+    $validator = Validator::Costom->new(rule => [ .. ]);
 
 =head2 C<add_constraint>
 
 Add constraint function
 
-    $vc->add_constraint(%constraint);
-    $vc->add_constraint(\%constraint);
+    $validator->add_constraint(%constraint);
+    $validator->add_constraint(\%constraint);
     
 Example
     
-    $vc->add_constraint(
+    $validator->add_constraint(
         int => sub {
             my $value    = shift;
             my $is_valid = $value =~ /^\-?[\d]+$/;
@@ -513,10 +551,10 @@ Example
 
 Validation
 
-    $result = $vc->validate($data, $rule);
-    $result = $vc->validate($data);
+    $result = $validator->validate($data, $rule);
+    $result = $validator->validate($data);
 
-If you omit $rule, $vc->rule is used.
+If you omit $rule, $validator->rule is used.
 Return value is L<Validator::Custom::Result> object.
 
 =head1 Validator::Custom::Result
@@ -525,10 +563,10 @@ Return value is L<Validator::Custom::Result> object.
 
 See L<Validator::Custom::Result>.
 
-The following is L<Validator::Custom::Result> sample
+The following is L<Validator::Custom::Result> example
 
     # Restlt
-    $result = $vc->validate($data, $rule);
+    $result = $validator->validate($data, $rule);
     
     # Error message
     @errors = $result->errors;
@@ -547,12 +585,13 @@ The following is L<Validator::Custom::Result> sample
 
 You can resist your constraint function using 'add_constraint' method.
 
-canstrant function can receive two argument.
+Constrant function can receive three argument.
 
-    1. value in validating data
-    2. argument passed in validation rule
+    1. validating data(which is first argument of validator())
+    2. arguments(which is in validation rule)
+    3. Validator::Cotsom object
 
-I explain using sample. You can pass argument in validation rule.
+I explain using example. You can pass argument in validation rule.
 and you can receive the argument in constraint function
 
     my $data = {key => 'value'}; # 1. value
@@ -562,8 +601,8 @@ and you can receive the argument in constraint function
         ],
     }
 
-    $vc->add_constraint(name => sub {
-        my ($value, $args) = @_;
+    $validator->add_constraint(name => sub {
+        my ($value, $args, $self) = @_;
         
         # ...
         
@@ -572,15 +611,40 @@ and you can receive the argument in constraint function
 
 constraint function also can return producted value.
 
-    $vc->add_constraint(name => sub {
-        my ($value, $args) = @_;
+    $validator->add_constraint(name => sub {
+        my ($value, $args, $self) = @_;
         
         # ...
         
         return ($is_valid, $product);
     });
 
-L<Validator::Custom::HTML::Form> is good sample.
+L<Validator::Custom::HTML::Form> is good example.
+
+You can use constraints function already resisted,
+
+    $validator->add_constraint(name => sub {
+        my ($value, $args, $self) = @_;
+        
+        my $is_valid = $self->constraints->{email}->($value);
+        
+        # And do something.
+        
+        return ($is_valid, $product);
+    });
+
+You must not referrer outer Validator::Custom object. Circular reference
+and memory leak occur.
+
+    $validator->add_constraint(name => sub {
+        my ($value, $args) = @_;
+        
+        # Must not do this!
+        my $is_valid = $validator->constraints->{email}->($value);
+        
+        return ($is_valid, $product);
+    });    
+
 
 =head1 CUSTOM CLASS
 
@@ -604,9 +668,9 @@ You can create your custom class extending Validator::Custom.
 
 This class is avalilable same way as Validator::Custom
 
-   $vc = Validator::Custom::Yours->new;
+   $validator = Validator::Custom::Yours->new;
 
-L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good sample.
+L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good example.
 
 =head1 OR VALIDATION
 

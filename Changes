@@ -1,3 +1,7 @@
+0.1001
+  added Validator::Custom::data_filter()
+  added Validator::Custom::Result::errors_to_hash()
+  improved exception logic
 0.0902
   update document
 0.0901
