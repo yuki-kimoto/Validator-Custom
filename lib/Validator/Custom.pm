@@ -49,6 +49,13 @@ EOS
 __PACKAGE__->attr('validation_rule'); # Deprecated
 
 sub add_constraint {
+    warn "\"add_constraint \"is now depricated. " .
+         "Please \"use register_constraint\"";
+    
+    shift->register_constraint(@_);
+}
+
+sub register_constraint {
     my $invocant = shift;
     
     # Merge
@@ -303,11 +310,11 @@ Validator::Custom - Custamizable validator
 
 =head1 VERSION
 
-Version 0.1001
+Version 0.1002
 
 =cut
 
-our $VERSION = '0.1001';
+our $VERSION = '0.1002';
 $VERSION = eval $VERSION;
 
 =head1 STATE
@@ -322,7 +329,7 @@ This module is not stable. APIs will be changed for a while.
     my $validator = Validator::Custom->new;
     
     # Add Constraint
-    $validator->add_constraint(
+    $validator->register_constraint(
         int => sub {
             my $value    = shift;
             my $is_valid = $value =~ /^\d+$/;
@@ -525,16 +532,16 @@ Constructor
     $validator = Validator::Costom->new;
     $validator = Validator::Costom->new(rule => [ .. ]);
 
-=head2 C<add_constraint>
+=head2 C<register_constraint>
 
 Add constraint function
 
-    $validator->add_constraint(%constraint);
-    $validator->add_constraint(\%constraint);
+    $validator->register_constraint(%constraint);
+    $validator->register_constraint(\%constraint);
     
 Example
     
-    $validator->add_constraint(
+    $validator->register_constraint(
         int => sub {
             my $value    = shift;
             my $is_valid = $value =~ /^\-?[\d]+$/;
@@ -546,6 +553,8 @@ Example
             return $is_valid;
         }
     );
+
+add_constraint() is now depricated. Please use register_constraint.
 
 =head2 C<validate>
 
@@ -583,7 +592,7 @@ The following is L<Validator::Custom::Result> example
 
 =head1 CONSTRAINT FUNCTION
 
-You can resist your constraint function using 'add_constraint' method.
+You can resist your constraint function using 'register_constraint' method.
 
 Constrant function can receive three argument.
 
@@ -601,7 +610,7 @@ and you can receive the argument in constraint function
         ],
     }
 
-    $validator->add_constraint(name => sub {
+    $validator->register_constraint(name => sub {
         my ($value, $args, $self) = @_;
         
         # ...
@@ -611,7 +620,7 @@ and you can receive the argument in constraint function
 
 constraint function also can return producted value.
 
-    $validator->add_constraint(name => sub {
+    $validator->register_constraint(name => sub {
         my ($value, $args, $self) = @_;
         
         # ...
@@ -623,7 +632,7 @@ L<Validator::Custom::HTML::Form> is good example.
 
 You can use constraints function already resisted,
 
-    $validator->add_constraint(name => sub {
+    $validator->register_constraint(name => sub {
         my ($value, $args, $self) = @_;
         
         my $is_valid = $self->constraints->{email}->($value);
@@ -636,7 +645,7 @@ You can use constraints function already resisted,
 You must not referrer outer Validator::Custom object. Circular reference
 and memory leak occur.
 
-    $validator->add_constraint(name => sub {
+    $validator->register_constraint(name => sub {
         my ($value, $args) = @_;
         
         # Must not do this!
@@ -653,7 +662,7 @@ You can create your custom class extending Validator::Custom.
     package Validator::Custom::Yours;
     use base 'Validator::Custom';
 
-    __PACKAGE__->add_constraint(
+    __PACKAGE__->register_constraint(
         int => sub {
             my $value    = shift;
             my $is_valid = $value =~ /^\-?[\d]+$/;

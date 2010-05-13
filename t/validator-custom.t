@@ -337,7 +337,7 @@ use T6;
 
 {
     my $vc = T1->new;
-    $vc->add_constraint(
+    $vc->register_constraint(
        'C1' => sub {
             my $value = shift;
             return $value > 1 ? 1 : 0;
@@ -365,7 +365,7 @@ use T6;
         ]
     ]);
     
-    is_deeply([$vc->validate($data)->invalid_keys], [qw/k1_1 k2_1/], 'add_constraints object');
+    is_deeply([$vc->validate($data)->invalid_keys], [qw/k1_1 k2_1/], 'register_constraints object');
 }
 
 use T7;

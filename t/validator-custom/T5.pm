@@ -1,7 +1,7 @@
 package T5;
 use base 'Validator::Custom';
 
-__PACKAGE__->add_constraint(
+__PACKAGE__->register_constraint(
     C1 => sub {
         my ($value, $args) = @_;
         

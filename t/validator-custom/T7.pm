@@ -1,7 +1,7 @@
 package T7;
 use base 'Validator::Custom';
 
-__PACKAGE__->add_constraint(
+__PACKAGE__->register_constraint(
     c1 => \&T7::Constraints::c1
 );
 

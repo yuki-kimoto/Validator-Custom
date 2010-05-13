@@ -1,3 +1,5 @@
+0.1002
+  add_constraint is depricated. it is renamed to register_constraint
 0.1001
   added Validator::Custom::data_filter()
   added Validator::Custom::Result::errors_to_hash()
