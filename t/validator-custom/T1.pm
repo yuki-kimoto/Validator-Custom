@@ -9,7 +9,7 @@ __PACKAGE__->register_constraint(
     },
     C1 => sub {
         my ($value, $args, $options) = @_;
-        return (1, $value * 2);
+        return [1, $value * 2];
     },
     aaa => sub {$_[0] eq 'aaa'},
     bbb => sub {$_[0] eq 'bbb'}

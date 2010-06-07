@@ -1,4 +1,4 @@
-use Test::More tests => 64;
+use Test::More tests => 62;
 
 use strict;
 use warnings;
@@ -366,31 +366,6 @@ use T6;
     ]);
     
     is_deeply([$vc->validate($data)->invalid_keys], [qw/k1_1 k2_1/], 'register_constraints object');
-}
-
-use T7;
-test 'Constraint function croak';
-{
-    
-    my $vc = T7->new;
-    my $data = {a => 1};
-    my $rule = [
-        a => [
-            'c1'
-        ]
-    ];
-    eval{$vc->validate($data, $rule)};
-    like($@, qr/Key 'a'.+validator-custom/ms, "$test : scalar");
-    
-    $data = {a => [1, 2]};
-    $rule = [
-        a => [
-            '@c1'
-        ]
-    ];
-    eval{$vc->validate($data, $rule)};
-    like($@, qr/Key 'a'.+validator-custom/ms, "$test : array");
-    
 }
 
 my $validator;

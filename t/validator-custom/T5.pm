@@ -5,13 +5,13 @@ __PACKAGE__->register_constraint(
     C1 => sub {
         my ($value, $args) = @_;
         
-        return (1, [$value, $args]);
+        return [1, [$value, $args]];
     },
     
     C2 => sub {
         my ($value, $args) = @_;
         
-        return (0, [$value, $args]);
+        return [0, [$value, $args]];
     },
     
     TRIM_LEAD => sub {
@@ -19,7 +19,7 @@ __PACKAGE__->register_constraint(
         
         $value =~ s/^ +//;
         
-        return (1, $value);
+        return [1, $value];
     },
     
     TRIM_TRAIL => sub {
@@ -27,11 +27,11 @@ __PACKAGE__->register_constraint(
         
         $value =~ s/ +$//;
         
-        return (1, $value);
+        return [1, $value];
     },
     
     NO_ERROR => sub {
-        return (0, 'a');
+        return [0, 'a'];
     },
     
     C3 => sub {
@@ -49,11 +49,11 @@ __PACKAGE__->register_constraint(
     },
     C5 => sub {
         my ($value, $arg) = @_;
-        return (1, $arg);
+        return [1, $arg];
     },
     C6 => sub {
         my $self = $_[2];
-        return (1, $self);
+        return [1, $self];
     }
 );
 

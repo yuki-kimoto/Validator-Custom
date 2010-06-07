@@ -204,13 +204,15 @@ sub validate {
                     my $converted_value;
                     
                     # Validation
-                    eval {
-                        ($is_valid, $converted_value)
-                          = $constraint_function->($data, $arg, $self);
-                    };
-                    croak "Constraint exception(Key '$result_key')." .
-                          " Error message: $@\n"
-                      if $@;
+                    my $constraint_result
+                      = $constraint_function->($data, $arg, $self);
+                    
+                    if (ref $constraint_result eq 'ARRAY') {
+                        ($is_valid, $converted_value) = @$constraint_result;
+                    }
+                    else {
+                        $is_valid = $constraint_result;
+                    }
                     
                     # Validation error
                     last unless $is_valid;
@@ -233,26 +235,23 @@ sub validate {
             else {
                 
                 # Set value
-                unless (defined $value) {
-                    $value = ref $key eq 'ARRAY'
-                           ? [map { $data->{$_} } @$key]
-                           : $data->{$key}
-                }
+                $value = ref $key eq 'ARRAY'
+                       ? [map { $data->{$_} } @$key]
+                       : $data->{$key}
+                  unless defined $value;
                 
                 my $converted_value;
                 
                 # Validation
-                eval {
-                    ($is_valid, $converted_value)
-                      = $constraint_function->($value, $arg, $self);
-                };
-                croak "Constraint exception(Key '$result_key'). " .
-                      "Error message: $@\n"
-                  if $@;
+                my $constraint_result
+                  = $constraint_function->($value, $arg, $self);
                 
-                # Update value
-                $value = $converted_value 
-                  if $is_valid && defined $converted_value;
+                if (ref $constraint_result eq 'ARRAY') {
+                    ($is_valid, $value) = @$constraint_result;
+                }
+                else {
+                    $is_valid = $constraint_result;
+                }
             }
             
             # Add error if it is invalid
@@ -315,7 +314,6 @@ Version 0.1101
 =cut
 
 our $VERSION = '0.1101';
-$VERSION = eval $VERSION;
 
 =head1 STATE
 
