@@ -1,6 +1,6 @@
 0.1011
-  
-  Validator::Result products attribute renamed to data(not backword compatible)
+  remove Validator::Custom validation_rule attribute(not backword compatibe)
+  Validator::Custom::Result products attribute renamed to data(not backword compatible)
 0.1002
   add_constraint is depricated. it is renamed to register_constraint
 0.1001

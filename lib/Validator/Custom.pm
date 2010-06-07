@@ -46,8 +46,6 @@ __PACKAGE__->attr(syntax => <<'EOS');
 
 EOS
 
-__PACKAGE__->attr('validation_rule'); # Deprecated
-
 sub add_constraint {
     warn "\"add_constraint \"is now depricated. " .
          "Please \"use register_constraint\"";
@@ -72,7 +70,7 @@ sub validate {
     my $class = ref $self;
     
     # Validation rule
-    $rule ||= $self->rule || $self->validation_rule;
+    $rule ||= $self->rule;
     
     # Data filter
     my $filter = $self->data_filter;
@@ -515,8 +513,6 @@ Validation rule has the following syntax.
             '@constraint5_1'              # 7. array's items validation
         ]
     ];
-
-'validation_rule' is deprecated. It is renamed to 'rule'
 
 =head2 C<syntax>
 
