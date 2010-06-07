@@ -1,6 +1,7 @@
 0.1011
-  constraint function must retrun array reference, not array(not backword compatible)
+  constraint function must return array reference, not array(not backword compatible)
   removed Validator::Custom validation_rule attribute(not backword compatibe)
+  saved all value of data to Validator::Customm::Result data attribute(not backword compatible)
   Validator::Custom::Result products attribute renamed to data(not backword compatible)
 0.1002
   add_constraint is depricated. it is renamed to register_constraint

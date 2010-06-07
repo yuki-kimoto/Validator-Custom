@@ -193,22 +193,23 @@ sub validate {
                            : [$data->{$key}]
                 }
                 
-                # Is first validation?
-                my $first_validation = 1;
-                
                 # Validation loop
-                my $converted_values;
+                my $elements;
                 foreach my $data (@$value) {
                     
-                    # Converted value
-                    my $converted_value;
+                    # Array element
+                    my $element;
                     
                     # Validation
                     my $constraint_result
                       = $constraint_function->($data, $arg, $self);
                     
+                    # Constrint result
                     if (ref $constraint_result eq 'ARRAY') {
-                        ($is_valid, $converted_value) = @$constraint_result;
+                        ($is_valid, $element) = @$constraint_result;
+                        
+                        $elements ||= [];
+                        push @$elements, $element;
                     }
                     else {
                         $is_valid = $constraint_result;
@@ -216,19 +217,10 @@ sub validate {
                     
                     # Validation error
                     last unless $is_valid;
-                    
-                    # Add converted value
-                    if (defined $converted_value) {
-                        if ($first_validation) {
-                            $converted_values  = [];
-                            $first_validation = 0;
-                        }
-                        push @{$converted_values}, $converted_value;
-                    }
                 }
                 
                 # Update value
-                $value = $converted_values if defined $converted_values;
+                $value = $elements if $elements;
             }
             
             # Data is scalar
@@ -239,8 +231,6 @@ sub validate {
                        ? [map { $data->{$_} } @$key]
                        : $data->{$key}
                   unless defined $value;
-                
-                my $converted_value;
                 
                 # Validation
                 my $constraint_result
@@ -288,6 +278,7 @@ sub validate {
         # Remove invalid key
         $result->remove_error_info($result_key);
     }
+    
     return $result;
 }
 
@@ -315,7 +306,7 @@ Version 0.1101
 
 our $VERSION = '0.1101';
 
-=head1 STATE
+=head1 STABILITY
 
 This module is not stable. APIs will be changed for a while.
 
@@ -626,7 +617,7 @@ constraint function also can return converted value.
 
 L<Validator::Custom::HTML::Form> is good example.
 
-=head1 CUSTOM CLASS
+=head1 CUSTAMIZE CLASS
 
 You can create your custom class extending Validator::Custom.
 
