@@ -117,22 +117,21 @@ sub validate {
           unless ref $constraints eq 'ARRAY';
         
         # Arrange key
-        my $product_key = $key;
+        my $result_key = $key;
         if (ref $key eq 'HASH') {
             my $first_key = (keys %$key)[0];
-            $product_key = $first_key;
+            $result_key = $first_key;
             $key         = $key->{$first_key};
         }
         elsif (ref $key eq 'ARRAY') {
-            $product_key = "$key";
+            $result_key = "$key";
         }
         
         # Already valid
-        next if $valid_keys->{$product_key};
+        next if $valid_keys->{$result_key};
         
         # Validation
         my $value;
-        my $products;
         foreach my $constraint (@$constraints) {
             
             # Arrange constraint information
@@ -200,35 +199,36 @@ sub validate {
                 my $first_validation = 1;
                 
                 # Validation loop
+                my $converted_values;
                 foreach my $data (@$value) {
                     
-                    # Product
-                    my $product;
+                    # Converted value
+                    my $converted_value;
                     
                     # Validation
                     eval {
-                        ($is_valid, $product)
+                        ($is_valid, $converted_value)
                           = $constraint_function->($data, $arg, $self);
                     };
-                    croak "Constraint exception(Key '$product_key')." .
+                    croak "Constraint exception(Key '$result_key')." .
                           " Error message: $@\n"
                       if $@;
                     
                     # Validation error
                     last unless $is_valid;
                     
-                    # Add product
-                    if (defined $product) {
+                    # Add converted value
+                    if (defined $converted_value) {
                         if ($first_validation) {
-                            $products = [];
+                            $converted_values  = [];
                             $first_validation = 0;
                         }
-                        push @{$products}, $product;
+                        push @{$converted_values}, $converted_value;
                     }
                 }
                 
                 # Update value
-                $value = $products if defined $products;
+                $value = $converted_values if defined $converted_values;
             }
             
             # Data is scalar
@@ -241,29 +241,31 @@ sub validate {
                            : $data->{$key}
                 }
                 
+                my $converted_value;
+                
                 # Validation
                 eval {
-                    ($is_valid, $products)
+                    ($is_valid, $converted_value)
                       = $constraint_function->($value, $arg, $self);
                 };
-                croak "Constraint exception(Key '$product_key'). " .
+                croak "Constraint exception(Key '$result_key'). " .
                       "Error message: $@\n"
                   if $@;
                 
                 # Update value
-                $value = $products if $is_valid && defined $products;
+                $value = $converted_value 
+                  if $is_valid && defined $converted_value;
             }
             
             # Add error if it is invalid
-            unless ($is_valid){
-                $products = undef;
+            unless ($is_valid) {
                 
                 # Resist error info
                 $result->add_error_info(
-                    $product_key => {message  => $message,
-                                     position => $position,
-                                     reason   => $constraint})
-                  unless exists $result->error_infos->{$product_key};
+                    $result_key => {message  => $message,
+                                    position => $position,
+                                    reason   => $constraint})
+                  unless exists $result->error_infos->{$result_key};
                 
                 # No Error strock
                 unless ($error_stock) {
@@ -272,7 +274,7 @@ sub validate {
                     for (my $k = $i + 2; $k < @{$rule}; $k += 2) {
                         my $key = $rule->[$k];
                         $key = (keys %$key)[0] if ref $key eq 'HASH';
-                        $found = 1 if $key eq $product_key;
+                        $found = 1 if $key eq $result_key;
                     }
                     last OUTER_LOOP unless $found;
                 }
@@ -281,13 +283,13 @@ sub validate {
         }
         
         # Product
-        $result->products->{$product_key} = $products if defined $products;
+        $result->data->{$result_key} = $value;
         
         # Key is valid
-        $valid_keys->{$product_key} = 1;
+        $valid_keys->{$result_key} = 1;
         
         # Remove invalid key
-        $result->remove_error_info($product_key);
+        $result->remove_error_info($result_key);
     }
     return $result;
 }
@@ -310,11 +312,11 @@ Validator::Custom - Custamizable validator
 
 =head1 VERSION
 
-Version 0.1002
+Version 0.1101
 
 =cut
 
-our $VERSION = '0.1002';
+our $VERSION = '0.1101';
 $VERSION = eval $VERSION;
 
 =head1 STATE
@@ -398,8 +400,8 @@ This module is not stable. APIs will be changed for a while.
     # Invalid keys
     my @invalid_keys = $result->invalid_keys;
     
-    # Producted value
-    my $products = $result->products;
+    # Result data
+    my $result_data = $result->data;
     
     # Is the result valid?
     my $ret = $result->is_valid;
@@ -575,20 +577,20 @@ See L<Validator::Custom::Result>.
 The following is L<Validator::Custom::Result> example
 
     # Restlt
-    $result = $validator->validate($data, $rule);
+    my $result = $validator->validate($data, $rule);
     
     # Error message
-    @errors = $result->errors;
+    my @errors = $result->errors;
     
     # Invalid keys
-    @invalid_keys = $result->invalid_keys;
+    my @invalid_keys = $result->invalid_keys;
     
     # Producted values
-    $products = $result->products;
-    $product  = $products->{key1};
+    my $data   = $result->data;
+    my $value1 = $data->{key1};
     
     # Is it valid?
-    $is_valid = $result->is_valid;
+    my $is_valid = $result->is_valid;
 
 =head1 CONSTRAINT FUNCTION
 
@@ -618,42 +620,17 @@ and you can receive the argument in constraint function
         return $is_valid;
     });
 
-constraint function also can return producted value.
+constraint function also can return converted value.
 
     $validator->register_constraint(name => sub {
         my ($value, $args, $self) = @_;
         
-        # ...
+        $value += 3;
         
-        return ($is_valid, $product);
+        return ($is_valid, $value);
     });
 
 L<Validator::Custom::HTML::Form> is good example.
-
-You can use constraints function already resisted,
-
-    $validator->register_constraint(name => sub {
-        my ($value, $args, $self) = @_;
-        
-        my $is_valid = $self->constraints->{email}->($value);
-        
-        # And do something.
-        
-        return ($is_valid, $product);
-    });
-
-You must not referrer outer Validator::Custom object. Circular reference
-and memory leak occur.
-
-    $validator->register_constraint(name => sub {
-        my ($value, $args) = @_;
-        
-        # Must not do this!
-        my $is_valid = $validator->constraints->{email}->($value);
-        
-        return ($is_valid, $product);
-    });    
-
 
 =head1 CUSTOM CLASS
 

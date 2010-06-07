@@ -47,8 +47,8 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
 
 {
     my $result = Validator::Custom::Result->new;
-    $result->products({k => 1});
-    is_deeply($result->products, {k => 1}, 'products attribute');
+    $result->data({k => 1});
+    is_deeply($result->data, {k => 1}, 'data attribute');
 }
 
 {
@@ -184,7 +184,7 @@ use T1;
     my $result= $vc->validate($data, $rule);
     is_deeply(scalar $result->errors, [], 'no error');
     
-    is_deeply(scalar $result->products, {k1 => [4,8]}, 'array validate2');
+    is_deeply(scalar $result->data, {k1 => [4,8]}, 'array validate2');
 }
 
 
@@ -245,14 +245,14 @@ use T1;
     
     is_deeply([$result->invalid_keys], [qw/k2 k4 k7 k8/], 'invalid key');
     
-    is_deeply($result->products->{k1},[1, [3, 4]], 'product');
-    ok(!$result->products->{k2}, 'product not exist in error case');
-    cmp_ok($result->products->{k3}, 'eq', 3, 'filter');
-    ok(!$result->products->{k4}, 'product not set in case error');
-    is($result->products->{k9}, 2, 'arg');
-    isa_ok($result->products->{k10}, 'T5');
-    isa_ok($result->products->{k11}->[0], 'T5');
-    isa_ok($result->products->{k11}->[1], 'T5');
+    is_deeply($result->data->{k1},[1, [3, 4]], 'data');
+    ok(!$result->data->{k2}, 'data not exist in error case');
+    cmp_ok($result->data->{k3}, 'eq', 3, 'filter');
+    ok(!$result->data->{k4}, 'data not set in case error');
+    is($result->data->{k9}, 2, 'arg');
+    isa_ok($result->data->{k10}, 'T5');
+    isa_ok($result->data->{k11}->[0], 'T5');
+    isa_ok($result->data->{k11}->[1], 'T5');
 
     $data = {k5 => 5, k6 => 6};
     $rule = [

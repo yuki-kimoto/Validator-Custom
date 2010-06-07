@@ -7,8 +7,8 @@ use base 'Object::Simple';
 
 use Carp 'croak';
 
-__PACKAGE__->attr(error_infos    => sub { {} });
-__PACKAGE__->attr(products       => sub { {} });
+__PACKAGE__->attr(error_infos  => sub { {} });
+__PACKAGE__->attr(data         => sub { {} });
 
 our $DEFAULT_MESSAGE = 'Error message not specified';
 
@@ -135,9 +135,9 @@ Validator::Custom::Result - Validator::Custom result
     # Invalid keys
     @invalid_keys = $result->invalid_keys;
     
-    # Producted values
-    $products = $result->products;
-    $product  = $products->{key1};
+    # Result data
+    $data   = $result->data;
+    $value1 = $data->{key1};
     
     # Is the result valid?
     $is_valid = $result->is_valid;
@@ -154,12 +154,12 @@ Error infos
     $result      = $result->error_infos($error_infos);
     $error_infos = $result->error_infos;
 
-=head2 products
+=head2 data
 
-Producted values
+Result data
 
-    $result   = $result->products($products);
-    $products = $result->products;
+    $result = $result->data($data);
+    $data   = $result->data;
 
 =head1 METHODS
 
