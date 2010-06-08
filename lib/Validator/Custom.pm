@@ -46,13 +46,6 @@ __PACKAGE__->attr(syntax => <<'EOS');
 
 EOS
 
-sub add_constraint {
-    warn "\"add_constraint \"is now depricated. " .
-         "Please \"use register_constraint\"";
-    
-    shift->register_constraint(@_);
-}
-
 sub register_constraint {
     my $invocant = shift;
     
@@ -300,11 +293,11 @@ Validator::Custom - Custamizable validator
 
 =head1 VERSION
 
-Version 0.1101
+Version 0.1102
 
 =cut
 
-our $VERSION = '0.1101';
+our $VERSION = '0.1102';
 
 =head1 STABILITY
 
@@ -642,6 +635,8 @@ This class is avalilable same way as Validator::Custom
    $validator = Validator::Custom::Yours->new;
 
 L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good example.
+
+If you find some constraint function, 
 
 =head1 OR VALIDATION
 

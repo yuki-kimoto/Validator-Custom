@@ -1,4 +1,6 @@
-0.1011
+0.1102
+  removed add_constraint() method(not backword compatible)
+0.1101
   constraint function must return array reference, not array(not backword compatible)
   removed Validator::Custom validation_rule attribute(not backword compatibe)
   saved all value of data to Validator::Customm::Result data attribute(not backword compatible)
