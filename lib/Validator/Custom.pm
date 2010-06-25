@@ -289,19 +289,15 @@ sub _rule_syntax {
 
 =head1 NAME
 
-Validator::Custom - Custamizable validator
+Validator::Custom - Simple Data Validation
 
 =head1 VERSION
 
-Version 0.1102
+Version 0.1103
 
 =cut
 
-our $VERSION = '0.1102';
-
-=head1 STABILITY
-
-This module is not stable. APIs will be changed for a while.
+our $VERSION = '0.1103';
 
 =head1 SYNOPSYS
     
@@ -310,7 +306,7 @@ This module is not stable. APIs will be changed for a while.
     # New
     my $validator = Validator::Custom->new;
     
-    # Add Constraint
+    # Register constraint
     $validator->register_constraint(
         int => sub {
             my $value    = shift;
@@ -333,6 +329,14 @@ This module is not stable. APIs will be changed for a while.
             my $length = length $value;
             my $is_valid = $length >= $min && $length <= $max;
             return $is_valid;
+        },
+        trim => sub {
+            my $value = shift;
+            
+            $value =~ s/^\s+/;
+            $value =~ s/\s+$/;
+            
+            return [1, $value];
         }
     );
     
@@ -396,18 +400,205 @@ This module is not stable. APIs will be changed for a while.
         ]
     ];
     
-    # "or" validation
+    # "OR" validation
     $rule = [
         email => [
             'blank'
         ],
-        # or
         email => [
             'not_blank',
-            'email'
+            'emai_address'
         ]
     ];
+
+=head1 DESCRIPTIONS
+
+Data validation is offten needed in HTML form data. 
+L<Validator::Custom> help you to do this.
+L<Validator::Custom> is very simple and useful validator.
+
+You can register your constraint functions easily.
+you can get ordered error message.
+L<Validator::Custom> also provide OR validation.
+
+At first, I explain the simplest example.
+
+    # Load module and create object
+    use Validator::Custom;
+    my $validator = Validator::Custom->new;
+    
+
+You can register constraint function. This function receive a value.
+If the value is integer, return ture. If the value is not integer,
+return false.
+   
+    # Register constraint function
+    $validator->register_constraint(
+        int => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^\d+$/;
+            return $is_valid;
+        }        
+    );
+
+Data which will be used on validation must be hash refernce.
+
+    # Data
+    my $data = { 
+        age => 19, 
+        height => 189
+    };    
+
+Validation rule is defined. The rule must be array reference.
+Odd number argument is data's key. 
+Even number argument is constarint functions.
+constraint functions must be array referecne.
+
+    # Validation rule
+    my $rule = [
+        age => [
+            'int'
+        ],
+        height => [
+            'int'
+        ]
+    ]);
+
+Validation is done by using data and rule.
+
+    my $result = $validator->validate($data, $rule);
+
+validate() return value is L<Validator::Custom::Result> object.
+This has validation result, such as error message, invalid keys,
+converted data.
+
+    # Restlt
+    my $result = $validator->validate($data, $rule);
+    
+    # Error message
+    my @errors = $result->errors;
+    
+    # Invalid keys
+    my @invalid_keys = $result->invalid_keys;
+    
+    # Producted values
+    my $data   = $result->data;
+    my $value = $data->{key};
+    
+    # Is it valid?
+    my $is_valid = $result->is_valid;
+
+I explanin constraint function's more details.
+
+    # Register constraint
+    $validator->register_constraint(
+        int => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^\d+$/;
+            return $is_valid;
+        },
+        ascii => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^[\x21-\x7E]+$/;
+            return $is_valid;
+        },
+        not_blank => sub {
+            my $value = shift;
+            my $is_valid = $value ne '';
+            return $is_valid;
+        },
+        length => sub {
+            my ($value, $args) = @_;
+            my ($min, $max) = @$args;
+            my $length = length $value;
+            my $is_valid = $length >= $min && $length <= $max;
+            return $is_valid;
+        },
+        trim => sub {
+            my $value = shift;
+            
+            $value =~ s/^\s+/;
+            $value =~ s/\s+$/;
+            
+            return [1, $value];
+        }
+    );
+
+Constrant function receive three arguments.
+
+    1. value
+    2. arguments
+    3. Validator::Cotsom object
+
+    my $data = {key => 'value'};
+    my $rule => {
+        key => [
+            {'name' => $args}
+        ],
+    }
+
+    $validator->register_constraint(name => sub {
+        my ($value, $args, $self) = @_;
         
+        # ...
+        
+        return $is_valid;
+    });
+
+constraint function also can return converted value.
+
+    $validator->register_constraint(name => sub {
+        my ($value, $args, $self) = @_;
+        
+        $value += 3;
+        
+        return ($is_valid, $value);
+    });
+
+You can create your validation class, which inherit Validator::Custom.
+You can register_constraint() from package to register constraint to you class.
+
+    package Validator::Custom::Yours;
+    use base 'Validator::Custom';
+
+    __PACKAGE__->register_constraint(
+        int => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^\-?[\d]+$/;
+            return $is_valid;
+        },
+        ascii => sub {
+            my $value    = shift;
+            my $is_valid = $value =~ /^[\x21-\x7E]+$/;
+            return $is_valid;
+        }
+    );
+
+L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good example.
+
+L<Validator:Custom> provide 'OR' validation.
+Key is written repeatedly in 'OR' validation.
+
+    # OR validation
+    $validator->rule(
+        key1 => ['constraint'],
+        key1 => ['constraint2']
+    );
+
+C<Example>
+
+if "email" is blank or email address, "email" is valid, 
+    
+    $validator->rule([
+        email => [
+            'blank'
+        ],
+        email => [
+            'not_blank',
+            'email_address'
+        ]
+    ]);
+
 =head1 ATTRIBUTES
 
 =head2 C<constraints>
@@ -546,125 +737,31 @@ Validation
 If you omit $rule, $validator->rule is used.
 Return value is L<Validator::Custom::Result> object.
 
-=head1 Validator::Custom::Result
+=head1 STABILITY
 
-'validate' method return L<Validator::Custom::Result> object.
+This module is stable. The following attribute and method names will not be changed in the future, and keep backword compatible.
 
-See L<Validator::Custom::Result>.
+    # DBIx::Custom
+    constraints
+    error_stock
+    data_filter
+    rule
+    syntax
+    new
+    register_constraint
+    validate
 
-The following is L<Validator::Custom::Result> example
-
-    # Restlt
-    my $result = $validator->validate($data, $rule);
-    
-    # Error message
-    my @errors = $result->errors;
-    
-    # Invalid keys
-    my @invalid_keys = $result->invalid_keys;
-    
-    # Producted values
-    my $data   = $result->data;
-    my $value1 = $data->{key1};
-    
-    # Is it valid?
-    my $is_valid = $result->is_valid;
-
-=head1 CONSTRAINT FUNCTION
-
-You can resist your constraint function using 'register_constraint' method.
-
-Constrant function can receive three argument.
-
-    1. validating data(which is first argument of validator())
-    2. arguments(which is in validation rule)
-    3. Validator::Cotsom object
-
-I explain using example. You can pass argument in validation rule.
-and you can receive the argument in constraint function
-
-    my $data = {key => 'value'}; # 1. value
-    my $rule => {
-        key => [
-            {'name' => $args} # 2. arguments
-        ],
-    }
-
-    $validator->register_constraint(name => sub {
-        my ($value, $args, $self) = @_;
-        
-        # ...
-        
-        return $is_valid;
-    });
-
-constraint function also can return converted value.
-
-    $validator->register_constraint(name => sub {
-        my ($value, $args, $self) = @_;
-        
-        $value += 3;
-        
-        return ($is_valid, $value);
-    });
-
-L<Validator::Custom::HTML::Form> is good example.
-
-=head1 CUSTAMIZE CLASS
-
-You can create your custom class extending Validator::Custom.
-
-    package Validator::Custom::Yours;
-    use base 'Validator::Custom';
-
-    __PACKAGE__->register_constraint(
-        int => sub {
-            my $value    = shift;
-            my $is_valid = $value =~ /^\-?[\d]+$/;
-            return $is_valid;
-        },
-        ascii => sub {
-            my $value    = shift;
-            my $is_valid = $value =~ /^[\x21-\x7E]+$/;
-            return $is_valid;
-        }
-    );
-
-This class is avalilable same way as Validator::Custom
-
-   $validator = Validator::Custom::Yours->new;
-
-L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good example.
-
-If you find some constraint function, 
-
-=head1 OR VALIDATION
-
-This module also provide 'or' validation.
-You write key constaraint in a rule repeateadly.
-one of the constraint is valid, the key is valid.
-
-$validator->rule(
-    key1 => ['constraint'],
-    key1 => ['constraint2']
-);
-
-C<Example>
-
-"email" is valid, if 'email' is blank or mail address, 
-To understand "or validation" easily,
-it is good practice to add "# or" comment to your code.
-    
-    $validator->rule([
-        email => [
-            'blank'
-        ],
-        # or
-        email => [
-            'not_blank',
-            'email'
-        ]
-    ]);
+    # DBIx::Custom::Result
+    error_infos
+    data
+    add_error_info
+    is_valid
+    error
+    errors
+    error_reason
+    errors_to_hash
+    invalid_keys
+    remove_error_info
 
 =head1 AUTHOR
 
@@ -680,5 +777,3 @@ This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 =cut
-
-1; # End of Validator::Custom

@@ -1,3 +1,6 @@
+0.1103
+  updated document.
+  Validator::Custom became stable. Backword compatible of 0.1103 is keeped. You can use Validator::Custom at ease.
 0.1102
   removed add_constraint() method(not backword compatible)
 0.1101
@@ -109,3 +112,4 @@
 0.01_01
   first develope release
 a
+ 

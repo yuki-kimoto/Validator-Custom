@@ -147,14 +147,14 @@ Validator::Custom::Result - Validator::Custom result
 
 =head1 ATTRIBUTES
 
-=head2 error_infos
+=head2 C<error_infos>
 
 Error infos
 
     $result      = $result->error_infos($error_infos);
     $error_infos = $result->error_infos;
 
-=head2 data
+=head2 C<data>
 
 Result data
 
