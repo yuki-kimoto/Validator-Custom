@@ -81,6 +81,9 @@ sub validate {
     
     # Result
     my $result = Validator::Custom::Result->new;
+
+    # Save raw data
+    $result->raw_data($data);
     
     # Error is stock?
     my $error_stock = $self->error_stock;
@@ -242,9 +245,10 @@ sub validate {
                 
                 # Resist error info
                 $result->add_error_info(
-                    $result_key => {message  => $message,
-                                    position => $position,
-                                    reason   => $constraint})
+                    $result_key => {message      => $message,
+                                    position     => $position,
+                                    reason       => $constraint,
+                                    original_key => $key})
                   unless exists $result->error_infos->{$result_key};
                 
                 # No Error strock
@@ -262,7 +266,7 @@ sub validate {
             }
         }
         
-        # Product
+        # Result data
         $result->data->{$result_key} = $value;
         
         # Key is valid

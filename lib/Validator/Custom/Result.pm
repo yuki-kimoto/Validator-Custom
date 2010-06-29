@@ -9,6 +9,7 @@ use Carp 'croak';
 
 __PACKAGE__->attr(error_infos  => sub { {} });
 __PACKAGE__->attr(data         => sub { {} });
+__PACKAGE__->attr(raw_data     => sub { {} });
 
 our $DEFAULT_MESSAGE = 'Error message not specified';
 
@@ -22,78 +23,31 @@ sub add_error_info {
     return $self;
 }
 
-sub error {
-    my ($self, $name) = @_;
-    
-    # Key name not specifed
-    croak 'Key name must be specified'
-      unless $name;
-    
-    # Error infomations
-    my $error_infos = $self->error_infos;
-    
-    # Error
-    my $error = exists $error_infos->{$name}
-              ? $error_infos->{$name}{message} || $DEFAULT_MESSAGE
-              : undef;
-    
-    return $error;
+sub error { shift->error_message(@_) }
+
+sub errors { 
+    return wantarray
+         ? @{shift->error_messages(@_)}
+         : shift->error_messages(@_);
 }
+
+sub errors_to_hash { shift->error_messages_to_hash(@_) }
 
 sub error_reason {
     my ($self, $name) = @_;
     
-    # Key name not specifed
-    croak 'Key name must be specified'
+    # Parameter name not specifed
+    croak 'Parameter name must be specified'
       unless $name;
     
     # Error reason
     return $self->error_infos->{$name}{reason};
 }
 
-sub errors {
-    my $self = shift;
-
-    # Errors
-    my @errors;
-    my $error_infos = $self->error_infos;
-    my @keys = sort { $error_infos->{$a}{position} <=>
-                      $error_infos->{$b}{position} }
-               keys %$error_infos;
-    foreach my $key (@keys) {
-        my $message = $error_infos->{$key}{message} || $DEFAULT_MESSAGE;
-        push @errors, $message if defined $message;
-    }
-    
-    return wantarray ? @errors : \@errors;
-}
-
-sub errors_to_hash {
-    my $self = shift;
-    
-    # Error informations
-    my $error_infos = $self->error_infos;
-    
-    # Errors
-    my $errors = {};
-    foreach my $name (keys %$error_infos) {
-        $errors->{$name} = $error_infos->{$name}{message} || 
-                           $DEFAULT_MESSAGE;
-    }
-    
-    return $errors;
-}
-
 sub invalid_keys {
-    my $self = shift;
-    
-    # Invalid keys
-    my $error_infos = $self->error_infos;
-    my @invalid_keys = sort { $error_infos->{$a}{position} <=>
-                              $error_infos->{$b}{position} }
-                             keys %$error_infos;
-    
-    return wantarray ? @invalid_keys : \@invalid_keys;
+    return wantarray
+         ? @{shift->invalid_params(@_)}
+         : shift->invalid_params(@_);
 }
 
 sub is_valid {
@@ -113,6 +67,87 @@ sub remove_error_info {
     delete $self->error_infos->{$key};
     
     return $self;
+}
+
+sub error_message {
+    my ($self, $name) = @_;
+    
+    # Parameter name not specifed
+    croak 'Parameter name must be specified'
+      unless $name;
+    
+    # Error infomations
+    my $error_infos = $self->error_infos;
+    
+    # Error
+    return exists $error_infos->{$name}
+         ? $error_infos->{$name}{message} || $DEFAULT_MESSAGE
+         : undef;
+}
+
+sub error_messages {
+    my $self = shift;
+
+    # Error messages
+    my @error_messages;
+    my $error_infos = $self->error_infos;
+    my @keys = sort { $error_infos->{$a}{position} <=>
+                      $error_infos->{$b}{position} }
+               keys %$error_infos;
+    foreach my $key (@keys) {
+        my $message = $error_infos->{$key}{message} || $DEFAULT_MESSAGE;
+        push @error_messages, $message if defined $message;
+    }
+    
+    return \@error_messages;
+}
+
+sub error_messages_to_hash {
+    my $self = shift;
+    
+    # Error informations
+    my $error_infos = $self->error_infos;
+    
+    # Error messages
+    my $error_messages = {};
+    foreach my $name (keys %$error_infos) {
+        $error_messages->{$name} = $error_infos->{$name}{message} || 
+                           $DEFAULT_MESSAGE;
+    }
+    
+    return $error_messages;
+}
+
+sub invalid_params {
+    my $self = shift;
+    
+    # Invalid params
+    my $error_infos = $self->error_infos;
+    my @invalid_params = sort { $error_infos->{$a}{position} <=>
+                              $error_infos->{$b}{position} }
+                              keys %$error_infos;
+    
+    return \@invalid_params;
+}
+
+sub invalid_raw_params {
+    my $self = shift;
+    
+    # Invalid params
+    my $error_infos = $self->error_infos;
+    my @invalid_params = sort { $error_infos->{$a}{position} <=>
+                              $error_infos->{$b}{position} }
+                              keys %$error_infos;
+    
+    # Invalid raw params
+    my @invalid_raw_params;
+    foreach my $name (@invalid_params) {
+        my $raw_param = $error_infos->{$name}{original_key};
+        $raw_param = [$raw_param] unless ref $raw_param eq 'ARRAY';
+        push @invalid_raw_params, @$raw_param;
+    }
+    
+    return \@invalid_raw_params;
 }
 
 1;
@@ -161,18 +196,14 @@ Result data
     $result = $result->data($data);
     $data   = $result->data;
 
+=head2 C<raw_data>
+
+Raw data soon after data_filter is excuted.
+
+    $result = $result->raw_data($data);
+    $data   = $result->raw_data;
+
 =head1 METHODS
-
-=head2 C<add_error_info>
-
-Add error informations
-
-    $result->add_error_info($error_info);
-
-Example
-
-    $result->add_error_info({invalid_key => $product_key,
-                             message     => $message});
 
 =head2 C<is_valid>
 
@@ -186,13 +217,13 @@ Check if the data corresponding to the key is valid.
 
 =head2 C<error>
 
-Get one error message.
+Error message.
 
     $error = $result->error('title');
 
 =head2 C<errors>
 
-Get error messages
+Error messages
 
     $errors = $result->errors;
     @errors = $result->errors;
@@ -216,10 +247,47 @@ Get invalid keys
     @invalid_keys = $result->invalid_keys;
     $invalid_keys = $result->invalid_keys;
 
+=head2 C<add_error_info>
+
+Add error informations
+
+    $result->add_error_info($name => $error_info);
+
 =head2 C<remove_error_info>
 
 Remove error information
 
-    $result->remove_error_info($key);
-    
+    $result->remove_error_info($name);
+
+
+=head2 error_message EXPERIMENTAL
+
+Error message.
+
+    $error_message = $result->error_message('title');
+
+=head2 error_messages EXPERIMENTAL
+
+Error messages.
+
+    $error_messages = $result->error_messages;
+
+=head2 error_messages_to_hash EXPERIMENTAL
+
+Error messages as hash reference.
+
+    $error_messages = $result->error_messages_to_hash;
+
+=head2 invalid_params EXPERIMENTAL
+
+Invalid parameter names
+
+    $invalid_params = $result->invalid_params;
+
+=head2 invalid_raw_params EXPERIMENTAL
+
+Invalid raw data parameter names.
+
+    $raw_invalid_params = $result->invalid_raw_params;
+
 =cut
