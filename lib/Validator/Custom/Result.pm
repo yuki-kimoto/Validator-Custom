@@ -13,43 +13,6 @@ __PACKAGE__->attr(raw_data     => sub { {} });
 
 our $DEFAULT_MESSAGE = 'Error message not specified';
 
-sub add_error_info {
-    my $self = shift;
-    
-    # Merge
-    my $error_infos = ref $_[0] eq 'HASH' ? $_[0] : {@_};
-    $self->error_infos({%{$self->error_infos}, %$error_infos});
-    
-    return $self;
-}
-
-sub error { shift->error_message(@_) }
-
-sub errors { 
-    return wantarray
-         ? @{shift->error_messages(@_)}
-         : shift->error_messages(@_);
-}
-
-sub errors_to_hash { shift->error_messages_to_hash(@_) }
-
-sub error_reason {
-    my ($self, $name) = @_;
-    
-    # Parameter name not specifed
-    croak 'Parameter name must be specified'
-      unless $name;
-    
-    # Error reason
-    return $self->error_infos->{$name}{reason};
-}
-
-sub invalid_keys {
-    return wantarray
-         ? @{shift->invalid_params(@_)}
-         : shift->invalid_params(@_);
-}
-
 sub is_valid {
     my ($self, $key) = @_;
     
@@ -60,16 +23,40 @@ sub is_valid {
     return exists $self->error_infos->{$key} ? 0 : 1;
 }
 
-sub remove_error_info {
-    my ($self, $key) = @_;
+sub messages {
+    my $self = shift;
+
+    # Error messages
+    my @messages;
+    my $error_infos = $self->error_infos;
+    my @keys = sort { $error_infos->{$a}{position} <=>
+                      $error_infos->{$b}{position} }
+               keys %$error_infos;
+    foreach my $key (@keys) {
+        my $message = $error_infos->{$key}{message} || $DEFAULT_MESSAGE;
+        push @messages, $message if defined $message;
+    }
     
-    # Remove
-    delete $self->error_infos->{$key};
-    
-    return $self;
+    return \@messages;
 }
 
-sub error_message {
+sub messages_to_hash {
+    my $self = shift;
+    
+    # Error informations
+    my $error_infos = $self->error_infos;
+    
+    # Error messages
+    my $messages = {};
+    foreach my $name (keys %$error_infos) {
+        $messages->{$name} = $error_infos->{$name}{message} || 
+                           $DEFAULT_MESSAGE;
+    }
+    
+    return $messages;
+}
+
+sub message {
     my ($self, $name) = @_;
     
     # Parameter name not specifed
@@ -85,69 +72,74 @@ sub error_message {
          : undef;
 }
 
-sub error_messages {
-    my $self = shift;
-
-    # Error messages
-    my @error_messages;
-    my $error_infos = $self->error_infos;
-    my @keys = sort { $error_infos->{$a}{position} <=>
-                      $error_infos->{$b}{position} }
-               keys %$error_infos;
-    foreach my $key (@keys) {
-        my $message = $error_infos->{$key}{message} || $DEFAULT_MESSAGE;
-        push @error_messages, $message if defined $message;
-    }
-    
-    return \@error_messages;
-}
-
-sub error_messages_to_hash {
-    my $self = shift;
-    
-    # Error informations
-    my $error_infos = $self->error_infos;
-    
-    # Error messages
-    my $error_messages = {};
-    foreach my $name (keys %$error_infos) {
-        $error_messages->{$name} = $error_infos->{$name}{message} || 
-                           $DEFAULT_MESSAGE;
-    }
-    
-    return $error_messages;
-}
-
 sub invalid_params {
     my $self = shift;
     
-    # Invalid params
-    my $error_infos = $self->error_infos;
-    my @invalid_params = sort { $error_infos->{$a}{position} <=>
-                              $error_infos->{$b}{position} }
-                              keys %$error_infos;
+    # Invalid parameter names
+    my @invalid_params;
+    foreach my $name (@{$self->invalid_rule_keys}) {
+        my $param = $self->error_infos->{$name}{original_key};
+        $param = [$param] unless ref $param eq 'ARRAY';
+        push @invalid_params, @$param;
+    }
     
     return \@invalid_params;
 }
 
-sub invalid_raw_params {
+sub invalid_rule_keys {
     my $self = shift;
     
-    # Invalid params
+    # Invalid rule keys
     my $error_infos = $self->error_infos;
-    my @invalid_params = sort { $error_infos->{$a}{position} <=>
+    my @invalid_rule_keys = sort { $error_infos->{$a}{position} <=>
                               $error_infos->{$b}{position} }
                               keys %$error_infos;
     
-    # Invalid raw params
-    my @invalid_raw_params;
-    foreach my $name (@invalid_params) {
-        my $raw_param = $error_infos->{$name}{original_key};
-        $raw_param = [$raw_param] unless ref $raw_param eq 'ARRAY';
-        push @invalid_raw_params, @$raw_param;
-    }
+    return \@invalid_rule_keys;
+}
+
+sub error_reason {
+    my ($self, $name) = @_;
     
-    return \@invalid_raw_params;
+    # Parameter name not specifed
+    croak 'Parameter name must be specified'
+      unless $name;
+    
+    # Error reason
+    return $self->error_infos->{$name}{reason};
+}
+
+sub add_error_info {
+    my $self = shift;
+    
+    # Merge
+    my $error_infos = ref $_[0] eq 'HASH' ? $_[0] : {@_};
+    $self->error_infos({%{$self->error_infos}, %$error_infos});
+    
+    return $self;
+}
+
+sub remove_error_info {
+    my ($self, $key) = @_;
+    
+    # Remove
+    delete $self->error_infos->{$key};
+    
+    return $self;
+}
+
+# The following methods is deprecated
+sub error { shift->message(@_) }
+sub errors { 
+    return wantarray
+         ? @{shift->messages(@_)}
+         : shift->messages(@_);
+}
+sub errors_to_hash { shift->messages_to_hash(@_) }
+sub invalid_keys {
+    return wantarray
+         ? @{shift->invalid_rule_keys(@_)}
+         : shift->invalid_rule_keys(@_);
 }
 
 1;
@@ -158,40 +150,38 @@ Validator::Custom::Result - Validator::Custom result
 
 =head1 SYNOPSYS
     
+    # Result
+    my $result = $vc->validate($data, $rule);
+    
+    # Chacke if the result is valid.
+    my $is_valid = $result->is_valid;
+    
     # Error messages
-    @errors = $result->errors;
+    my $messages = $result->messages;
+
+    # Error messages to hash ref
+    my $messages_hash = $result->message_to_hash;
     
-    # One error message
-    $error = $result->error('title');
+    # A error message
+    my $message = $result->message('title');
     
-    # Error messages as hash ref
-    $errors = $result->errors_to_hash;
+    # Invalid parameter names
+    my $invalid_params = $result->invalid_params;
     
-    # Invalid keys
-    @invalid_keys = $result->invalid_keys;
+    # Invalid rule keys
+    my $invalid_rule_keys = $result->invalid_rule_keys;
+    
+    # Raw data
+    my $raw_data = $result->raw_data;
     
     # Result data
-    $data   = $result->data;
-    $value1 = $data->{key1};
-    
-    # Is the result valid?
-    $is_valid = $result->is_valid;
-    
-    # Is one data valid?
-    $is_valid = $result->is_valid('title');
+    my $result_data = $result->data;
 
 =head1 ATTRIBUTES
 
-=head2 C<error_infos>
-
-Error infos
-
-    $result      = $result->error_infos($error_infos);
-    $error_infos = $result->error_infos;
-
 =head2 C<data>
 
-Result data
+Result data.
 
     $result = $result->data($data);
     $data   = $result->data;
@@ -203,91 +193,101 @@ Raw data soon after data_filter is excuted.
     $result = $result->raw_data($data);
     $data   = $result->raw_data;
 
+=head2 C<error_infos>
+
+Error informations.
+
+    $result      = $result->error_infos($error_infos);
+    $error_infos = $result->error_infos;
+
 =head1 METHODS
 
 =head2 C<is_valid>
 
-Check if result is valid.
+Check if the result is valid.
 
     $is_valid = $result->is_valid;
 
-Check if the data corresponding to the key is valid.
+=head2 C<messages>
 
-    $is_valid = $result->is_valid('title');
+Error messages.
 
-=head2 C<error>
+    $messages = $result->messages;
+
+=head2 C<message>
 
 Error message.
 
-    $error = $result->error('title');
+    $message = $result->message('title');
 
-=head2 C<errors>
+=head2 C<messages_to_hash>
 
-Error messages
+Error messages to hash reference.
 
-    $errors = $result->errors;
-    @errors = $result->errors;
+    $messages = $result->messages_to_hash;
+
+=head2 C<invalid_params>
+
+Invalid raw data parameter names.
+
+    $invalid_params = $result->invalid_params;
+
+=head2 C<invalid_rule_keys>
+
+Invalid rule keys
+
+    $invalid_rule_keys = $result->invalid_rule_keys;
 
 =head2 C<error_reason>
 
-Get error reason. this is same as constraint name.
+Error reason. This is constraint name.
 
-    $error_reason = $result->error_reason($key);
-
-=head2 C<errors_to_hash>
-
-Get error messages as hash ref
-
-    $errors = $result->errors_to_hash;
-
-=head2 C<invalid_keys>
-
-Get invalid keys
-
-    @invalid_keys = $result->invalid_keys;
-    $invalid_keys = $result->invalid_keys;
+    $error_reason = $result->error_reason('title');
 
 =head2 C<add_error_info>
 
-Add error informations
+Add error informations.
 
     $result->add_error_info($name => $error_info);
 
 =head2 C<remove_error_info>
 
-Remove error information
+Remove error information.
 
     $result->remove_error_info($name);
 
+=head2 C<errors> DEPRECATED
 
-=head2 error_message EXPERIMENTAL
-
-Error message.
-
-    $error_message = $result->error_message('title');
-
-=head2 error_messages EXPERIMENTAL
+errors() is deprecated. Please use message() instead.
 
 Error messages.
 
-    $error_messages = $result->error_messages;
+    $errors = $result->errors;
+    @errors = $result->errors;
 
-=head2 error_messages_to_hash EXPERIMENTAL
+=head2 C<errors_to_hash> DEPRECATED
 
-Error messages as hash reference.
+errors_to_hash() is deprecated. Please use messages_to_hash() instead.
 
-    $error_messages = $result->error_messages_to_hash;
+Error messages to hash reference.
 
-=head2 invalid_params EXPERIMENTAL
+    $errors = $result->errors_to_hash;
 
-Invalid parameter names
+=head2 C<error> DEPRECATED
 
-    $invalid_params = $result->invalid_params;
+error() is deprecated. Please use message() instead.
 
-=head2 invalid_raw_params EXPERIMENTAL
+A error message
 
-Invalid raw data parameter names.
+    $error = $result->error('title');
 
-    $raw_invalid_params = $result->invalid_raw_params;
+=head2 C<invalid_keys> DEPRECATED
+
+invalid_keys() is deprecated. Please use invalid_rule_keys() instead.
+
+Invalid rule keys.
+
+    @invalid_keys = $result->invalid_keys;
+    $invalid_keys = $result->invalid_keys;
 
 =cut

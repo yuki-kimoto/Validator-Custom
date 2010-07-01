@@ -10,11 +10,11 @@ use Validator::Custom::Result;
 
 __PACKAGE__->dual_attr('constraints', default => sub { {} },
                                       inherit => 'hash_copy');
-__PACKAGE__->attr('data_filter');
-__PACKAGE__->attr(error_stock => 1);
 __PACKAGE__->attr('rule');
-
+__PACKAGE__->attr(error_stock => 1);
+__PACKAGE__->attr('data_filter');
 __PACKAGE__->attr(syntax => <<'EOS');
+
 ### Syntax of validation rule
     my $rule = [                          # 1. Rule is array ref
         key1 => [                         # 2. Constraints is array ref
@@ -297,11 +297,11 @@ Validator::Custom - Simple Data Validation
 
 =head1 VERSION
 
-Version 0.1103
+Version 0.1201
 
 =cut
 
-our $VERSION = '0.1103';
+our $VERSION = '0.1201';
 
 =head1 SYNOPSYS
     
@@ -374,28 +374,31 @@ our $VERSION = '0.1103';
     );
     
     # Validation
-    my $result = $validator->validate($data);
+    my $vresult = $validator->validate($data, $rule);
+    
+    # Chacke if the vresult is valid.
+    my $is_valid = $vresult->is_valid;
     
     # Error messages
-    my @errors = $result->errors;
-    
-    # One error message
-    my $error = $result->error('age');
+    my $messages = $vresult->messages;
 
-    # Error messages by hash ref
-    my $errors = $result->errors_to_hash;
-
-    # Invalid keys
-    my @invalid_keys = $result->invalid_keys;
+    # Error messages to hash ref
+    my $messages_hash = $vresult->message_to_hash;
     
-    # Result data
-    my $result_data = $result->data;
+    # A error message
+    my $message = $vresult->message('title');
     
-    # Is the result valid?
-    my $ret = $result->is_valid;
+    # Invalid parameter names
+    my $invalid_params = $vresult->invalid_params;
     
-    # Is one data valid
-    $ret = $result->is_valid('age');
+    # Invalid rule keys
+    my $invalid_rule_keys = $vresult->invalid_rule_keys;
+    
+    # Raw data
+    my $raw_data = $vresult->raw_data;
+    
+    # vresult data
+    my $vresult_data = $vresult->data;
     
     # Corelative validation
     my $rule = [
@@ -473,24 +476,33 @@ Validation is done by using data and rule.
     my $result = $validator->validate($data, $rule);
 
 validate() return value is L<Validator::Custom::Result> object.
-This has validation result, such as error message, invalid keys,
-converted data.
 
-    # Restlt
-    my $result = $validator->validate($data, $rule);
+    # Validation
+    my $vresult = $validator->validate($data, $rule);
     
-    # Error message
-    my @errors = $result->errors;
+    # Chacke if the vresult is valid.
+    my $is_valid = $vresult->is_valid;
     
-    # Invalid keys
-    my @invalid_keys = $result->invalid_keys;
+    # Error messages
+    my $messages = $vresult->messages;
+
+    # Error messages to hash ref
+    my $messages_hash = $vresult->message_to_hash;
     
-    # Producted values
-    my $data   = $result->data;
-    my $value = $data->{key};
+    # A error message
+    my $message = $vresult->message('title');
     
-    # Is it valid?
-    my $is_valid = $result->is_valid;
+    # Invalid parameter names
+    my $invalid_params = $vresult->invalid_params;
+    
+    # Invalid rule keys
+    my $invalid_rule_keys = $vresult->invalid_rule_keys;
+    
+    # Raw data
+    my $raw_data = $vresult->raw_data;
+    
+    # vresult data
+    my $vresult_data = $vresult->data;
 
 I explanin constraint function's more details.
 
@@ -751,21 +763,30 @@ This module is stable. The following attribute and method names will not be chan
     data_filter
     rule
     syntax
+    
     new
     register_constraint
     validate
 
     # DBIx::Custom::Result
-    error_infos
     data
-    add_error_info
+    raw_data
+    error_infos
+    
     is_valid
-    error
-    errors
+    messages
+    message
+    messages_to_hash
+    invalid_params
+    invalid_rule_keys
     error_reason
-    errors_to_hash
-    invalid_keys
+    add_error_info
     remove_error_info
+    
+    errors(DEPRECATED)
+    errors_to_hash(DEPRECATED)
+    error(DEPRECATED)
+    invalid_keys(DEPRECATED)
 
 =head1 AUTHOR
 

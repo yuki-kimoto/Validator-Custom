@@ -1,10 +1,14 @@
 0.1201
-  added Validator::Custom::Result error_message() EXPERIMENTAL
-  added Validator::Custom::Result error_messages() EXPERIMENTAL
-  added Validator::Custom::Result error_messages_to_hash() EXPERIMENTAL
-  added Validator::Custom::Result invalid_params() EXPERIMENTAL
-  added Validator::Custom::Result invalid_raw_params() EXPERIMENTAL
-  added Validator::Custom::Result raw_data() EXPERIMENTAL
+  added Validator::Custom::Result message()
+  added Validator::Custom::Result messages()
+  added Validator::Custom::Result messages_to_hash()
+  added Validator::Custom::Result invalid_params()
+  added Validator::Custom::Result invalid_rule_keys()
+  added Validator::Custom::Result raw_data()
+  deprecated Validator::Custom::Result errors()
+  deprecated Validator::Custom::Result errors_to_hash()
+  deprecated Validator::Custom::Result error()
+  deprecated Validator::Custom::Result invalid_keys
 0.1103
   updated document.
   Validator::Custom became stable. Backword compatible of 0.1103 is keeped. You can use Validator::Custom at ease.

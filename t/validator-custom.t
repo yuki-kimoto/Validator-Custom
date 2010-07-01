@@ -33,7 +33,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
     is_deeply($errors, [qw/k1Error2 k2Error2/], 'rule');
     is_deeply($errors_hash, {k1 => 'k1Error2', k2 => 'k2Error2'}, 'rule errors hash');
     
-    my $errors_hash2 = $vresult->error_messages_to_hash;
+    my $errors_hash2 = $vresult->messages_to_hash;
     is_deeply($errors_hash2, {k1 => 'k1Error2', k2 => 'k2Error2'}, 'rule errors hash');
     
     my @errors = Validator::Custom->new(rule => $rule)->validate($data)->errors;
@@ -80,7 +80,7 @@ use T1;
     my $result= $vc->validate($data, $rule);
     is_deeply([$result->errors], [qw/k2Error1 k4Error1/], 'Custom validator');
     is_deeply(scalar $result->invalid_keys, [qw/k2 k4/], 'invalid keys hash');
-    is_deeply($result->invalid_params, [qw/k2 k4/], 'invalid params hash');
+    is_deeply($result->invalid_rule_keys, [qw/k2 k4/], 'invalid params hash');
     is_deeply([$result->invalid_keys], [qw/k2 k4/], 'invalid keys hash');  
     ok(!$result->is_valid, 'is_valid');
     
@@ -422,10 +422,10 @@ $vresult = $vc->validate($params, $rule);
 ok(!$vresult->is_valid, "$test : invalid");
 is_deeply([$vresult->invalid_keys], ['key1'], "$test : invalid_keys");
 is_deeply([$vresult->errors], ['Error-key1-0'], "$test : errors");
-is_deeply($vresult->error_messages, ['Error-key1-0'], "$test : error_messages");
+is_deeply($vresult->messages, ['Error-key1-0'], "$test : messages");
 is($vresult->error_reason('key1'), 'Int', "$test : error reason");
 is($vresult->error('key1'), 'Error-key1-0', "$test: error");
-is($vresult->error_message('key1'), 'Error-key1-0', "$test: error");
+is($vresult->message('key1'), 'Error-key1-0', "$test: error");
 eval{ $vresult->error };
 like($@, qr/Parameter name must be specified/, 'error not Parameter name');
 
@@ -458,7 +458,7 @@ is_deeply([$vresult->invalid_keys], ['key1'], "$test: basic");
 is_deeply($vresult->raw_data, {key1 => 'a'}, "raw_data");
 
 
-test 'Validator::Custom::Result raw_invalid_params';
+test 'Validator::Custom::Result raw_invalid_rule_keys';
 $vc = Validator::Custom->new;
 $vc->register_constraint(p => sub {
     my $values = shift;
@@ -484,6 +484,6 @@ $rule = [
 ];
 $vresult = $vc->validate($data, $rule);
 
-is_deeply($vresult->invalid_params, ['k12', 'k3'], 'invalid_params');
-is_deeply($vresult->invalid_raw_params, ['k1', 'k2', 'k3'],
-          'invalid_raw_params');
+is_deeply($vresult->invalid_rule_keys, ['k12', 'k3'], 'invalid_rule_keys');
+is_deeply($vresult->invalid_params, ['k1', 'k2', 'k3'],
+          'invalid_params');
