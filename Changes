@@ -1,3 +1,8 @@
+0.1202
+  fixed document
+  fixed error message
+  added EXPERIMENTAL shared_rule attribute
+
 0.1201
   added Validator::Custom::Result message()
   added Validator::Custom::Result messages()

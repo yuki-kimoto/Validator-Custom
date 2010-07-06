@@ -11,9 +11,11 @@ use Validator::Custom::Result;
 __PACKAGE__->dual_attr('constraints', default => sub { {} },
                                       inherit => 'hash_copy');
 __PACKAGE__->attr('rule');
+__PACKAGE__->attr(shared_rule => sub { [] });
 __PACKAGE__->attr(error_stock => 1);
 __PACKAGE__->attr('data_filter');
 __PACKAGE__->attr(syntax => <<'EOS');
+
 
 ### Syntax of validation rule
     my $rule = [                          # 1. Rule is array ref
@@ -64,6 +66,9 @@ sub validate {
     
     # Validation rule
     $rule ||= $self->rule;
+    
+    # Shared rule
+    my $shared_rule = $self->shared_rule;
     
     # Data filter
     my $filter = $self->data_filter;
@@ -124,6 +129,9 @@ sub validate {
         # Already valid
         next if $valid_keys->{$result_key};
         
+        # Add shared rule
+        push @$constraints, @$shared_rule;
+        
         # Validation
         my $value;
         foreach my $constraint (@$constraints) {
@@ -172,7 +180,7 @@ sub validate {
                 $constraint_function = $self->constraints->{$constraint};
                 
                 # Check constraint function
-                croak "'$constraint' is not resisted"
+                croak "'$constraint' is not registered"
                   unless ref $constraint_function eq 'CODE'
             }
             
@@ -755,6 +763,20 @@ Validation rule has the following syntax.
             '@constraint5_1'              # 7. array's items validation
         ]
     ];
+
+=head2 C<shared_rule> EXPERIMENTAL
+
+Shared rule. Shared rule is added the head of normal rule in validation.
+
+    $vc          = $vc->shared_rule(\@rule);
+    $shared_rule = $vc->shared_rule;
+
+Example
+
+    $vc->shared_rule([
+        ['defined',   'Must be defined'],
+        ['not_blank', 'Must be not blank']
+    ]);
 
 =head2 C<syntax>
 

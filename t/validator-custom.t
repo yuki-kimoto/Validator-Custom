@@ -1,4 +1,4 @@
-use Test::More tests => 69;
+use Test::More tests => 70;
 
 use strict;
 use warnings;
@@ -123,7 +123,7 @@ use T1;
         ],
     ];    
     eval{T1->new->validate($data, $rule)};
-    like($@, qr/'No' is not resisted/, 'no custom type');
+    like($@, qr/'No' is not registered/, 'no custom type');
 }
 
 {
@@ -487,3 +487,33 @@ $vresult = $vc->validate($data, $rule);
 is_deeply($vresult->invalid_rule_keys, ['k12', 'k3'], 'invalid_rule_keys');
 is_deeply($vresult->invalid_params, ['k1', 'k2', 'k3'],
           'invalid_params');
+
+test 'shared_rule';
+$vc = Validator::Custom->new;
+$vc->register_constraint(
+    defined   => sub { defined $_[0] },
+    not_blank => sub { $_[0] ne '' },
+    int       => sub { $_[0] =~ /\d+/ }
+);
+$data = {
+    k2 => 'a',
+    k3 => 1
+};
+$rule = [
+    k1 => [
+        # Nothing
+    ],
+    k2 => [
+        # Nothing
+    ],
+    k3 => [
+        'int'
+    ]
+];
+$vc->shared_rule([
+    ['defined', 'Must be defined'],
+    ['not_blank',   'Must be blank']
+]);
+$vresult = $vc->validate($data, $rule);
+is_deeply($vresult->messages_to_hash, {k1 => 'Must be defined'},
+          'shared rule');
