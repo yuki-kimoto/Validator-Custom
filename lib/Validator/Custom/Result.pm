@@ -128,7 +128,7 @@ sub remove_error_info {
     return $self;
 }
 
-# The following methods is deprecated
+# These methods is deprecated
 sub error { shift->message(@_) }
 sub errors { 
     return wantarray
@@ -146,7 +146,7 @@ sub invalid_keys {
 
 =head1 NAME
 
-Validator::Custom::Result - Validator::Custom result
+Validator::Custom::Result - Result of validation
 
 =head1 SYNOPSYS
     
@@ -256,7 +256,7 @@ Remove error information.
 
     $result->remove_error_info($name);
 
-=head2 C<errors> DEPRECATED
+=head2 C<(deprecated) errors>
 
 errors() is deprecated. Please use message() instead.
 
@@ -265,7 +265,7 @@ Error messages.
     $errors = $result->errors;
     @errors = $result->errors;
 
-=head2 C<errors_to_hash> DEPRECATED
+=head2 C<(deprecated) errors_to_hash>
 
 errors_to_hash() is deprecated. Please use messages_to_hash() instead.
 
@@ -273,7 +273,7 @@ Error messages to hash reference.
 
     $errors = $result->errors_to_hash;
 
-=head2 C<error> DEPRECATED
+=head2 C<(deprecated) error> 
 
 error() is deprecated. Please use message() instead.
 
@@ -281,7 +281,7 @@ A error message
 
     $error = $result->error('title');
 
-=head2 C<invalid_keys> DEPRECATED
+=head2 C<(deprecated) invalid_keys>
 
 invalid_keys() is deprecated. Please use invalid_rule_keys() instead.
 

@@ -301,25 +301,20 @@ sub _rule_syntax {
 
 =head1 NAME
 
-Validator::Custom - Data validator basic class
+Validator::Custom - Validates user input easily
 
 =cut
 
-our $VERSION = '0.1202';
+our $VERSION = '0.1203';
 
 =head1 SYNOPSYS
     
-    # Load module
+    # Load module and create object
     use Validator::Custom;
-
-    # Create
     my $vc = Validator::Custom->new;
 
-    # Data
-    my $data = { 
-        age => 19, 
-        name => 'Ken Suzuki'
-    };
+    # Data used at validation
+    my $data = {age => 19, name => 'Ken Suzuki'};
     
     # Register constraint
     $vc->register_constraint(
@@ -342,7 +337,7 @@ our $VERSION = '0.1202';
         },
     );
     
-    # Validation rule
+    # Rule
     my $rule = [
         age => [
             'int'
@@ -358,7 +353,7 @@ our $VERSION = '0.1202';
     
     ### Validator::Custom::Result
     
-    # Chacke if the vresult is valid.
+    # Chacke if the data is valid.
     my $is_valid = $vresult->is_valid;
     
     # Error messages
@@ -367,7 +362,7 @@ our $VERSION = '0.1202';
     # Error messages to hash ref
     my $messages_hash = $vresult->messages_to_hash;
     
-    # A error message
+    # Error message
     my $message = $vresult->message('age');
     
     # Invalid parameter names
@@ -447,24 +442,24 @@ our $VERSION = '0.1202';
 
 =head1 DESCRIPTIONS
 
-L<Validator::Custom> is data validator.
-L<Validator::Custom> help you to check if the data is valid.
+L<Validator::Custom> validates user input easily.
 
-    # Load module and create object
+=head2 C<1. Basic usage>
+
+At first, you B<load module> and B<create object>.
+
     use Validator::Custom;
     my $vc = Validator::Custom->new;
 
-Data is hash reference.
+B<Data> used in validation must be B<hash reference>.
 
-    # Data
     my $data = { 
         age => 19, 
         name => 'Ken Suzuki'
     };
 
-Constraint function registered by register_constraint() method.
-   
-    # Register constraint function
+you can B<register constraint function> by C<register_constraint()>.
+
     $vc->register_constraint(
         int => sub {
             my $value    = shift;
@@ -485,9 +480,10 @@ Constraint function registered by register_constraint() method.
         },
     );
 
-Validation rule is array reference. Message can be defined if needed.
+You can define B<validation rule>, using B<data key>(age, name) and
+B<constraint function> (int, not_blank, length) and B<error message>.
+Validation rule must be B<array reference>.
 
-    # Validation rule
     my $rule = [
         age => [
             'int'
@@ -498,28 +494,17 @@ Validation rule is array reference. Message can be defined if needed.
         ]
     ];
 
-Constraints section must be array reference if constraint is only the one.
+You can validate the data by C<validate()>. This method return
+L<Validator::Custom::Result> object.
 
-    # Wrong!
-    my $rule = [
-        age => 'int' # Constraint section must be array reference!
-        name => [
-            ['not_blank',        "Name must be exists"],
-            [{length => [1, 5]}, "Name length must be 1 to 5"]
-        ]
-    ];
-
-validate() method validate data,
-and return L<Validator::Custom::Result> object.
-
-    # Validate
     my $vresult = $vc->validate($data, $rule);
 
-L<Validator::Custom::Result> has the following methods.
+=head2 C<2. Validation result>
 
-    ### Validator::Custom::Result
+L<Validator::Custom::Result> constains various information.
+This has the many methods.
     
-    # Chacke if the vresult is valid.
+    # Chacke if the date is valid.
     my $is_valid = $vresult->is_valid;
     
     # Error messages
@@ -543,29 +528,26 @@ L<Validator::Custom::Result> has the following methods.
     # Result data
     my $result_data = $vresult->data;
 
-The following is L<Validator::Custom::Result> examples.
+I show some examples.
 
-Example1:
+B<Example1: Get error messages>
 
-    #  Get ordered error messages
     unless ($vresult->is_valid) {
         my $messages = $vresult->messages;
         
         # Do something
     }
 
-Example2: 
+B<Example2: Get error messages as hash reference>
 
-    # Get error messages as hash reference
     unless ($vresult->is_valid) {
         my $messages = $vresult->messages_to_hash;
 
         # Do something
     }
 
-Example3: 
+B<Example3: Combination with> L<HTML::FillInForm>
 
-    # Combination with L<HTML::FillInForm>
     unless ($vresult->is_valid) {
         
         my $html = get_something_way();
@@ -579,9 +561,11 @@ Example3:
         # Do something
     }
 
-L<Validator:Custom> also provide 'OR' validation. Key is written repeatedly.
+=head2 C<3. Advanced features>
 
-    # "OR" validation
+L<Validator:Custom> provide B<'OR' validation>. B<Key is written repeatedly>
+in 'OR' validation.
+
     $rule = [
         email => [
             'blank'
@@ -592,10 +576,9 @@ L<Validator:Custom> also provide 'OR' validation. Key is written repeatedly.
         ]
     ];
     
-If data is not hash reference, you can converted data to hash reference
-by data_filter() method.
+If data is not hash reference, you can B<converted data to hash reference>
+by C<data_filter()>.
 
-    # Data filter
     $vc->data_filter(
         sub { 
             my $data = shift;
@@ -606,12 +589,12 @@ by data_filter() method.
         }
     );
 
-=head2 Constraint function specification
+=head2 C<4. Specification of constraint function>
 
 Constraint function receive three arguments,
-value of data, arguments of rule, and L<Validator::Custom> object.
+B<1. value of data>, B<2. argument of rule>, B<3. Validator::Custom object>.
 
-Constraint function must be return value to check if the value is valid.
+And this function must return B<bool value> to check if the value is valid.
 
     # Register constraint
     $vc->register_constraint(
@@ -624,37 +607,35 @@ Constraint function must be return value to check if the value is valid.
         }
     )
 
-Value is like 19, 'Ken Suzuki' in the data.
+In the following data, B<1. value of data> is 'Ken Suzuki'. 
+B<2. argument of rule> is [1, 5]. 
 
     # Data
-    my $data = { 
-        age => 19, 
-        name => 'Ken Suzuki'
-    };
+    my $data = {name => 'Ken Suzuki'};
 
-In case corelative validation, multi values is paccked to array reference,
-so first argument of constraint function is ['xxx', 'xxx'].
+    # Rule
+    # Rule
+    my $rule = [
+        name => [
+            {length => [1, 5]}
+        ]
+    ];
+
+In case corelative validation, values is packed to array reference,
+B<1. value of data> is ['xxx', 'xxx'].
 
     $data = {password1 => 'xxx', password2 => 'xxx'};
 
     $rule = [
         {password_check => [qw/password1 password2/]} => [
-            ['same', 'Two password must be equal']
+            ['duplication', 'Two password must be equal']
         ]
     ];
 
-Second argument is arguments of the rule. It is specified in the rule,
-like [1, 5].
+Constraint function can be return B<converted value>. If you return converted value, you must return B<array reference>,
+first argument is B<bool value> to check if the value is valid,
+second argument is B<converted value>.
 
-    my $rule = [
-        name => [
-            [{length => [1, 5]}, "Name length must be 1 to 5"]
-        ]
-    ];
-
-Constraint function can be also return converted value. If you return converted value, you must return array reference, which first argument is the one for checking if the value is valid, second argument is converted value.
-
-    # Register filter , instead of constraint
     $vc->register_constraint(
         trim => sub {
             my $value = shift;
@@ -666,11 +647,9 @@ Constraint function can be also return converted value. If you return converted 
         }
     );
 
-=head2 Extending Validator::Custom
+=head2 C<5. Extend Validator::Custom>
 
-L<Validator::Custom> is easy to extend. You can register constraint functions to your class.
-
-    ### Extending Validator:Custom
+L<Validator::Custom> is easy to extend. You can register constraint functions to Your class by C<register_constraint>.
     
     package YourValidator;
     use base 'Validator::Custom';
@@ -764,7 +743,7 @@ Validation rule has the following syntax.
         ]
     ];
 
-=head2 C<shared_rule> EXPERIMENTAL
+=head2 C<shared_rule EXPERIMENTAL>
 
 Shared rule. Shared rule is added the head of normal rule in validation.
 
@@ -819,7 +798,7 @@ Example:
 
 =head2 C<validate>
 
-Validation
+Validate data.
 
     $vresult = $vc->validate($data, $rule);
     $vresult = $vc->validate($data);
@@ -858,16 +837,16 @@ This module is stable. The following attribute and method keep backword compatib
     add_error_info
     remove_error_info
     
-    errors(DEPRECATED)
-    errors_to_hash(DEPRECATED)
-    error(DEPRECATED)
-    invalid_keys(DEPRECATED)
+    (deprecated) errors
+    (deprecated) errors_to_hash
+    (deprecated) error
+    (deprecated) invalid_keys
 
 =head1 AUTHOR
 
 Yuki Kimoto, C<< <kimoto.yuki at gmail.com> >>
 
-L<Validator::Custom> is developed on L<http://github.com/yuki-kimoto/Validator-Custom>
+L<http://github.com/yuki-kimoto/Validator-Custom>
 
 =head1 COPYRIGHT & LICENCE
 
