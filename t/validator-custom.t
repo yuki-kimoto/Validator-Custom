@@ -1,4 +1,4 @@
-use Test::More tests => 109;
+use Test::More tests => 110;
 
 use strict;
 use warnings;
@@ -1174,3 +1174,35 @@ sub validate_exception {
     like($@, $error, "$test_name exception");
 }
 
+test 'trim';
+{
+    my $data = {
+        int_param => ' 123 ',
+        collapse  => "  \n a \r\n b\nc  \t",
+        left      => '  abc  ',
+        right     => '  def  '
+    };
+
+    my $validation_rule = [
+      int_param => [
+          ['trim']
+      ],
+      collapse  => [
+          ['trim_collapse']
+      ],
+      left      => [
+          ['trim_lead']
+      ],
+      right     => [
+          ['trim_trail']
+      ]
+    ];
+
+    my $result_data= Validator::Custom->new->validate($data,$validation_rule)->data;
+
+    is_deeply(
+        $result_data, 
+        { int_param => '123', left => "abc  ", right => '  def', collapse => "a b c"},
+        'trim check'
+    );
+}

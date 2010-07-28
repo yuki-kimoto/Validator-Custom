@@ -33,6 +33,10 @@ __PACKAGE__->register_constraint(
     between           => \&Validator::Custom::Basic::Constraints::between,
     decimal           => \&Validator::Custom::Basic::Constraints::decimal,
     in_array          => \&Validator::Custom::Basic::Constraints::in_array,
+    trim              => \&Validator::Custom::Basic::Constraints::trim,
+    trim_lead         => \&Validator::Custom::Basic::Constraints::trim_lead,
+    trim_trail        => \&Validator::Custom::Basic::Constraints::trim_trail,
+    trim_collapse     => \&Validator::Custom::Basic::Constraints::trim_collapse
 );
 
 __PACKAGE__->attr('rule');
@@ -1204,6 +1208,46 @@ Check if the food ordered is in menu
         food => [
             {in_array => [qw/sushi bread apple/]}
         ]
+    ];
+
+=head2 C<trim>
+
+Trim leading and trailing white space
+
+    my $rule = [
+        key1 => [
+            ['trim']           # ' 123 ' -> '123'
+        ],
+    ];
+    
+=head2 C<trim_lead>
+
+Trim leading white space
+
+    my $rule = [
+        key1 => [
+            ['trim_lead']      # '  abc  ' -> 'abc   '
+        ],
+    ];
+
+=head2 C<trim_trail>
+
+Trim trailing white space
+
+    my $rule = [
+        key1 => [
+            ['trim_trail']     # '  def  ' -> '   def'
+        ]
+    ];
+
+=head2 C<trim_collapse>
+
+Trim leading and trailing white space, and collapse all whitespace characters into a single space.
+
+    my $rule = [
+        key1 => [
+            ['trim_collapse']  # "  \n a \r\n b\nc  \t" -> 'a b c'
+        ],
     ];
 
 =head1 BUGS

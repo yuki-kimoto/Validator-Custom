@@ -1,3 +1,10 @@
+0.1208
+  added the following constraints
+    trim
+    trim_lead
+    trim_trail
+    trim_collapse
+
 0.1207
   added the following constraints
     not_defined

@@ -139,6 +139,33 @@ sub in_array {
     return $match > 0 ? 1 : 0;
 }
 
+sub trim {
+    my $value = shift;
+    $value =~ s/^\s*(.*?)\s*$/$1/ms;
+    return [1, $value];
+}
+
+sub trim_lead {
+    my $value = shift;
+    $value =~ s/^\s+(.*)$/$1/ms;
+    return [1, $value];
+}
+
+sub trim_trail{
+    my $value = shift;
+    $value =~ s/^(.*?)\s+$/$1/ms;
+    return [1, $value];
+}
+
+sub trim_collapse {
+    my $value = shift;
+    if (defined $value) {
+        $value =~ s/\s+/ /g;
+        $value =~ s/^\s*(.*?)\s*$/$1/ms;
+    }
+    return [1, $value];
+}
+
 1;
 
 =head1 NAME
@@ -149,45 +176,53 @@ Validator::Custom::Basic::Constraints - Basic constraint functions
 
 Constraint functions is explained in L<Validator::Custom>
 
-=head2 defined
+=head2 C<defined>
 
-=head2 not_defined
+=head2 C<not_defined>
 
-=head2 not_blank
+=head2 C<not_blank>
 
-=head2 blank
+=head2 C<blank>
 
-=head2 not_space
+=head2 C<not_space>
 
-=head2 int
+=head2 C<int>
 
-=head2 uint
+=head2 C<uint>
 
-=head2 decimal
+=head2 C<decimal>
     
-=head2 ascii
+=head2 C<ascii>
 
-=head2 length
+=head2 C<length>
 
-=head2 http_url
+=head2 C<http_url>
 
-=head2 selected_at_least
+=head2 C<selected_at_least>
 
-=head2 regex
+=head2 C<regex>
 
-=head2 duplication
+=head2 C<duplication>
 
-=head2 shift_array
+=head2 C<shift_array>
 
-=head2 greater_than
+=head2 C<greater_than>
 
-=head2 less_than
+=head2 C<less_than>
 
-=head2 equal_to
+=head2 C<equal_to>
 
-=head2 between
+=head2 C<between>
 
-=head2 in_array
+=head2 C<in_array>
+
+=head2 C<trim>
+
+=head2 C<trim_lead>
+
+=head2 C<trim_trail>
+
+=head2 C<trim_collapse>
 
 =head1 AUTHOR
 
