@@ -6,10 +6,35 @@ use warnings;
 use base 'Object::Simple';
 
 use Carp 'croak';
+use Validator::Custom::Basic::Constraints;
 use Validator::Custom::Result;
 
 __PACKAGE__->dual_attr('constraints', default => sub { {} },
                                       inherit => 'hash_copy');
+
+__PACKAGE__->register_constraint(
+    not_defined       => \&Validator::Custom::Basic::Constraints::not_defined,
+    defined           => \&Validator::Custom::Basic::Constraints::defined,
+    not_space         => \&Validator::Custom::Basic::Constraints::not_space,
+    not_blank         => \&Validator::Custom::Basic::Constraints::not_blank,
+    blank             => \&Validator::Custom::Basic::Constraints::blank,
+    int               => \&Validator::Custom::Basic::Constraints::int,
+    uint              => \&Validator::Custom::Basic::Constraints::uint,
+    ascii             => \&Validator::Custom::Basic::Constraints::ascii,
+    shift             => \&Validator::Custom::Basic::Constraints::shift_array,
+    duplication       => \&Validator::Custom::Basic::Constraints::duplication,
+    length            => \&Validator::Custom::Basic::Constraints::length,
+    regex             => \&Validator::Custom::Basic::Constraints::regex,
+    http_url          => \&Validator::Custom::Basic::Constraints::http_url,
+    selected_at_least => \&Validator::Custom::Basic::Constraints::selected_at_least,
+    greater_than      => \&Validator::Custom::Basic::Constraints::greater_than,
+    less_than         => \&Validator::Custom::Basic::Constraints::less_than,
+    equal_to          => \&Validator::Custom::Basic::Constraints::equal_to,
+    between           => \&Validator::Custom::Basic::Constraints::between,
+    decimal           => \&Validator::Custom::Basic::Constraints::decimal,
+    in_array          => \&Validator::Custom::Basic::Constraints::in_array,
+);
+
 __PACKAGE__->attr('rule');
 __PACKAGE__->attr(shared_rule => sub { [] });
 __PACKAGE__->attr(error_stock => 1);
@@ -305,7 +330,7 @@ Validator::Custom - Validates user input easily
 
 =cut
 
-our $VERSION = '0.1206';
+our $VERSION = '0.1207';
 
 =head1 SYNOPSYS
 
@@ -317,27 +342,6 @@ Basic usages
 
     # Data used at validation
     my $data = {age => 19, name => 'Ken Suzuki'};
-    
-    # Register constraint
-    $vc->register_constraint(
-        int => sub {
-            my $value    = shift;
-            my $is_valid = $value =~ /^\d+$/;
-            return $is_valid;
-        },
-        not_blank => sub {
-            my $value = shift;
-            my $is_valid = $value ne '';
-            return $is_valid;
-        },
-        length => sub {
-            my ($value, $args) = @_;
-            my ($min, $max) = @$args;
-            my $length = length $value;
-            my $is_valid = $length >= $min && $length <= $max;
-            return $is_valid;
-        },
-    );
     
     # Rule
     my $rule = [
@@ -383,6 +387,15 @@ Result of validation
     
 Advanced features
 
+    # Register constraint
+    $vc->register_constraint(
+        email => sub {
+            require Email::Valid;
+            return 0 unless $_[0];
+            return Email::Valid->address(-address => $_[0]) ? 1 : 0;
+        }
+    );
+    
     # Multi parameters validation
     $data = {password1 => 'xxx', password2 => 'xxx'};
     $vc->register_constraint(
@@ -441,7 +454,12 @@ Extending
     use base 'Validator::Custom';
     
     __PACKAGE__->register_constraint(
-        defined  => sub { defined $_[0] }
+    $vc->register_constraint(
+        email => sub {
+            require Email::Valid;
+            return 0 unless $_[0];
+            return Email::Valid->address(-address => $_[0]) ? 1 : 0;
+        }
     );
     
     1;
@@ -467,7 +485,7 @@ constraint function can receive any arguments, other than parameter value.
 =item *
 
 Can create original class, extending Validator::Custom
-(See L<Validator::Custom::HTMLForm>)
+(See L<Validator::Custom::HTMLFOrm>)
 
 =item *
 
@@ -605,7 +623,7 @@ Combination with L<HTML::FillInForm>
 
 =head2 4. Syntax of rule
 
-=head3 C<4.1. Basic syntax>
+=head3 C<Basic syntax>
 
 Rule must be array reference. This is for keeping the order of
 invalid parameter names.
@@ -631,7 +649,7 @@ expression.
         # ]
     ];
 
-=head3 C<4.2. Constraint expression>
+=head3 C<Constraint expression>
 
 Constraint expression is one of four.
 
@@ -681,7 +699,7 @@ B<Example:>
         ]
     ];
 
-=head3 C<4.3 Multi-paramters validation>
+=head3 C<Multi-paramters validation>
 
 Multi-paramters validation is available.
 
@@ -696,7 +714,7 @@ Multi-paramters validation is available.
 "password1" and "password2" is parameter names.
 "password_check" is result key.
 
-=head3 C<4.4. Multi-values validation>
+=head3 C<Multi-values validation>
 
 Multi-values validation is available
 if the paramter value is array reference.
@@ -712,7 +730,7 @@ Add "@" mark before constraint name.
         ]
     ];
 
-=head3 C<4.5. Validation of OR condition>
+=head3 C<Validation of OR condition>
 
 OR condition validation is available.
 Write paramter name repeatedly.
@@ -727,7 +745,7 @@ Write paramter name repeatedly.
         ]
     ];
 
-=head3 C<4.6. (experimental) Shared rule>
+=head3 C<Shared rule>
 
 Can share rule with all parameters.
 Shared rule is added to the
@@ -753,7 +771,7 @@ I explain the specification of constraint.
         }
     )
 
-=head3 C<5.1. Arguments and return value>
+=head3 C<Arguments and return value>
 
 Constraint function receive three arguments.
 
@@ -810,7 +828,7 @@ value is ['xxx', 'xxx'].
         ]
     ];
 
-=head3 C<5.2. Filtering function>
+=head3 C<Filtering function>
 
 Constraint function can be also return converted value. If you return converted value, you must return array reference, which contains two
 element, value to check if the value is valid,
@@ -845,7 +863,7 @@ L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good examples.
 
 =head2 7. Advanced features
 
-=head3 C<7.1. Data filtering>
+=head3 C<Data filtering>
 
 If data is not hash reference, you can converted data to hash reference
 by data_filter().
@@ -860,7 +878,7 @@ by data_filter().
         }
     );
 
-=head3 C<7.2. Stock of messages>
+=head3 C<Stock of messages>
 
 By default, all parameters is checked by validate(). If you want to
 check only if the data is valid, it is good to finish validation when
@@ -942,7 +960,7 @@ Validation rule has the following syntax.
         ]
     ];
 
-=head2 C<(experimental) shared_rule>
+=head2 C<shared_rule>
 
     $vc          = $vc->shared_rule(\@rule);
     $shared_rule = $vc->shared_rule;
@@ -1000,6 +1018,193 @@ the value is valid.
 Validate the data.
 Return value is L<Validator::Custom::Result> object.
 If the rule of second arument is ommited, rule attribute is used for validation.
+
+=head1 Constraints
+
+=head2 C<defined>
+
+Check if the data is defined.
+
+=head2 C<not_defined>
+
+Check if the data is not defined.
+
+=head2 C<not_blank>
+
+Check if the data is not blank.
+
+=head2 C<blank>
+
+Check if the is blank.
+
+=head2 C<not_space>
+
+Check if the data do not containe space.
+
+=head2 C<int>
+
+Check if the data is integer.
+    
+    # valid data
+    123
+    -134
+
+=head2 C<uint>
+
+Check if the data is unsigned integer.
+
+    # valid data
+    123
+    
+=head2 C<decimal>
+    
+    my $data = { num => '123.45678' };
+    my $rule => [
+        num => [
+            {'decimal' => [3, 5]}
+        ]
+    ];
+
+    Validator::Custom::HTMLForm->new->validate($data,$rule);
+
+Each numbers (3,5) mean maximum digits before/after '.'
+
+=head2 C<ascii>
+
+check is the data consists of only ascii code.
+
+=head2 C<length>
+
+Check the length of the data.
+
+The following sample check if the length of the data is 4 or not.
+
+    my $data = { str => 'aaaa' };
+    my $rule => [
+        num => [
+            {'length' => 4}
+        ]
+    ];
+
+When you set two arguments, it checks if the length of data is in
+the range between 4 and 10.
+    
+    my $data = { str => 'aaaa' };
+    my $rule => [
+        num => [
+            {'length' => [4, 10]}
+        ]
+    ];
+
+=head2 C<http_url>
+
+Verify it is a http(s)-url
+
+    my $data = { url => 'http://somehost.com' };
+    my $rule => [
+        url => [
+            'http_url'
+        ]
+    ];
+
+=head2 C<selected_at_least>
+
+Verify the quantity of selected parameters is counted over allowed minimum.
+
+    <input type="checkbox" name="hobby" value="music" /> Music
+    <input type="checkbox" name="hobby" value="movie" /> Movie
+    <input type="checkbox" name="hobby" value="game"  /> Game
+    
+    
+    my $data = {hobby => ['music', 'movie' ]};
+    my $rule => [
+        hobby => [
+            {selected_at_least => 1}
+        ]
+    ];
+
+=head2 C<regex>
+
+Check with regular expression.
+    
+    my $data = {str => 'aaa'};
+    my $rule => [
+        str => [
+            {regex => qr/a{3}/}
+        ]
+    ];
+
+=head2 C<duplication>
+
+Check if the two data are same or not.
+
+    my $data = {mail1 => 'a@somehost.com', mail2 => 'a@somehost.com'};
+    my $rule => [
+        [qw/mail1 mail2/] => [
+            'duplication'
+        ]
+    ];
+
+=head2 C<shift>
+
+Shift the head of array reference.
+
+    my $data = {nums => [1, 2]};
+    my $rule => [
+        nums => [
+            'shift'
+        ]
+    ];
+
+=head2 C<greater_than>
+
+Numeric comparison
+
+    my $rule = [
+        age => [
+            {greater_than => 25}
+        ]
+    ];
+
+=head2 C<less_than>
+
+Numeric comparison
+
+    my $rule = [
+        age => [
+            {less_than => 25}
+        ]
+    ];
+
+=head2 C<equal_to>
+
+Numeric comparison
+
+    my $rule = [
+        age => [
+            {equal_to => 25}
+        ]
+    ];
+    
+=head2 C<between>
+
+Numeric comparison
+
+    my $rule = [
+        age => [
+            {between => [1, 20]}
+        ]
+    ];
+
+=head2 C<in_array>
+
+Check if the food ordered is in menu
+
+    my $rule = [
+        food => [
+            {in_array => [qw/sushi bread apple/]}
+        ]
+    ];
 
 =head1 BUGS
 

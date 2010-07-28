@@ -1,4 +1,4 @@
-use Test::More tests => 70;
+use Test::More tests => 109;
 
 use strict;
 use warnings;
@@ -517,3 +517,660 @@ $vc->shared_rule([
 $vresult = $vc->validate($data, $rule);
 is_deeply($vresult->messages_to_hash, {k1 => 'Must be defined'},
           'shared rule');
+
+test 'constraints default';
+
+my @infos = (
+    [
+        'not_defined',
+        {
+            k1 => undef,
+            k2 => 'a',
+        },
+        [
+            k1 => [
+                'not_defined'
+            ],
+            k2 => [
+                'not_defined'
+            ],
+        ],
+        [qw/k2/]
+    ],
+    [
+        'defined',
+        {
+            k1 => undef,
+            k2 => 'a',
+        },
+        [
+            k1 => [
+                'defined'
+            ],
+            k2 => [
+                'defined'
+            ],
+        ],
+        [qw/k1/]
+    ],
+    [
+        'not_space',
+        {
+            k1 => '',
+            k2 => ' ',
+            k3 => ' a '
+        },
+        [
+            k1 => [
+                'not_space'
+            ],
+            k2 => [
+                'not_space'
+            ],
+            k3 => [
+                'not_space'
+            ],
+        ],
+        [qw/k1 k2/]
+    ],
+    [
+        'not_blank',
+        {
+            k1 => '',
+            k2 => 'a',
+            k3 => ' '
+        },
+        [
+            k1 => [
+                'not_blank'
+            ],
+            k2 => [
+                'not_blank'
+            ],
+            k3 => [
+                'not_blank'
+            ],
+        ],
+        [qw/k1/]
+    ],
+    [
+        'blank',
+        {
+            k1 => '',
+            k2 => 'a',
+            k3 => ' '
+        },
+        [
+            k1 => [
+                'blank'
+            ],
+            k2 => [
+                'blank'
+            ],
+            k3 => [
+                'blank'
+            ],
+        ],
+        [qw/k2 k3/]
+    ],    
+    [
+        'int',
+        {
+            k8  => '19',
+            k9  => '-10',
+            k10 => 'a',
+            k11 => '10.0',
+        },
+        [
+            k8 => [
+                'int'
+            ],
+            k9 => [
+                'int'
+            ],
+            k10 => [
+                'int'
+            ],
+            k11 => [
+                'int'
+            ],
+        ],
+        [qw/k10 k11/]
+    ],
+    [
+        'uint',
+        {
+            k12  => '19',
+            k13  => '-10',
+            k14 => 'a',
+            k15 => '10.0',
+        },
+        [
+            k12 => [
+                'uint'
+            ],
+            k13 => [
+                'uint'
+            ],
+            k14 => [
+                'uint'
+            ],
+            k15 => [
+                'uint'
+            ],
+        ],
+        [qw/k13 k14 k15/]
+    ],
+    [
+        'ascii',
+        {
+            k16 => '!~',
+            k17 => ' ',
+            k18 => "\0x7f",
+        },
+        [
+            k16 => [
+                'ascii'
+            ],
+            k17 => [
+                'ascii'
+            ],
+            k18 => [
+                'ascii'
+            ],
+        ],
+        [qw/k17 k18/]
+    ],
+    [
+        'length',
+        {
+            k19 => '111',
+            k20 => '111',
+        },
+        [
+            k19 => [
+                {'length' => [3, 4]},
+                {'length' => [2, 3]},
+                {'length' => [3]},
+                {'length' => 3},
+            ],
+            k20 => [
+                {'length' => [4, 5]},
+            ]
+        ],
+        [qw/k20/],
+    ],
+    [
+        'duplication',
+        {
+            k1_1 => 'a',
+            k1_2 => 'a',
+            
+            k2_1 => 'a',
+            k2_2 => 'b'
+        },
+        [
+            {k1 => [qw/k1_1 k1_2/]} => [
+                'duplication'
+            ],
+            {k2 => [qw/k2_1 k2_2/]} => [
+                'duplication'
+            ]
+        ],
+        [qw/k2/]
+    ],
+    [
+        'regex',
+        {
+            k1 => 'aaa',
+            k2 => 'aa',
+        },
+        [
+            k1 => [
+                {'regex' => "a{3}"}
+            ],
+            k2 => [
+                {'regex' => "a{4}"}
+            ]
+        ],
+        [qw/k2/]
+    ],
+    [
+        'http_url',
+        {
+            k1 => 'http://www.lost-season.jp/mt/',
+            k2 => 'iii',
+        },
+        [
+            k1 => [
+                'http_url'
+            ],
+            k2 => [
+                'http_url'
+            ]
+        ],
+        [qw/k2/]
+    ],
+    [
+        'selected_at_least',
+        {
+            k1 => 1,
+            k2 =>[1],
+            k3 => [1, 2],
+            k4 => [],
+            k5 => [1,2]
+        },
+        [
+            k1 => [
+                {selected_at_least => 1}
+            ],
+            k2 => [
+                {selected_at_least => 1}
+            ],
+            k3 => [
+                {selected_at_least => 2}
+            ],
+            k4 => [
+                'selected_at_least'
+            ],
+            k5 => [
+                {'selected_at_least' => 3}
+            ]
+        ],
+        [qw/k5/]
+    ],
+    [
+        'greater_than',
+        {
+            k1 => 5,
+            k2 => 5,
+            k3 => 'a',
+        },
+        [
+            k1 => [
+                {'greater_than' => 5}
+            ],
+            k2 => [
+                {'greater_than' => 4}
+            ],
+            k3 => [
+                {'greater_than' => 1}
+            ]
+        ],
+        [qw/k1 k3/]
+    ],
+    [
+        'less_than',
+        {
+            k1 => 5,
+            k2 => 5,
+            k3 => 'a',
+        },
+        [
+            k1 => [
+                {'less_than' => 5}
+            ],
+            k2 => [
+                {'less_than' => 6}
+            ],
+            k3 => [
+                {'less_than' => 1}
+            ]
+        ],
+        [qw/k1 k3/]
+    ],
+    [
+        'equal_to',
+        {
+            k1 => 5,
+            k2 => 5,
+            k3 => 'a',
+        },
+        [
+            k1 => [
+                {'equal_to' => 5}
+            ],
+            k2 => [
+                {'equal_to' => 4}
+            ],
+            k3 => [
+                {'equal_to' => 1}
+            ]
+        ],
+        [qw/k2 k3/]
+    ],
+    [
+        'between',
+        {
+            k1 => 5,
+            k2 => 5,
+            k3 => 5,
+            k4 => 5,
+            k5 => 'a',
+        },
+        [
+            k1 => [
+                {'between' => [5, 6]}
+            ],
+            k2 => [
+                {'between' => [4, 5]}
+            ],
+            k3 => [
+                {'between' => [6, 7]}
+            ],
+            k4 => [
+                {'between' => [5, 5]}
+            ],
+            k5 => [
+                {'between' => [5, 5]}
+            ]
+        ],
+        [qw/k3 k5/]
+    ],
+    [
+        'decimal',
+        {
+            k1 => '12.123',
+            k2 => '12.123',
+            k3 => '12.123',
+            k4 => '12',
+            k5 => '123',
+            k6 => '123.a',
+        },
+        [
+            k1 => [
+                {'decimal' => [2,3]}
+            ],
+            k2 => [
+                {'decimal' => [1,3]}
+            ],
+            k3 => [
+                {'decimal' => [2,2]}
+            ],
+            k4 => [
+                {'decimal' => [2]}
+            ],
+            k5 => [
+                {'decimal' => 2}
+            ],
+            k6 => [
+                {'decimal' => 2}
+            ]
+        ],
+        [qw/k2 k3 k5 k6/]
+    ],
+    [
+        'in_array',
+        {
+            k1 => 'a',
+            k2 => 'a',
+            k3 => undef
+        },
+        [
+            k1 => [
+                {'in_array' => [qw/a b/]}
+            ],
+            k2 => [
+                {'in_array' => [qw/b c/]}
+            ],
+            k3 => [
+                {'in_array' => [qw/b c/]}
+            ]
+        ],
+        [qw/k2 k3/]
+    ],
+    [
+        'shift array',
+        {
+            k1 => [1, 2]
+        },
+        [
+            k1 => [
+                'shift'
+            ]
+        ],
+        [],
+        {k1 => 1}
+    ],
+    [
+        'shift scalar',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                'shift'
+            ]
+        ],
+        [],
+        {k1 => 1}
+    ],
+);
+
+foreach my $info (@infos) {
+    validate_ok(@$info);
+}
+
+# exception
+my @exception_infos = (
+    [
+        'duplication value1 undefined',
+        {
+            k1_1 => undef,
+            k1_2 => 'a',
+        },
+        [
+            [qw/k1_1 k1_2/] => [
+                ['duplication']
+            ],
+        ],
+        qr/\QConstraint 'duplication' needs two keys of data/
+    ],
+    [
+        'duplication value2 undefined',
+        {
+            k2_1 => 'a',
+            k2_2 => undef,
+        },
+        [
+            [qw/k2_1 k2_2/] => [
+                ['duplication']
+            ]
+        ],
+        qr/\QConstraint 'duplication' needs two keys of data/
+    ],
+    [
+        'length need parameter',
+        {
+            k1 => 'a',
+        },
+        [
+            k1 => [
+                'length'
+            ]
+        ],
+        qr/\QConstraint 'length' needs one or two arguments/
+    ],
+    [
+        'greater_than target undef',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                'greater_than'
+            ]
+        ],
+        qr/\QConstraint 'greater_than' needs a numeric argument/
+    ],
+    [
+        'greater_than not number',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                {'greater_than' => 'a'}
+            ]
+        ],
+        qr/\QConstraint 'greater_than' needs a numeric argument/
+    ],
+    [
+        'less_than target undef',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                'less_than'
+            ]
+        ],
+        qr/\QConstraint 'less_than' needs a numeric argument/
+    ],
+    [
+        'less_than not number',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                {'less_than' => 'a'}
+            ]
+        ],
+        qr/\QConstraint 'less_than' needs a numeric argument/
+    ],
+    [
+        'equal_to target undef',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                'equal_to'
+            ]
+        ],
+        qr/\QConstraint 'equal_to' needs a numeric argument/
+    ],
+    [
+        'equal_to not number',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                {'equal_to' => 'a'}
+            ]
+        ],
+        qr/\QConstraint 'equal_to' needs a numeric argument/
+    ],
+    [
+        'between target undef',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                {'between' => [undef, 1]}
+            ]
+        ],
+        qr/\QConstraint 'between' needs two numeric arguments/
+    ],
+    [
+        'between target undef or not number1',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                {'between' => ['a', 1]}
+            ]
+        ],
+        qr/\QConstraint 'between' needs two numeric arguments/
+    ],
+    [
+        'between target undef or not number2',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                {'between' => [1, undef]}
+            ]
+        ],
+        qr/\QConstraint 'between' needs two numeric arguments/
+    ],
+    [
+        'between target undef or not number3',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                {'between' => [1, 'a']}
+            ]
+        ],
+        qr/\Qbetween' needs two numeric arguments/
+    ],
+    [
+        'decimal target undef',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                'decimal'
+            ]
+        ],
+        qr/\QConstraint 'decimal' needs one or two numeric arguments/
+    ],
+    [
+        'decimal target not number 1',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                {'decimal' => ['a']}
+            ]
+        ],
+        qr/\QConstraint 'decimal' needs one or two numeric arguments/
+    ],
+    [
+        'DECIMAL target not number 2',
+        {
+            k1 => 1
+        },
+        [
+            k1 => [
+                {'decimal' => [1, 'a']}
+            ]
+        ],
+        qr/\QConstraint 'decimal' needs one or two numeric arguments/
+    ],
+);
+
+foreach my $exception_info (@exception_infos) {
+    validate_exception(@$exception_info)
+}
+
+sub validate_ok {
+    my ($test_name, $data, $validation_rule, $invalid_keys, $result_data) = @_;
+    my $vc = Validator::Custom->new;
+    my $r = $vc->validate($data, $validation_rule);
+    is_deeply([$r->invalid_keys], $invalid_keys, "$test_name invalid_keys");
+    
+    if (ref $result_data eq 'CODE') {
+        $result_data->($r);
+    }
+    elsif($result_data) {
+        is_deeply($r->data, $result_data, "$test_name result data");
+    }
+}
+
+sub validate_exception {
+    my ($test_name, $data, $validation_rule, $error) = @_;
+    my $vc = Validator::Custom->new;
+    eval{$vc->validate($data, $validation_rule)};
+    like($@, $error, "$test_name exception");
+}
+
