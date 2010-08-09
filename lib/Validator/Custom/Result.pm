@@ -202,6 +202,9 @@ Error informations.
 
 =head1 METHODS
 
+L<Validator::Custom::Result> inherits all methods from L<Object::Simple>
+and implements the following new ones.
+
 =head2 C<is_valid>
 
 Check if the result is valid.

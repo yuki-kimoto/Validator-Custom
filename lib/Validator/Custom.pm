@@ -334,7 +334,7 @@ Validator::Custom - Validates user input easily
 
 =cut
 
-our $VERSION = '0.1207';
+our $VERSION = '0.1208';
 
 =head1 SYNOPSYS
 
@@ -500,7 +500,7 @@ OR condition validation.
 
 =head2 2. Basic usages
 
-Construct a new Validator::Custom object.
+Create a new L<Validator::Custom> object.
 
     use Validator::Custom;
     my $vc = Validator::Custom->new;
@@ -983,15 +983,10 @@ Shared rule. Shared rule is added the head of normal rule.
 
 Syntax of rule.
 
-=head1 MEHTODS
+=head1 METHODS
 
-=head2 C<new>
-
-    $vc = Validator::Costom->new;
-    $vc = Validator::Costom->new(%attributes);
-    $vc = Validator::Costom->new(\%attributes);
-
-Construct a new L<Validator::Custom> object.
+L<Validator::Custom> inherits all methods from L<Object::Simple>
+and implements the following new ones.
 
 =head2 C<register_constraint>
 
