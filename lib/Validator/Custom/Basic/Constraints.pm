@@ -5,6 +5,9 @@ use warnings;
 
 use Carp 'croak';
 
+# Carp trust relationship
+push @Validator::Custom::CARP_NOT, __PACKAGE__;
+
 sub not_defined { !defined $_[0] }
 sub defined   { defined $_[0] }
 sub blank     { $_[0] eq '' }

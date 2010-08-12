@@ -1,4 +1,4 @@
-use Test::More tests => 110;
+use Test::More tests => 111;
 
 use strict;
 use warnings;
@@ -1206,3 +1206,14 @@ test 'trim';
         'trim check'
     );
 }
+
+test 'Carp trust relationship';
+$data = {a => undef, b => undef};
+$vc = Validator::Custom->new;
+$rule = [
+    {pass => [qw/a b/]} => [
+        'duplication'
+    ]
+];
+eval{$vc->validate($data, $rule)};
+like($@, qr/\.t /, $test);

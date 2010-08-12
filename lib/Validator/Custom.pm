@@ -334,7 +334,7 @@ Validator::Custom - Validates user input easily
 
 =cut
 
-our $VERSION = '0.1208';
+our $VERSION = '0.1209';
 
 =head1 SYNOPSYS
 
