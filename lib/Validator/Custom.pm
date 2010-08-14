@@ -1,5 +1,8 @@
 package Validator::Custom;
 
+our $VERSION = '0.1210';
+
+use 5.008001;
 use strict;
 use warnings;
 
@@ -328,13 +331,11 @@ sub _rule_syntax {
     return $message;
 }
 
+1;
+
 =head1 NAME
 
 Validator::Custom - Validates user input easily
-
-=cut
-
-our $VERSION = '0.1209';
 
 =head1 SYNOPSYS
 
