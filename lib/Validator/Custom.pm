@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1210';
+our $VERSION = '0.1211';
 
 use 5.008001;
 use strict;
@@ -490,7 +490,7 @@ constraint function can receive any arguments, other than parameter value.
 =item *
 
 Can create original class, extending Validator::Custom
-(See L<Validator::Custom::HTMLFOrm>)
+(See L<Validator::Custom::HTMLForm>)
 
 =item *
 
