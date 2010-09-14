@@ -1,4 +1,4 @@
-use Test::More tests => 111;
+use Test::More tests => 113;
 
 use strict;
 use warnings;
@@ -1217,3 +1217,42 @@ $rule = [
 ];
 eval{$vc->validate($data, $rule)};
 like($@, qr/\.t /, $test);
+
+
+test 'Negative validation';
+$data = {key1 => 'a', key2 => 1};
+$vc = Validator::Custom->new;
+$rule = [
+    key1 => [
+        'not_blank',
+        '!int',
+        'not_blank'
+    ],
+    key2 => [
+        'not_blank',
+        '!int',
+        'not_blank'
+    ]
+];
+my $result = $vc->validate($data, $rule);
+is_deeply($result->invalid_params, ['key2'], "$test: single value");
+
+$data = {key1 => ['a', 'a'], key2 => [1, 1]};
+$vc = Validator::Custom->new;
+$rule = [
+    key1 => [
+        '@not_blank',
+        '@!int',
+        '@not_blank'
+    ],
+    key2 => [
+        '@not_blank',
+        '@!int',
+        '@not_blank'
+    ]
+];
+$result = $vc->validate($data, $rule);
+is_deeply($result->invalid_params, ['key2'], "$test: multi values");
+
+
+

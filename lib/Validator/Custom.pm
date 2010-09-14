@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1211';
+our $VERSION = '0.1301';
 
 use 5.008001;
 use strict;
@@ -187,6 +187,7 @@ sub validate {
             
             # Constraint function
             my $constraint_function;
+            my $negative;
             
             # Sub reference
             if( ref $constraint eq 'CODE') {
@@ -199,9 +200,10 @@ sub validate {
             else {
                 
                 # Array constraint
-                if($constraint =~ /^\@(.+)$/) {
-                    $data_type->{array} = 1;
-                    $constraint = $1;
+                if($constraint =~ /^(\@?)(\!?)(.+)$/) {
+                    $data_type->{array} = 1 if ($1 || '') eq '@';
+                    $negative = 1 if ($2 || '') eq '!';
+                    $constraint = $3;
                 }
                 
                 # Check constraint key
@@ -251,6 +253,9 @@ sub validate {
                         $is_valid = $constraint_result;
                     }
                     
+                    # Negative
+                    $is_valid = !$is_valid if $negative;
+                    
                     # Validation error
                     last unless $is_valid;
                 }
@@ -278,6 +283,9 @@ sub validate {
                 else {
                     $is_valid = $constraint_result;
                 }
+
+                # Negative
+                $is_valid = !$is_valid if $negative;
             }
             
             # Add error if it is invalid
@@ -427,6 +435,13 @@ Advanced features
             'emai_address'
         ]
     ];
+    
+    # Negative validateion
+    $rule = [
+        'age' => [
+            '!int'
+        ]
+    ];
 
     # Data filter
     $vc->data_filter(
@@ -469,7 +484,7 @@ Extending
     
     1;
 
-=head1 DESCRIPTIONS
+=head1 DESCRIPTION
 
 L<Validator::Custom> validates user input.
 
@@ -495,7 +510,7 @@ Can create original class, extending Validator::Custom
 =item *
 
 Support multi-paramters validation, multi-values validation,
-OR condition validation.
+OR condition validation, negative validation.
 
 =back
 
@@ -750,6 +765,27 @@ Write paramter name repeatedly.
         ]
     ];
 
+=head3 (experimanetal) C<Negative validation> 
+
+You can negativate a constraint function
+by adding '!' to the constraint name.
+
+    $rule = [
+        age => [
+            '!int';
+        ],
+    ];
+
+This means that "age" is B<not> int.
+
+You can also combine this and Multi-paramters validation
+
+    $rule = [
+        ages => [
+            '@!int';
+        ]
+    ];
+
 =head3 C<Shared rule>
 
 Can share rule with all parameters.
@@ -758,6 +794,7 @@ head of each list of constraint expression.
 
     $vc->shared_rule([
         ['defined',   'Must be defined'],
+        ['trim'],
         ['not_blank', 'Must be not blank']
     ]);
 
