@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1301';
+our $VERSION = '0.1302';
 
 use 5.008001;
 use strict;
@@ -154,9 +154,21 @@ sub validate {
             $result_key = $first_key;
             $key         = $key->{$first_key};
         }
-        elsif (ref $key eq 'ARRAY') {
-            $result_key = "$key";
+        my $keys = ref $key eq 'ARRAY' ? $key : [$key];
+        
+        # Check missing parameters
+        my $found_missing_param;
+        my $found_missing_params = {};
+        my $missing_params = $result->missing_params;
+        foreach my $key (@$keys) {
+            unless (exists $data->{$key}) {
+                push @$missing_params, $key
+                  unless $found_missing_params->{$key};
+                $found_missing_params->{$key}++;
+                $found_missing_param = 1;
+            }
         }
+        next if $found_missing_param;
         
         # Already valid
         next if $valid_keys->{$result_key};
@@ -226,9 +238,9 @@ sub validate {
                 
                 # Set value
                 unless (defined $value) {
-                    $value = ref $data->{$key} eq 'ARRAY' 
-                           ? $data->{$key}
-                           : [$data->{$key}]
+                    $value = ref $data->{$keys->[0]} eq 'ARRAY' 
+                           ? $data->{$keys->[0]}
+                           : [$data->{$keys->[0]}]
                 }
                 
                 # Validation loop
@@ -268,9 +280,9 @@ sub validate {
             else {
                 
                 # Set value
-                $value = ref $key eq 'ARRAY'
-                       ? [map { $data->{$_} } @$key]
-                       : $data->{$key}
+                $value = @$keys > 1
+                       ? [map { $data->{$_} } @$keys]
+                       : $data->{$keys->[0]}
                   unless defined $value;
                 
                 # Validation
@@ -933,15 +945,15 @@ finished soon after invalid value is found.
 
 =head2 C<constraints>
 
-    $vc          = $vc->constraints(\%constraints);
-    $constraints = $vc->constraints;
+    my $constraints = $vc->constraints;
+    $vc             = $vc->constraints(\%constraints);
 
 Constraint functions.
 
 =head2 C<error_stock>
 
-    $vc          = $vc->error_stock(1);
-    $error_stock = $vc->error_stcok;
+    my $error_stock = $vc->error_stcok;
+    $vc             = $vc->error_stock(1);
 
 If error_stock is set to 1, all validation error is stocked.
 If error_stock is set 0, Validation is finished soon after a error occur.
@@ -950,8 +962,8 @@ Default to 1.
 
 =head2 C<data_filter>
 
-    $vc     = $vc->data_filter(\&filter);
-    $filter = $vc->data_filter;
+    my $filter = $vc->data_filter;
+    $vc        = $vc->data_filter(\&filter);
 
 Filter input data. If data is not hash reference, you can convert the data to hash reference.
 
@@ -967,8 +979,8 @@ Filter input data. If data is not hash reference, you can convert the data to ha
 
 =head2 C<rule>
 
-    $vc   = $vc->rule($rule);
-    $rule = $vc->rule;
+    my $rule = $vc->rule;
+    $vc      = $vc->rule($rule);
 
 Rule for validation.
 Validation rule has the following syntax.
@@ -1004,8 +1016,8 @@ Validation rule has the following syntax.
 
 =head2 C<shared_rule>
 
-    $vc          = $vc->shared_rule(\@rule);
-    $shared_rule = $vc->shared_rule;
+    my $shared_rule = $vc->shared_rule;
+    $vc             = $vc->shared_rule(\@rule);
 
 Shared rule. Shared rule is added the head of normal rule.
 
@@ -1016,8 +1028,8 @@ Shared rule. Shared rule is added the head of normal rule.
 
 =head2 C<syntax>
 
-    $vc     = $vc->syntax($syntax);
-    $syntax = $vc->syntax;
+    my $syntax = $vc->syntax;
+    $vc        = $vc->syntax($syntax);
 
 Syntax of rule.
 

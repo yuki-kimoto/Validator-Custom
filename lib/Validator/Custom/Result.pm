@@ -7,9 +7,10 @@ use base 'Object::Simple';
 
 use Carp 'croak';
 
-__PACKAGE__->attr(error_infos  => sub { {} });
-__PACKAGE__->attr(data         => sub { {} });
-__PACKAGE__->attr(raw_data     => sub { {} });
+__PACKAGE__->attr(error_infos    => sub { {} });
+__PACKAGE__->attr(data           => sub { {} });
+__PACKAGE__->attr(raw_data       => sub { {} });
+__PACKAGE__->attr(missing_params => sub { {} });
 
 our $DEFAULT_MESSAGE = 'Error message not specified';
 
@@ -156,6 +157,9 @@ Validator::Custom::Result - Result of validation
     # Chacke if the result is valid.
     my $is_valid = $result->is_valid;
     
+    # Missing parameters
+    my $missing_params = $result->missing_params;
+    
     # Error messages
     my $messages = $result->messages;
 
@@ -183,22 +187,29 @@ Validator::Custom::Result - Result of validation
 
 Result data.
 
-    $result = $result->data($data);
-    $data   = $result->data;
+    my $data = $result->data;
+    $result  = $result->data($data);
 
 =head2 C<raw_data>
 
 Raw data soon after data_filter is excuted.
 
-    $result = $result->raw_data($data);
-    $data   = $result->raw_data;
+    my $data  = $result->raw_data;
+    $result   = $result->raw_data($data);
 
 =head2 C<error_infos>
 
 Error informations.
 
-    $result      = $result->error_infos($error_infos);
-    $error_infos = $result->error_infos;
+    my $error_infos = $result->error_infos;
+    $result         = $result->error_infos($error_infos);
+
+=head2 C<(experimental) missing_params>
+
+Missing paramters
+
+    my $missing_params = $result->missing_params;
+    $result            = $result->missing_params($missing_params);
 
 =head1 METHODS
 
@@ -278,7 +289,7 @@ Error messages to hash reference.
 
 =head2 C<(deprecated) error> 
 
-error() is deprecated. Please use message() instead.
+error() is deprecated. Use message() instead.
 
 A error message
 
@@ -286,7 +297,7 @@ A error message
 
 =head2 C<(deprecated) invalid_keys>
 
-invalid_keys() is deprecated. Please use invalid_rule_keys() instead.
+invalid_keys() is deprecated. Use invalid_rule_keys() instead.
 
 Invalid rule keys.
 

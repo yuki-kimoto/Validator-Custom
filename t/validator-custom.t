@@ -1,4 +1,4 @@
-use Test::More tests => 113;
+use Test::More tests => 111;
 
 use strict;
 use warnings;
@@ -226,15 +226,6 @@ use T1;
         k7 => [
             {'C2' => [3, 4]},
         ],
-        k8 => [
-            'C4'
-        ],
-        k9 => [
-            {'C5' => 2}
-        ],
-        k10 => [
-            'C6'
-        ],
         k11 => [
             '@C6'
         ]
@@ -244,17 +235,15 @@ use T1;
     my $result= $vc->validate($data, $rule);
     is_deeply([$result->errors], 
               ['k2Error1', 'Error message not specified',
-               'Error message not specified', 'Error message not specified'
+               'Error message not specified'
               ], 'variouse options');
     
-    is_deeply([$result->invalid_keys], [qw/k2 k4 k7 k8/], 'invalid key');
+    is_deeply([$result->invalid_keys], [qw/k2 k4 k7/], 'invalid key');
     
     is_deeply($result->data->{k1},[1, [3, 4]], 'data');
     ok(!$result->data->{k2}, 'data not exist in error case');
     cmp_ok($result->data->{k3}, 'eq', 3, 'filter');
     ok(!$result->data->{k4}, 'data not set in case error');
-    is($result->data->{k9}, 2, 'arg');
-    isa_ok($result->data->{k10}, 'T5');
     isa_ok($result->data->{k11}->[0], 'T5');
     isa_ok($result->data->{k11}->[1], 'T5');
 
@@ -496,6 +485,7 @@ $vc->register_constraint(
     int       => sub { $_[0] =~ /\d+/ }
 );
 $data = {
+    k1 => undef,
     k2 => 'a',
     k3 => 1
 };
@@ -1254,5 +1244,23 @@ $rule = [
 $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_params, ['key2'], "$test: multi values");
 
+__END__
 
+test 'missing_params';
+$data = {key1 => 1};
+$vc = Validator::Custom->new;
+$rule = [
+    key1 => [
+        'int'
+    ],
+    key2 => [
+        'int'
+    ],
+    {rkey1 => ['key2', 'key3']} => [
+        'duplication'
+    ]
+];
+$result = $vc->validate($data, $rule);
+is(!$result->is_valid, "$test : invalid");
+is_deeply($result->missing_params, ['key2', 'key3'], "$test : names");
 
