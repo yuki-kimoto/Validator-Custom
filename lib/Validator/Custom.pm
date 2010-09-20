@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1302';
+our $VERSION = '0.1303';
 
 use 5.008001;
 use strict;
@@ -46,9 +46,9 @@ __PACKAGE__->attr('rule');
 __PACKAGE__->attr(shared_rule => sub { [] });
 __PACKAGE__->attr(error_stock => 1);
 __PACKAGE__->attr('data_filter');
+__PACKAGE__->attr(default_messages => sub { {} });
+
 __PACKAGE__->attr(syntax => <<'EOS');
-
-
 ### Syntax of validation rule
     my $rule = [                          # 1. Rule is array ref
         key1 => [                         # 2. Constraints is array ref
@@ -118,7 +118,9 @@ sub validate {
     
     # Result
     my $result = Validator::Custom::Result->new;
-
+    $result->{_error_infos} = {};
+    $result->{_default_messages} = $self->default_messages;
+    
     # Save raw data
     $result->raw_data($data);
     
@@ -131,6 +133,9 @@ sub validate {
     # Error position
     my $position = 0;
     
+    # Found missing paramteters
+    my $found_missing_params = {};
+
     # Process each key
     OUTER_LOOP:
     for (my $i = 0; $i < @{$rule}; $i += 2) {
@@ -158,7 +163,6 @@ sub validate {
         
         # Check missing parameters
         my $found_missing_param;
-        my $found_missing_params = {};
         my $missing_params = $result->missing_params;
         foreach my $key (@$keys) {
             unless (exists $data->{$key}) {
@@ -304,12 +308,13 @@ sub validate {
             unless ($is_valid) {
                 
                 # Resist error info
-                $result->add_error_info(
-                    $result_key => {message      => $message,
-                                    position     => $position,
-                                    reason       => $constraint,
-                                    original_key => $key})
-                  unless exists $result->error_infos->{$result_key};
+                $result->{_error_infos}->{$result_key} = {
+                    message      => $message,
+                    position     => $position,
+                    reason       => $constraint,
+                    original_key => $key
+                }
+                  unless exists $result->{_error_infos}->{$result_key};
                 
                 # No Error strock
                 unless ($error_stock) {
@@ -333,7 +338,7 @@ sub validate {
         $valid_keys->{$result_key} = 1;
         
         # Remove invalid key
-        $result->remove_error_info($result_key);
+        delete $result->{_error_infos}->{$key};
     }
     
     return $result;
@@ -389,6 +394,9 @@ Result of validation
     # Chacke if the data is valid.
     my $is_valid = $vresult->is_valid;
     
+    # (experimental) Missing paramters
+    my $missing_params = $vresult->missing_params;
+    
     # Error messages
     my $messages = $vresult->messages;
 
@@ -412,6 +420,12 @@ Result of validation
     
 Advanced features
 
+    # (experimental) default messages
+    $vc->default_messages({
+        age  => 'age is invalid',
+        name => 'name is invalid'
+    });
+    
     # Register constraint
     $vc->register_constraint(
         email => sub {
@@ -917,6 +931,8 @@ L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good examples.
 
 =head2 7. Advanced features
 
+=head3 
+
 =head3 C<Data filtering>
 
 If data is not hash reference, you can converted data to hash reference
@@ -1032,6 +1048,11 @@ Shared rule. Shared rule is added the head of normal rule.
     $vc        = $vc->syntax($syntax);
 
 Syntax of rule.
+
+=head2 (experimental) default_messages
+
+    my $default_messages = $vc->default_messages;
+    $vc                  = $vc->default_messages(\%default_messages);
 
 =head1 METHODS
 
@@ -1303,7 +1324,8 @@ C<< <kimoto.yuki at gmail.com> >>
 
 =head1 STABILITY
 
-L<Validator::Custom> and L<Validator::Custom::Result> is now stable. all methods(except for experimantal marking ones) keep backword compatible in the future.
+L<Validator::Custom> and L<Validator::Custom::Result> is stable. All methods in 
+this documentation (except for experimantal marking ones) keep backword compatible in the future.
 
 =head1 AUTHOR
 

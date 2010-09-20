@@ -7,21 +7,18 @@ use base 'Object::Simple';
 
 use Carp 'croak';
 
-__PACKAGE__->attr(error_infos    => sub { {} });
 __PACKAGE__->attr(data           => sub { {} });
 __PACKAGE__->attr(raw_data       => sub { {} });
-__PACKAGE__->attr(missing_params => sub { {} });
+__PACKAGE__->attr(missing_params => sub { [] });
 
 our $DEFAULT_MESSAGE = 'Error message not specified';
 
 sub is_valid {
-    my ($self, $key) = @_;
+    my $self = shift;
     
-    # Error is nothing
-    return keys %{$self->error_infos} ? 0 : 1 unless defined $key;
-    
-    # Specified key is invalid
-    return exists $self->error_infos->{$key} ? 0 : 1;
+    # Is valid?
+    return keys %{$self->{_error_infos}} || @{$self->missing_params}
+         ? 0 : 1;
 }
 
 sub messages {
@@ -29,12 +26,14 @@ sub messages {
 
     # Error messages
     my @messages;
-    my $error_infos = $self->error_infos;
+    my $error_infos = $self->{_error_infos};
     my @keys = sort { $error_infos->{$a}{position} <=>
                       $error_infos->{$b}{position} }
                keys %$error_infos;
-    foreach my $key (@keys) {
-        my $message = $error_infos->{$key}{message} || $DEFAULT_MESSAGE;
+    foreach my $name (@keys) {
+        my $message = $error_infos->{$name}{message}
+                   || $self->{_default_messages}{$name}
+                   || $DEFAULT_MESSAGE;
         push @messages, $message if defined $message;
     }
     
@@ -45,13 +44,14 @@ sub messages_to_hash {
     my $self = shift;
     
     # Error informations
-    my $error_infos = $self->error_infos;
+    my $error_infos = $self->{_error_infos};
     
     # Error messages
     my $messages = {};
     foreach my $name (keys %$error_infos) {
-        $messages->{$name} = $error_infos->{$name}{message} || 
-                           $DEFAULT_MESSAGE;
+        $messages->{$name} = $error_infos->{$name}{message}
+                          || $self->{_default_messages}{$name}
+                          || $DEFAULT_MESSAGE;
     }
     
     return $messages;
@@ -64,13 +64,7 @@ sub message {
     croak 'Parameter name must be specified'
       unless $name;
     
-    # Error infomations
-    my $error_infos = $self->error_infos;
-    
-    # Error
-    return exists $error_infos->{$name}
-         ? $error_infos->{$name}{message} || $DEFAULT_MESSAGE
-         : undef;
+    return $self->messages_to_hash->{$name};
 }
 
 sub invalid_params {
@@ -79,7 +73,7 @@ sub invalid_params {
     # Invalid parameter names
     my @invalid_params;
     foreach my $name (@{$self->invalid_rule_keys}) {
-        my $param = $self->error_infos->{$name}{original_key};
+        my $param = $self->{_error_infos}->{$name}{original_key};
         $param = [$param] unless ref $param eq 'ARRAY';
         push @invalid_params, @$param;
     }
@@ -91,7 +85,7 @@ sub invalid_rule_keys {
     my $self = shift;
     
     # Invalid rule keys
-    my $error_infos = $self->error_infos;
+    my $error_infos = $self->{_error_infos};
     my @invalid_rule_keys = sort { $error_infos->{$a}{position} <=>
                               $error_infos->{$b}{position} }
                               keys %$error_infos;
@@ -107,8 +101,12 @@ sub error_reason {
       unless $name;
     
     # Error reason
-    return $self->error_infos->{$name}{reason};
+    return $self->{_error_infos}->{$name}{reason};
 }
+
+### Deprecated attributes and methods
+
+__PACKAGE__->attr(error_infos    => sub { {} });
 
 sub add_error_info {
     my $self = shift;
@@ -129,7 +127,6 @@ sub remove_error_info {
     return $self;
 }
 
-# These methods is deprecated
 sub error { shift->message(@_) }
 sub errors { 
     return wantarray
@@ -197,19 +194,19 @@ Raw data soon after data_filter is excuted.
     my $data  = $result->raw_data;
     $result   = $result->raw_data($data);
 
-=head2 C<error_infos>
-
-Error informations.
-
-    my $error_infos = $result->error_infos;
-    $result         = $result->error_infos($error_infos);
-
 =head2 C<(experimental) missing_params>
 
 Missing paramters
 
     my $missing_params = $result->missing_params;
     $result            = $result->missing_params($missing_params);
+
+=head2 C<(depricated) error_infos>
+
+Error informations.
+
+    my $error_infos = $result->error_infos;
+    $result         = $result->error_infos($error_infos);
 
 =head1 METHODS
 
@@ -258,13 +255,13 @@ Error reason. This is constraint name.
 
     $error_reason = $result->error_reason('title');
 
-=head2 C<add_error_info>
+=head2 C<(depricated) add_error_info>
 
 Add error informations.
 
     $result->add_error_info($name => $error_info);
 
-=head2 C<remove_error_info>
+=head2 C<(depricated) remove_error_info>
 
 Remove error information.
 

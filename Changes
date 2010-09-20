@@ -1,3 +1,7 @@
+0.1303
+  fix missing_params bugs
+  added experimental "default_messages" attributes
+  depricated "error_infos", "add_error_info", and "remove_error_info"
 0.1302
   added experimental Validator::Custom::Result missing_params
 0.1301
@@ -63,7 +67,7 @@
   deprecated Validator::Custom::Result invalid_keys
 0.1103
   updated document.
-  Validator::Custom became stable. Backword compatible of 0.1103 is keeped. You can use Validator::Custom at ease.
+  Validator::Custom became stable. Backword compatible of 0.1103 is keeped in. You can use Validator::Custom at ease.
 0.1102
   removed add_constraint() method(not backword compatible)
 0.1101

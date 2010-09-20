@@ -1,4 +1,4 @@
-use Test::More tests => 111;
+use Test::More tests => 117;
 
 use strict;
 use warnings;
@@ -1244,7 +1244,6 @@ $rule = [
 $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_params, ['key2'], "$test: multi values");
 
-__END__
 
 test 'missing_params';
 $data = {key1 => 1};
@@ -1261,6 +1260,22 @@ $rule = [
     ]
 ];
 $result = $vc->validate($data, $rule);
-is(!$result->is_valid, "$test : invalid");
+ok(!$result->is_valid, "$test : invalid");
 is_deeply($result->missing_params, ['key2', 'key3'], "$test : names");
+
+
+test 'default_messages';
+$data = {key1 => 'a'};
+$vc = Validator::Custom->new;
+$vc->default_messages({key1 => 'key1 is invalid'});
+$rule = [
+    key1 => [
+        'int'
+    ],
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid, "$test : invalid");
+is_deeply($result->messages, ['key1 is invalid'], "$test : messages");
+is_deeply($result->messages_to_hash, {key1 => 'key1 is invalid'}, "$test : messegas_to_hash");
+is($result->message('key1'), 'key1 is invalid', "$test: message");
 
