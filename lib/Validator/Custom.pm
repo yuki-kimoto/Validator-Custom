@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1303';
+our $VERSION = '0.1304';
 
 use 5.008001;
 use strict;

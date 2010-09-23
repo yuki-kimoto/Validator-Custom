@@ -1,9 +1,11 @@
+0.1304
+  added experimental "Validate::Custom::Result has_missing_param" method
 0.1303
   fix missing_params bugs
   added experimental "default_messages" attributes
   depricated "error_infos", "add_error_info", and "remove_error_info"
 0.1302
-  added experimental Validator::Custom::Result missing_params
+  added experimental "Validator::Custom::Result missing_params" attribute
 0.1301
   added experimental negative syntax
 0.1211

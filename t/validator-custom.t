@@ -1,4 +1,4 @@
-use Test::More tests => 117;
+use Test::More tests => 119;
 
 use strict;
 use warnings;
@@ -1262,6 +1262,28 @@ $rule = [
 $result = $vc->validate($data, $rule);
 ok(!$result->is_valid, "$test : invalid");
 is_deeply($result->missing_params, ['key2', 'key3'], "$test : names");
+
+
+test 'has_missing_param';
+$data = {};
+$vc = Validator::Custom->new;
+$rule = [
+    key1 => [
+        'int'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->has_missing_param, "$test : missing");
+
+$data = {key1 => 'a'};
+$vc = Validator::Custom->new;
+$rule = [
+    key1 => [
+        'int'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->has_missing_param, "$test : missing");
 
 
 test 'default_messages';

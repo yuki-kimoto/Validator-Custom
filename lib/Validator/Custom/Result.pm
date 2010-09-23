@@ -21,6 +21,8 @@ sub is_valid {
          ? 0 : 1;
 }
 
+sub has_missing_param { @{shift->missing_params} ? 1 : 0 }
+
 sub messages {
     my $self = shift;
 
@@ -154,7 +156,10 @@ Validator::Custom::Result - Result of validation
     # Chacke if the result is valid.
     my $is_valid = $result->is_valid;
     
-    # Missing parameters
+    # (experimental) Check the existence of missing paramter
+    my $has_missing_param = $result->has_missing_param
+    
+    # (experimental) Missing parameters
     my $missing_params = $result->missing_params;
     
     # Error messages
@@ -182,31 +187,31 @@ Validator::Custom::Result - Result of validation
 
 =head2 C<data>
 
-Result data.
-
     my $data = $result->data;
     $result  = $result->data($data);
 
-=head2 C<raw_data>
+Result data.
 
-Raw data soon after data_filter is excuted.
+=head2 C<raw_data>
 
     my $data  = $result->raw_data;
     $result   = $result->raw_data($data);
 
-=head2 C<(experimental) missing_params>
+Raw data soon after data_filter is excuted.
 
-Missing paramters
+=head2 C<(experimental) missing_params>
 
     my $missing_params = $result->missing_params;
     $result            = $result->missing_params($missing_params);
 
-=head2 C<(depricated) error_infos>
+Missing paramters
 
-Error informations.
+=head2 C<(depricated) error_infos>
 
     my $error_infos = $result->error_infos;
     $result         = $result->error_infos($error_infos);
+
+Error informations.
 
 =head1 METHODS
 
@@ -215,90 +220,96 @@ and implements the following new ones.
 
 =head2 C<is_valid>
 
+    $is_valid = $result->is_valid;
+
 Check if the result is valid.
 
-    $is_valid = $result->is_valid;
+=head2 C<(experimental) has_missing_param>
+
+    my $has_missing_param = $result->has_missing_param;
+
+Check the existence of missing parameter.
 
 =head2 C<messages>
 
-Error messages.
-
     $messages = $result->messages;
+
+Error messages.
 
 =head2 C<message>
 
-Error message.
-
     $message = $result->message('title');
+
+Error message.
 
 =head2 C<messages_to_hash>
 
-Error messages to hash reference.
-
     $messages = $result->messages_to_hash;
+
+Error messages to hash reference.
 
 =head2 C<invalid_params>
 
-Invalid raw data parameter names.
-
     $invalid_params = $result->invalid_params;
+
+Invalid raw data parameter names.
 
 =head2 C<invalid_rule_keys>
 
-Invalid rule keys
-
     $invalid_rule_keys = $result->invalid_rule_keys;
+
+Invalid rule keys
 
 =head2 C<error_reason>
 
-Error reason. This is constraint name.
-
     $error_reason = $result->error_reason('title');
+
+Error reason. This is constraint name.
 
 =head2 C<(depricated) add_error_info>
 
-Add error informations.
-
     $result->add_error_info($name => $error_info);
+
+Add error informations.
 
 =head2 C<(depricated) remove_error_info>
 
-Remove error information.
-
     $result->remove_error_info($name);
+
+Remove error information.
 
 =head2 C<(deprecated) errors>
 
 errors() is deprecated. Please use message() instead.
 
-Error messages.
-
     $errors = $result->errors;
     @errors = $result->errors;
+
+Error messages.
 
 =head2 C<(deprecated) errors_to_hash>
 
 errors_to_hash() is deprecated. Please use messages_to_hash() instead.
 
-Error messages to hash reference.
-
     $errors = $result->errors_to_hash;
+
+Error messages to hash reference.
 
 =head2 C<(deprecated) error> 
 
 error() is deprecated. Use message() instead.
 
-A error message
-
     $error = $result->error('title');
+
+A error message
 
 =head2 C<(deprecated) invalid_keys>
 
 invalid_keys() is deprecated. Use invalid_rule_keys() instead.
 
-Invalid rule keys.
-
     @invalid_keys = $result->invalid_keys;
     $invalid_keys = $result->invalid_keys;
+
+Invalid rule keys.
 
 =cut
