@@ -12,41 +12,14 @@ use Carp 'croak';
 use Validator::Custom::Basic::Constraints;
 use Validator::Custom::Result;
 
+
 __PACKAGE__->dual_attr('constraints', default => sub { {} },
                                       inherit => 'hash_copy');
-
-__PACKAGE__->register_constraint(
-    not_defined       => \&Validator::Custom::Basic::Constraints::not_defined,
-    defined           => \&Validator::Custom::Basic::Constraints::defined,
-    not_space         => \&Validator::Custom::Basic::Constraints::not_space,
-    not_blank         => \&Validator::Custom::Basic::Constraints::not_blank,
-    blank             => \&Validator::Custom::Basic::Constraints::blank,
-    int               => \&Validator::Custom::Basic::Constraints::int,
-    uint              => \&Validator::Custom::Basic::Constraints::uint,
-    ascii             => \&Validator::Custom::Basic::Constraints::ascii,
-    shift             => \&Validator::Custom::Basic::Constraints::shift_array,
-    duplication       => \&Validator::Custom::Basic::Constraints::duplication,
-    length            => \&Validator::Custom::Basic::Constraints::length,
-    regex             => \&Validator::Custom::Basic::Constraints::regex,
-    http_url          => \&Validator::Custom::Basic::Constraints::http_url,
-    selected_at_least => \&Validator::Custom::Basic::Constraints::selected_at_least,
-    greater_than      => \&Validator::Custom::Basic::Constraints::greater_than,
-    less_than         => \&Validator::Custom::Basic::Constraints::less_than,
-    equal_to          => \&Validator::Custom::Basic::Constraints::equal_to,
-    between           => \&Validator::Custom::Basic::Constraints::between,
-    decimal           => \&Validator::Custom::Basic::Constraints::decimal,
-    in_array          => \&Validator::Custom::Basic::Constraints::in_array,
-    trim              => \&Validator::Custom::Basic::Constraints::trim,
-    trim_lead         => \&Validator::Custom::Basic::Constraints::trim_lead,
-    trim_trail        => \&Validator::Custom::Basic::Constraints::trim_trail,
-    trim_collapse     => \&Validator::Custom::Basic::Constraints::trim_collapse
-);
-
-__PACKAGE__->attr('rule');
-__PACKAGE__->attr(shared_rule => sub { [] });
-__PACKAGE__->attr(error_stock => 1);
 __PACKAGE__->attr('data_filter');
 __PACKAGE__->attr(default_messages => sub { {} });
+__PACKAGE__->attr(error_stock => 1);
+__PACKAGE__->attr('rule');
+__PACKAGE__->attr(shared_rule => sub { [] });
 
 __PACKAGE__->attr(syntax => <<'EOS');
 ### Syntax of validation rule
@@ -79,6 +52,35 @@ __PACKAGE__->attr(syntax => <<'EOS');
     ];
 
 EOS
+
+
+__PACKAGE__->register_constraint(
+    ascii             => \&Validator::Custom::Basic::Constraints::ascii,
+    between           => \&Validator::Custom::Basic::Constraints::between,
+    blank             => \&Validator::Custom::Basic::Constraints::blank,
+    decimal           => \&Validator::Custom::Basic::Constraints::decimal,
+    defined           => sub { defined $_[0] },
+    duplication       => \&Validator::Custom::Basic::Constraints::duplication,
+    equal_to          => \&Validator::Custom::Basic::Constraints::equal_to,
+    greater_than      => \&Validator::Custom::Basic::Constraints::greater_than,
+    http_url          => \&Validator::Custom::Basic::Constraints::http_url,
+    int               => \&Validator::Custom::Basic::Constraints::int,
+    in_array          => \&Validator::Custom::Basic::Constraints::in_array,
+    length            => \&Validator::Custom::Basic::Constraints::length,
+    less_than         => \&Validator::Custom::Basic::Constraints::less_than,
+    not_defined       => \&Validator::Custom::Basic::Constraints::not_defined,
+    not_space         => \&Validator::Custom::Basic::Constraints::not_space,
+    not_blank         => \&Validator::Custom::Basic::Constraints::not_blank,
+    uint              => \&Validator::Custom::Basic::Constraints::uint,
+    regex             => \&Validator::Custom::Basic::Constraints::regex,
+    selected_at_least => \&Validator::Custom::Basic::Constraints::selected_at_least,
+    shift             => \&Validator::Custom::Basic::Constraints::shift_array,
+    trim              => \&Validator::Custom::Basic::Constraints::trim,
+    trim_collapse     => \&Validator::Custom::Basic::Constraints::trim_collapse,
+    trim_lead         => \&Validator::Custom::Basic::Constraints::trim_lead,
+    trim_trail        => \&Validator::Custom::Basic::Constraints::trim_trail
+);
+
 
 sub register_constraint {
     my $invocant = shift;
@@ -985,16 +987,6 @@ finished soon after invalid value is found.
 
 Constraint functions.
 
-=head2 C<error_stock>
-
-    my $error_stock = $vc->error_stcok;
-    $vc             = $vc->error_stock(1);
-
-If error_stock is set to 1, all validation error is stocked.
-If error_stock is set 0, Validation is finished soon after a error occur.
-
-Default to 1. 
-
 =head2 C<data_filter>
 
     my $filter = $vc->data_filter;
@@ -1010,7 +1002,22 @@ Filter input data. If data is not hash reference, you can convert the data to ha
             
             return $data;
         }
-    )
+    );
+
+=head2 (experimental) default_messages
+
+    my $default_messages = $vc->default_messages;
+    $vc                  = $vc->default_messages(\%default_messages);
+
+=head2 C<error_stock>
+
+    my $error_stock = $vc->error_stcok;
+    $vc             = $vc->error_stock(1);
+
+If error_stock is set to 1, all validation error is stocked.
+If error_stock is set 0, Validation is finished soon after a error occur.
+
+Default to 1. 
 
 =head2 C<rule>
 
@@ -1068,15 +1075,19 @@ Shared rule. Shared rule is added the head of normal rule.
 
 Syntax of rule.
 
-=head2 (experimental) default_messages
-
-    my $default_messages = $vc->default_messages;
-    $vc                  = $vc->default_messages(\%default_messages);
-
 =head1 METHODS
 
 L<Validator::Custom> inherits all methods from L<Object::Simple>
 and implements the following new ones.
+
+=head2 C<validate>
+
+    $result = $vc->validate($data, $rule);
+    $result = $vc->validate($data);
+
+Validate the data.
+Return value is L<Validator::Custom::Result> object.
+If the rule of second arument is ommited, rule attribute is used for validation.
 
 =head2 C<register_constraint>
 
@@ -1099,52 +1110,26 @@ the value is valid.
         }
     );
 
-=head2 C<validate>
-
-    $result = $vc->validate($data, $rule);
-    $result = $vc->validate($data);
-
-Validate the data.
-Return value is L<Validator::Custom::Result> object.
-If the rule of second arument is ommited, rule attribute is used for validation.
-
 =head1 Constraints
 
-=head2 C<defined>
+=head2 C<ascii>
 
-Check if the data is defined.
+check is the data consists of only ascii code.
 
-=head2 C<not_defined>
+=head2 C<between>
 
-Check if the data is not defined.
+Numeric comparison
 
-=head2 C<not_blank>
-
-Check if the data is not blank.
+    my $rule = [
+        age => [
+            {between => [1, 20]}
+        ]
+    ];
 
 =head2 C<blank>
 
 Check if the is blank.
 
-=head2 C<not_space>
-
-Check if the data do not containe space.
-
-=head2 C<int>
-
-Check if the data is integer.
-    
-    # valid data
-    123
-    -134
-
-=head2 C<uint>
-
-Check if the data is unsigned integer.
-
-    # valid data
-    123
-    
 =head2 C<decimal>
     
     my $data = { num => '123.45678' };
@@ -1158,9 +1143,69 @@ Check if the data is unsigned integer.
 
 Each numbers (3,5) mean maximum digits before/after '.'
 
-=head2 C<ascii>
+=head2 C<defined>
 
-check is the data consists of only ascii code.
+Check if the data is defined.
+
+=head2 C<duplication>
+
+Check if the two data are same or not.
+
+    my $data = {mail1 => 'a@somehost.com', mail2 => 'a@somehost.com'};
+    my $rule => [
+        [qw/mail1 mail2/] => [
+            'duplication'
+        ]
+    ];
+
+=head2 C<equal_to>
+
+Numeric comparison
+
+    my $rule = [
+        age => [
+            {equal_to => 25}
+        ]
+    ];
+    
+=head2 C<greater_than>
+
+Numeric comparison
+
+    my $rule = [
+        age => [
+            {greater_than => 25}
+        ]
+    ];
+
+=head2 C<http_url>
+
+Verify it is a http(s)-url
+
+    my $data = { url => 'http://somehost.com' };
+    my $rule => [
+        url => [
+            'http_url'
+        ]
+    ];
+
+=head2 C<int>
+
+Check if the data is integer.
+    
+    # valid data
+    123
+    -134
+
+=head2 C<in_array>
+
+Check if the food ordered is in menu
+
+    my $rule = [
+        food => [
+            {in_array => [qw/sushi bread apple/]}
+        ]
+    ];
 
 =head2 C<length>
 
@@ -1185,14 +1230,43 @@ the range between 4 and 10.
         ]
     ];
 
-=head2 C<http_url>
+=head2 C<less_than>
 
-Verify it is a http(s)-url
+Numeric comparison
 
-    my $data = { url => 'http://somehost.com' };
+    my $rule = [
+        age => [
+            {less_than => 25}
+        ]
+    ];
+
+=head2 C<not_blank>
+
+Check if the data is not blank.
+
+=head2 C<not_defined>
+
+Check if the data is not defined.
+
+=head2 C<not_space>
+
+Check if the data do not containe space.
+
+=head2 C<uint>
+
+Check if the data is unsigned integer.
+
+    # valid data
+    123
+    
+=head2 C<regex>
+
+Check with regular expression.
+    
+    my $data = {str => 'aaa'};
     my $rule => [
-        url => [
-            'http_url'
+        str => [
+            {regex => qr/a{3}/}
         ]
     ];
 
@@ -1212,28 +1286,6 @@ Verify the quantity of selected parameters is counted over allowed minimum.
         ]
     ];
 
-=head2 C<regex>
-
-Check with regular expression.
-    
-    my $data = {str => 'aaa'};
-    my $rule => [
-        str => [
-            {regex => qr/a{3}/}
-        ]
-    ];
-
-=head2 C<duplication>
-
-Check if the two data are same or not.
-
-    my $data = {mail1 => 'a@somehost.com', mail2 => 'a@somehost.com'};
-    my $rule => [
-        [qw/mail1 mail2/] => [
-            'duplication'
-        ]
-    ];
-
 =head2 C<shift>
 
 Shift the head of array reference.
@@ -1242,56 +1294,6 @@ Shift the head of array reference.
     my $rule => [
         nums => [
             'shift'
-        ]
-    ];
-
-=head2 C<greater_than>
-
-Numeric comparison
-
-    my $rule = [
-        age => [
-            {greater_than => 25}
-        ]
-    ];
-
-=head2 C<less_than>
-
-Numeric comparison
-
-    my $rule = [
-        age => [
-            {less_than => 25}
-        ]
-    ];
-
-=head2 C<equal_to>
-
-Numeric comparison
-
-    my $rule = [
-        age => [
-            {equal_to => 25}
-        ]
-    ];
-    
-=head2 C<between>
-
-Numeric comparison
-
-    my $rule = [
-        age => [
-            {between => [1, 20]}
-        ]
-    ];
-
-=head2 C<in_array>
-
-Check if the food ordered is in menu
-
-    my $rule = [
-        food => [
-            {in_array => [qw/sushi bread apple/]}
         ]
     ];
 
@@ -1305,6 +1307,16 @@ Trim leading and trailing white space
         ],
     ];
     
+=head2 C<trim_collapse>
+
+Trim leading and trailing white space, and collapse all whitespace characters into a single space.
+
+    my $rule = [
+        key1 => [
+            ['trim_collapse']  # "  \n a \r\n b\nc  \t" -> 'a b c'
+        ],
+    ];
+
 =head2 C<trim_lead>
 
 Trim leading white space
@@ -1323,16 +1335,6 @@ Trim trailing white space
         key1 => [
             ['trim_trail']     # '  def  ' -> '   def'
         ]
-    ];
-
-=head2 C<trim_collapse>
-
-Trim leading and trailing white space, and collapse all whitespace characters into a single space.
-
-    my $rule = [
-        key1 => [
-            ['trim_collapse']  # "  \n a \r\n b\nc  \t" -> 'a b c'
-        ],
     ];
 
 =head1 BUGS
