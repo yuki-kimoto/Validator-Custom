@@ -1,4 +1,5 @@
-use Test::More tests => 119;
+#use Test::More tests => 119;
+use Test::More 'no_plan';
 
 use strict;
 use warnings;
@@ -1301,3 +1302,14 @@ is_deeply($result->messages, ['key1 is invalid'], "$test : messages");
 is_deeply($result->messages_to_hash, {key1 => 'key1 is invalid'}, "$test : messegas_to_hash");
 is($result->message('key1'), 'key1 is invalid', "$test: message");
 
+
+test 'duplication result value';
+$data = {key1 => 'a', key2 => 'a'};
+$rule = [
+    {key3 => ['key1', 'key2']} => [
+        'duplication'
+    ]
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+is($result->data->{key3}, 'a', $test);

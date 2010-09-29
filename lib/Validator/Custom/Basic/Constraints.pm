@@ -32,7 +32,7 @@ sub duplication {
     croak "Constraint 'duplication' needs two keys of data"
       unless defined $values->[0] && defined $values->[1];
     
-    return $values->[0] eq $values->[1] ? 1 : 0;
+    return $values->[0] eq $values->[1] ? [1, $values->[0]] : 0;
 }
 
 sub length {
