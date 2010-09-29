@@ -1265,7 +1265,7 @@ ok(!$result->is_valid, "$test : invalid");
 is_deeply($result->missing_params, ['key2', 'key3'], "$test : names");
 
 
-test 'has_missing_param';
+test 'has_missing';
 $data = {};
 $vc = Validator::Custom->new;
 $rule = [
@@ -1274,7 +1274,7 @@ $rule = [
     ]
 ];
 $result = $vc->validate($data, $rule);
-ok($result->has_missing_param, "$test : missing");
+ok($result->has_missing, "$test : missing");
 
 $data = {key1 => 'a'};
 $vc = Validator::Custom->new;
@@ -1284,7 +1284,7 @@ $rule = [
     ]
 ];
 $result = $vc->validate($data, $rule);
-ok(!$result->has_missing_param, "$test : missing");
+ok(!$result->has_missing, "$test : missing");
 
 
 test 'default_messages';

@@ -21,7 +21,7 @@ sub is_valid {
          ? 0 : 1;
 }
 
-sub has_missing_param { @{shift->missing_params} ? 1 : 0 }
+sub has_missing { @{shift->missing_params} ? 1 : 0 }
 
 sub messages {
     my $self = shift;
@@ -157,7 +157,7 @@ Validator::Custom::Result - Result of validation
     my $is_valid = $result->is_valid;
     
     # (experimental) Check the existence of missing paramter
-    my $has_missing_param = $result->has_missing_param
+    my $has_missing_param = $result->has_missing
     
     # (experimental) Missing parameters
     my $missing_params = $result->missing_params;
@@ -224,9 +224,9 @@ and implements the following new ones.
 
 Check if the result is valid.
 
-=head2 C<(experimental) has_missing_param>
+=head2 C<(experimental) has_missing>
 
-    my $has_missing_param = $result->has_missing_param;
+    my $has_missing_param = $result->has_missing;
 
 Check the existence of missing parameter.
 
