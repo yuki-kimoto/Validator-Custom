@@ -17,8 +17,14 @@ sub is_ok {
     my $self = shift;
     
     # Is ok?
-    return keys %{$self->{_error_infos}} || @{$self->missing_params}
-         ? 0 : 1;
+    return !$self->has_invalid && !$self->has_missing ? 1 : 0;
+}
+
+sub has_invalid {
+    my $self = shift;
+    
+    # Has invalid parameter?
+    return keys %{$self->{_error_infos}} ? 1 : 0;
 }
 
 sub has_missing { @{shift->missing_params} ? 1 : 0 }
@@ -155,15 +161,24 @@ Validator::Custom::Result - Result of validation
     # Result
     my $result = $vc->validate($data, $rule);
     
-    # Chacke if the result is valid.
-    my $is_valid = $result->is_valid;
+    # (experimental) Chacke if the result is valid.
+    my $is_ok = $result->is_ok;
     
-    # (experimental) Check the existence of missing paramter
+    # (experimental) Check the existence of missing parameter
     my $has_missing_param = $result->has_missing
     
     # (experimental) Missing parameters
     my $missing_params = $result->missing_params;
     
+    # (experimental) Chack if the data has invalid parameter
+    my $has_invalid = $result->has_invalid;
+    
+    # Invalid parameter names
+    my $invalid_params = $result->invalid_params;
+    
+    # Invalid rule keys
+    my $invalid_rule_keys = $result->invalid_rule_keys;
+
     # Error messages
     my $messages = $result->messages;
 
@@ -172,12 +187,6 @@ Validator::Custom::Result - Result of validation
     
     # A error message
     my $message = $result->message('title');
-    
-    # Invalid parameter names
-    my $invalid_params = $result->invalid_params;
-    
-    # Invalid rule keys
-    my $invalid_rule_keys = $result->invalid_rule_keys;
     
     # Raw data
     my $raw_data = $result->raw_data;
@@ -206,7 +215,7 @@ Raw data soon after data_filter is excuted.
     my $missing_params = $result->missing_params;
     $result            = $result->missing_params($missing_params);
 
-Missing paramters
+Missing parameters
 
 =head2 C<(depricated) error_infos>
 
@@ -225,7 +234,7 @@ and implements the following new ones.
     $is_ok = $result->is_ok;
 
 Check if the result is ok. ok means that
-data has no missing paramter and no invalid paramter.
+data has no missing parameter and no invalid parameter.
 
 =head2 C<(experimental) has_missing>
 
@@ -250,6 +259,12 @@ Error message.
     $messages = $result->messages_to_hash;
 
 Error messages to hash reference.
+
+=head2 C<(experimental) has_invalid>
+
+    my $has_invalid = $result->has_invalid;
+
+Check if the data has invalid parameter
 
 =head2 C<invalid_params>
 

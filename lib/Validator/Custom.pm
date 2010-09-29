@@ -385,41 +385,46 @@ Basic usages
     ];
     
     # Validate
-    my $vresult = $vc->validate($data, $rule);
+    my $result = $vc->validate($data, $rule);
 
 Result of validation
 
     ### Validator::Custom::Result
+
+    my $result = $vc->validate($data, $rule);
     
-    # (experimental) Chacke if the data is ok.
-    my $is_ok = $vresult->is_ok;
+    # (experimental) Chacke if the result is valid.
+    my $is_ok = $result->is_ok;
     
-    # (experimental) Check if the data has missing paramter
-    my $has_missing = $vresult->has_missing;
+    # (experimental) Check the existence of missing parameter
+    my $has_missing_param = $result->has_missing
     
     # (experimental) Missing parameters
-    my $missing_params = $vresult->missing_params;
+    my $missing_params = $result->missing_params;
     
-    # Error messages
-    my $messages = $vresult->messages;
-
-    # Error messages to hash ref
-    my $messages_hash = $vresult->messages_to_hash;
-    
-    # Error message
-    my $message = $vresult->message('age');
+    # (experimental) Chack if the data has invalid parameter
+    my $has_invalid = $resutl->has_invalid;
     
     # Invalid parameter names
-    my $invalid_params = $vresult->invalid_params;
+    my $invalid_params = $result->invalid_params;
     
     # Invalid rule keys
-    my $invalid_rule_keys = $vresult->invalid_rule_keys;
+    my $invalid_rule_keys = $result->invalid_rule_keys;
+
+    # Error messages
+    my $messages = $result->messages;
+
+    # Error messages to hash ref
+    my $messages_hash = $result->message_to_hash;
+    
+    # A error message
+    my $message = $result->message('title');
     
     # Raw data
-    my $raw_data = $vresult->raw_data;
+    my $raw_data = $result->raw_data;
     
     # Result data
-    my $result_data = $vresult->data;
+    my $result_data = $result->data;
     
 Advanced features
 
@@ -452,7 +457,7 @@ Advanced features
             ['same', 'Two password must be equal']
         ]
     ];
-    $vresult = $vc->validate($data, $rule);
+    $result = $vc->validate($data, $rule);
 
     # "OR" validation
     $rule = [
@@ -600,7 +605,7 @@ and constraint expressions. the format detail is explained in
 
 Validate the data. validate() return L<Validator::Custom::Result> object.
 
-    my $vresult = $vc->validate($data, $rule);
+    my $result = $vc->validate($data, $rule);
 
 =head2 3. Result of validation
 
@@ -608,71 +613,74 @@ L<Validator::Custom::Result> object has the result of validation.
 
 Check if the data is ok.
     
-    my $is_ok = $vresult->is_ok;
+    my $is_ok = $result->is_ok;
 
 Error messages
     
     # Error messages
-    my $messages = $vresult->messages;
+    my $messages = $result->messages;
 
     # Error messages to hash ref
-    my $messages_hash = $vresult->messages_to_hash;
+    my $messages_hash = $result->messages_to_hash;
     
     # A error message
-    my $message = $vresult->message('age');
+    my $message = $result->message('age');
 
 Check if data has missing paremeters
 
     # Check if the data has missing parameter
-    my $has_missing = $vresult->has_missing;
+    my $has_missing = $result->has_missing;
     
     # Missing parameters
-    my $missing_params = $vresult->missing_params;
+    my $missing_params = $result->missing_params;
 
 Invalid parameter names and invalid result keys
 
+    # Check if the data has invalid paramters
+    my $has_invalid = $result->has_invalid;
+    
     # Invalid parameter names
-    my $invalid_params = $vresult->invalid_params;
+    my $invalid_params = $result->invalid_params;
     
     # Invalid rule keys
-    my $invalid_rule_keys = $vresult->invalid_rule_keys;
+    my $invalid_rule_keys = $result->invalid_rule_keys;
 
 Raw data and result data
 
     # Raw data
-    my $raw_data = $vresult->raw_data;
+    my $raw_data = $result->raw_data;
     
     # Result data
-    my $result_data = $vresult->data;
+    my $result_data = $result->data;
 
 B<Examples:>
 
 Check the result and get error messages.
 
-    unless ($vresult->is_ok) {
-        my $messages = $vresult->messages;
+    unless ($result->is_ok) {
+        my $messages = $result->messages;
         
         # Do something
     }
 
 Check the result and get error messages as hash reference
 
-    unless ($vresult->is_ok) {
-        my $messages = $vresult->messages_to_hash;
+    unless ($result->is_ok) {
+        my $messages = $result->messages_to_hash;
 
         # Do something
     }
 
 Combination with L<HTML::FillInForm>
 
-    unless ($vresult->is_ok) {
+    unless ($result->is_ok) {
         
         my $html = get_something_way();
         
         # Fill in form
         $html = HTML::FillInForm->fill(
-            \$html, $vresult->raw_data,
-            ignore_fields => $vresult->invalid_params
+            \$html, $result->raw_data,
+            ignore_fields => $result->invalid_params
         );
         
         # Do something
@@ -1093,8 +1101,8 @@ the value is valid.
 
 =head2 C<validate>
 
-    $vresult = $vc->validate($data, $rule);
-    $vresult = $vc->validate($data);
+    $result = $vc->validate($data, $rule);
+    $result = $vc->validate($data);
 
 Validate the data.
 Return value is L<Validator::Custom::Result> object.
