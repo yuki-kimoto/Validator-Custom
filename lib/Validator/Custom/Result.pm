@@ -13,10 +13,10 @@ __PACKAGE__->attr(missing_params => sub { [] });
 
 our $DEFAULT_MESSAGE = 'Error message not specified';
 
-sub is_valid {
+sub is_ok {
     my $self = shift;
     
-    # Is valid?
+    # Is ok?
     return keys %{$self->{_error_infos}} || @{$self->missing_params}
          ? 0 : 1;
 }
@@ -142,6 +142,8 @@ sub invalid_keys {
          : shift->invalid_rule_keys(@_);
 }
 
+sub is_valid { shift->is_ok(@_) }
+
 1;
 
 =head1 NAME
@@ -218,11 +220,12 @@ Error informations.
 L<Validator::Custom::Result> inherits all methods from L<Object::Simple>
 and implements the following new ones.
 
-=head2 C<is_valid>
+=head2 C<is_ok>
 
-    $is_valid = $result->is_valid;
+    $is_ok = $result->is_ok;
 
-Check if the result is valid.
+Check if the result is ok. ok means that
+data has no missing paramter and no invalid paramter.
 
 =head2 C<(experimental) has_missing>
 
@@ -311,5 +314,14 @@ invalid_keys() is deprecated. Use invalid_rule_keys() instead.
     $invalid_keys = $result->invalid_keys;
 
 Invalid rule keys.
+
+=head2 C<(deprecated) is_valid>
+
+is_valid() is deprecated. Use is_ok() instead.
+
+    $is_valid = $result->is_valid;
+
+Check if the result is valid.
+
 
 =cut

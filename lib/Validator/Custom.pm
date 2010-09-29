@@ -391,10 +391,13 @@ Result of validation
 
     ### Validator::Custom::Result
     
-    # Chacke if the data is valid.
-    my $is_valid = $vresult->is_valid;
+    # (experimental) Chacke if the data is ok.
+    my $is_ok = $vresult->is_ok;
     
-    # (experimental) Missing paramters
+    # (experimental) Check if the data has missing paramter
+    my $has_missing = $vresult->has_missing;
+    
+    # (experimental) Missing parameters
     my $missing_params = $vresult->missing_params;
     
     # Error messages
@@ -603,9 +606,9 @@ Validate the data. validate() return L<Validator::Custom::Result> object.
 
 L<Validator::Custom::Result> object has the result of validation.
 
-Check if the data is valid.
+Check if the data is ok.
     
-    my $is_valid = $vresult->is_valid;
+    my $is_ok = $vresult->is_ok;
 
 Error messages
     
@@ -618,7 +621,15 @@ Error messages
     # A error message
     my $message = $vresult->message('age');
 
-Invalid paramter names and invalid result keys
+Check if data has missing paremeters
+
+    # Check if the data has missing parameter
+    my $has_missing = $vresult->has_missing;
+    
+    # Missing parameters
+    my $missing_params = $vresult->missing_params;
+
+Invalid parameter names and invalid result keys
 
     # Invalid parameter names
     my $invalid_params = $vresult->invalid_params;
@@ -638,7 +649,7 @@ B<Examples:>
 
 Check the result and get error messages.
 
-    unless ($vresult->is_valid) {
+    unless ($vresult->is_ok) {
         my $messages = $vresult->messages;
         
         # Do something
@@ -646,7 +657,7 @@ Check the result and get error messages.
 
 Check the result and get error messages as hash reference
 
-    unless ($vresult->is_valid) {
+    unless ($vresult->is_ok) {
         my $messages = $vresult->messages_to_hash;
 
         # Do something
@@ -654,7 +665,7 @@ Check the result and get error messages as hash reference
 
 Combination with L<HTML::FillInForm>
 
-    unless ($vresult->is_valid) {
+    unless ($vresult->is_ok) {
         
         my $html = get_something_way();
         

@@ -1,6 +1,7 @@
 0.1401
   fixed duprication result value([$value, $value] to $value])
   renamed Validator::Custom::Result::has_missing_param to has_missing
+  renamed Validator::Custom::Reuslt::is_valid to is_ok. is_valid is deprecated
 0.1304
   added experimental "Validate::Custom::Result has_missing_param" method
 0.1303

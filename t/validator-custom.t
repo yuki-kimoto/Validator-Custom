@@ -83,7 +83,7 @@ use T1;
     is_deeply(scalar $result->invalid_keys, [qw/k2 k4/], 'invalid keys hash');
     is_deeply($result->invalid_rule_keys, [qw/k2 k4/], 'invalid params hash');
     is_deeply([$result->invalid_keys], [qw/k2 k4/], 'invalid keys hash');  
-    ok(!$result->is_valid, 'is_valid');
+    ok(!$result->is_ok, 'is_ok');
     
     my $constraints = T1->constraints;
     ok(exists($constraints->{Int}), 'get constraints');
@@ -256,7 +256,7 @@ use T1;
     ];
     
     $result= $vc->validate($data, $rule);
-    ok(!$result->is_valid, 'corelative invalid_keys');
+    ok(!$result->is_ok, 'corelative invalid_keys');
     is(scalar @{$result->invalid_keys}, 1, 'corelative invalid_keys');
 }
 
@@ -326,7 +326,7 @@ use T6;
 
 {
     my $result = Validator::Custom->new->rule([])->validate({key => 1});
-    ok($result->is_valid, 'is_valid ok');
+    ok($result->is_ok, 'is_ok ok');
 }
 
 {
@@ -394,22 +394,22 @@ $rule = [
 ];
 $params = {key1 => 1, key0 => 1, key2 => 2};
 $vresult = $vc->validate($params, $rule);
-ok($vresult->is_valid, "$test : first key");
+ok($vresult->is_ok, "$test : first key");
 
 $params = {key1 => 'aaa', key0 => 1, key2 => 2};
 $vresult = $vc->validate($params, $rule);
-ok($vresult->is_valid, "$test : second key");
+ok($vresult->is_ok, "$test : second key");
 
 $params = {key1 => 'bbb', key0 => 1, key2 => 2};
 $vresult = $vc->validate($params, $rule);
-ok($vresult->is_valid, "$test : third key");
+ok($vresult->is_ok, "$test : third key");
 ok(!$vresult->error_reason('key1'), "$test : third key : error reason");
 eval { $vresult->error_reason };
 like($@, qr/Parameter name must be specified/, 'error_reason not Parameter name');
 
 $params = {key1 => 'ccc', key0 => 1, key2 => 2};
 $vresult = $vc->validate($params, $rule);
-ok(!$vresult->is_valid, "$test : invalid");
+ok(!$vresult->is_ok, "$test : invalid");
 is_deeply([$vresult->invalid_keys], ['key1'], "$test : invalid_keys");
 is_deeply([$vresult->errors], ['Error-key1-0'], "$test : errors");
 is_deeply($vresult->messages, ['Error-key1-0'], "$test : messages");
@@ -422,7 +422,7 @@ like($@, qr/Parameter name must be specified/, 'error not Parameter name');
 $vc = T1->new(error_stock => 0);
 $params = {key1 => 'ccc', key0 => 1, key2 => 'no_num'};
 $vresult = $vc->validate($params, $rule);
-ok(!$vresult->is_valid, "$test : invalid");
+ok(!$vresult->is_ok, "$test : invalid");
 is_deeply([$vresult->invalid_keys], ['key1'], "$test : invalid_keys");
 is_deeply([$vresult->errors], ['Error-key1-0'], "$test : errors");
 is($vresult->error_reason('key1'), 'Int', "$test : error reason");
@@ -1261,9 +1261,8 @@ $rule = [
     ]
 ];
 $result = $vc->validate($data, $rule);
-ok(!$result->is_valid, "$test : invalid");
+ok(!$result->is_ok, "$test : invalid");
 is_deeply($result->missing_params, ['key2', 'key3'], "$test : names");
-
 
 test 'has_missing';
 $data = {};
@@ -1297,7 +1296,7 @@ $rule = [
     ],
 ];
 $result = $vc->validate($data, $rule);
-ok(!$result->is_valid, "$test : invalid");
+ok(!$result->is_ok, "$test : invalid");
 is_deeply($result->messages, ['key1 is invalid'], "$test : messages");
 is_deeply($result->messages_to_hash, {key1 => 'key1 is invalid'}, "$test : messegas_to_hash");
 is($result->message('key1'), 'key1 is invalid', "$test: message");
