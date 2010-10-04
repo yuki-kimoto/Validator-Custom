@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1304';
+our $VERSION = '0.1401';
 
 use 5.008001;
 use strict;
@@ -16,40 +16,31 @@ use Validator::Custom::Result;
 __PACKAGE__->dual_attr('constraints', default => sub { {} },
                                       inherit => 'hash_copy');
 __PACKAGE__->attr('data_filter');
-__PACKAGE__->attr(default_messages => sub { {} });
 __PACKAGE__->attr(error_stock => 1);
 __PACKAGE__->attr('rule');
 __PACKAGE__->attr(shared_rule => sub { [] });
 
 __PACKAGE__->attr(syntax => <<'EOS');
 ### Syntax of validation rule
-    my $rule = [                          # 1. Rule is array ref
-        key1 => [                         # 2. Constraints is array ref
-            'constraint1_1',              # 3. Constraint is string
-            ['constraint1_2', 'error1_2'],#      or arrya ref (message)
-            {'constraint1_3' => 'string'} #      or hash ref (arguments)
-              
-        ],
-        key2 => [
-            {'constraint2_1'              # 4. Argument is string
-              => 'string'},               #
-            {'constraint2_2'              #     or array ref
-              => ['arg1', 'arg2']},       #
-            {'constraint1_3'              #     or hash ref
-              => {k1 => 'v1', k2 => 'v2'}}#
-        ],
-        key3 => [                           
-            [{constraint3_1 => 'string'}, # 5. Combination argument
-             'error3_1' ]                 #     and message
-        ],
-        { key4 => ['key4_1', 'key4_2'] }  # 6. Multi-paramters validation
-            => [
-                'constraint4_1'
-               ],
-        key5 => [
-            '@constraint5_1'              # 7. Multi-values validation
-        ]
-    ];
+my $rule = [                              # 1. Rule is array ref
+    key => [                              # 2. Constraints is array ref
+        'constraint',                     # 3. Constraint is string
+        {'constraint' => 'args'}          #      or hash ref (arguments)
+        ['constraint', 'err'],            #      or arrya ref (message)
+    ],
+    key => [                           
+        [{constraint => 'args'}, 'err']   # 4. With argument and message
+    ],
+    {key => ['key1', 'key2']} => [        # 5. Multi-parameters validation
+        'constraint'
+    ],
+    key => [
+        '@constraint'                     # 6. Multi-values validation
+    ],
+    key => \%OPTIONS => [                 # 7. With options
+        'constraint'
+    ]
+];
 
 EOS
 
@@ -92,6 +83,8 @@ sub register_constraint {
     return $invocant;
 }
 
+our %VALID_OPTIONS = map {$_ => 1} qw/message default copy/;
+
 sub validate {
     my ($self, $data, $rule) = @_;
     
@@ -121,7 +114,6 @@ sub validate {
     # Result
     my $result = Validator::Custom::Result->new;
     $result->{_error_infos} = {};
-    $result->{_default_messages} = $self->default_messages;
     
     # Save raw data
     $result->raw_data($data);
@@ -145,8 +137,18 @@ sub validate {
         # Increment position
         $position++;
         
-        # Key and constraints
-        my ($key, $constraints) = @{$rule}[$i, ($i + 1)];
+        # Key, options, and constraints
+        my $key = $rule->[$i];
+        my $options = $rule->[$i + 1];
+        my $constraints;
+        if (ref $options eq 'HASH') {
+            $constraints = $rule->[$i + 2];
+            $i++;
+        }
+        else {
+            $constraints = $options;
+            $options = {};
+        }
         
         # Check constraints
         croak "Constraints of validation rule must be array ref\n" .
@@ -163,6 +165,16 @@ sub validate {
         }
         my $keys = ref $key eq 'ARRAY' ? $key : [$key];
         
+        # Check option
+        foreach my $oname (keys %$options) {
+            croak qq{Option "$oname" of "$result_key" is invalid name}
+              unless $VALID_OPTIONS{$oname};
+        }
+        
+        # Is data copy?
+        my $copy = 1;
+        $copy = $options->{copy} if exists $options->{copy};
+        
         # Check missing parameters
         my $found_missing_param;
         my $missing_params = $result->missing_params;
@@ -174,7 +186,11 @@ sub validate {
                 $found_missing_param = 1;
             }
         }
-        next if $found_missing_param;
+        if ($found_missing_param) {
+            $result->data->{$result_key} = $options->{default}
+              if exists $options->{default} && $copy;
+            next;
+        }
         
         # Already valid
         next if $valid_keys->{$result_key};
@@ -310,6 +326,7 @@ sub validate {
             unless ($is_valid) {
                 
                 # Resist error info
+                $message = $options->{message} unless defined $message;
                 $result->{_error_infos}->{$result_key} = {
                     message      => $message,
                     position     => $position,
@@ -318,12 +335,17 @@ sub validate {
                 }
                   unless exists $result->{_error_infos}->{$result_key};
                 
+                # Set default value
+                $result->data->{$result_key} = $options->{default}
+                  if exists $options->{default} && $copy;
+                
                 # No Error strock
                 unless ($error_stock) {
                     # Check rest constraint
                     my $found;
                     for (my $k = $i + 2; $k < @{$rule}; $k += 2) {
                         my $key = $rule->[$k];
+                        $k++ if ref $rule->[$k + 1] eq 'HASH';
                         $key = (keys %$key)[0] if ref $key eq 'HASH';
                         $found = 1 if $key eq $result_key;
                     }
@@ -334,7 +356,7 @@ sub validate {
         }
         
         # Result data
-        $result->data->{$result_key} = $value;
+        $result->data->{$result_key} = $value if $copy;
         
         # Key is valid
         $valid_keys->{$result_key} = 1;
@@ -368,11 +390,10 @@ Validator::Custom - Validates user input easily
 
 Basic usages
 
-    # Load module and create object
     use Validator::Custom;
     my $vc = Validator::Custom->new;
 
-    # Data used at validation
+    # Data
     my $data = {age => 19, name => 'Ken Suzuki'};
     
     # Rule
@@ -383,6 +404,9 @@ Basic usages
         name => [
             ['not_blank',        "Name must be exists"],
             [{length => [1, 5]}, "Name length must be 1 to 5"]
+        ],
+        price => {default => 1000, message => 'price must be integer'} => [
+            'int'
         ]
     ];
     
@@ -390,52 +414,22 @@ Basic usages
     my $result = $vc->validate($data, $rule);
 
 Result of validation
-
-    ### Validator::Custom::Result
-
-    my $result = $vc->validate($data, $rule);
     
-    # (experimental) Chacke if the result is valid.
-    my $is_ok = $result->is_ok;
+    # More than one parameter is missing
+    if ($result->has_missing) {
+        # Do something
+    }
     
-    # (experimental) Check the existence of missing parameter
-    my $has_missing_param = $result->has_missing
+    # More than one parameter is invalid
+    elsif ($result->has_invalid) {
+        # Do someting
+    }
     
-    # (experimental) Missing parameters
-    my $missing_params = $result->missing_params;
-    
-    # (experimental) Chack if the data has invalid parameter
-    my $has_invalid = $resutl->has_invalid;
-    
-    # Invalid parameter names
-    my $invalid_params = $result->invalid_params;
-    
-    # Invalid rule keys
-    my $invalid_rule_keys = $result->invalid_rule_keys;
-
-    # Error messages
-    my $messages = $result->messages;
-
-    # Error messages to hash ref
-    my $messages_hash = $result->message_to_hash;
-    
-    # A error message
-    my $message = $result->message('title');
-    
-    # Raw data
-    my $raw_data = $result->raw_data;
-    
-    # Result data
-    my $result_data = $result->data;
+    my $title_is_valid = $result->is_valid('title');
+    my $title_message  = $result->message('title');
     
 Advanced features
 
-    # (experimental) default messages
-    $vc->default_messages({
-        age  => 'age is invalid',
-        name => 'name is invalid'
-    });
-    
     # Register constraint
     $vc->register_constraint(
         email => sub {
@@ -531,7 +525,7 @@ L<Validator::Custom> validates user input.
 =item *
 
 Can set a message for each parameter. the messages is added to
-the result when the paramter is invalid. the messages keeps the order.
+the result when the parameter is invalid. the messages keeps the order.
 
 =item *
 
@@ -545,7 +539,7 @@ Can create original class, extending Validator::Custom
 
 =item *
 
-Support multi-paramters validation, multi-values validation,
+Support multi-parameters validation, multi-values validation,
 OR condition validation, negative validation.
 
 =back
@@ -612,65 +606,33 @@ Validate the data. validate() return L<Validator::Custom::Result> object.
 =head2 3. Result of validation
 
 L<Validator::Custom::Result> object has the result of validation.
-
-Check if the data is ok.
-    
-    my $is_ok = $result->is_ok;
-
-Error messages
-    
-    # Error messages
-    my $messages = $result->messages;
-
-    # Error messages to hash ref
-    my $messages_hash = $result->messages_to_hash;
-    
-    # A error message
-    my $message = $result->message('age');
-
-Check if data has missing paremeters
-
-    # Check if the data has missing parameter
-    my $has_missing = $result->has_missing;
-    
-    # Missing parameters
-    my $missing_params = $result->missing_params;
-
-Invalid parameter names and invalid result keys
-
-    # Check if the data has invalid paramters
-    my $has_invalid = $result->has_invalid;
-    
-    # Invalid parameter names
-    my $invalid_params = $result->invalid_params;
-    
-    # Invalid rule keys
-    my $invalid_rule_keys = $result->invalid_rule_keys;
-
-Raw data and result data
-
-    # Raw data
-    my $raw_data = $result->raw_data;
-    
-    # Result data
-    my $result_data = $result->data;
+See L<Validator::Custom::Result> in detail.
 
 B<Examples:>
 
-Check the result and get error messages.
-
-    unless ($result->is_ok) {
-        my $messages = $result->messages;
+Check if the data has missing parameter and invalid parameter.
+and print message unless the parameter is valid.
+    
+    if ($result->has_missing) {
+        # ...
+    }
+    elsif ($result->has_invalid) {
         
-        # Do something
+        print $result->message('title')
+          unless $result->is_valid('title');
+        
+        print $result->message('author')
+          unless $result->is_valid('author');
     }
 
-Check the result and get error messages as hash reference
+Get all message
 
-    unless ($result->is_ok) {
-        my $messages = $result->messages_to_hash;
-
-        # Do something
+    if ($result->has_missing) {
+        # ...
+    }
+    elsif ($result->has_invalid) {
+        
+        my $messages = $result->messages;
     }
 
 Combination with L<HTML::FillInForm>
@@ -710,7 +672,11 @@ expression.
             'not_blank',
             'int'
         ]
-        # PARAMETER_NAME => [
+        price => {default => 1000, message => 'price must be integer'} => [
+            'int'
+        ]
+
+        # PARAMETER_NAME => OPTIONS(this is optional) => [
         #    CONSTRIANT_EXPRESSION1
         #    CONSTRAINT_EXPRESSION2
         # ]
@@ -766,9 +732,35 @@ B<Example:>
         ]
     ];
 
-=head3 C<Multi-paramters validation>
+=head3 C<Options>
 
-Multi-paramters validation is available.
+Options can be set.
+
+=over 4
+
+=item 1. message
+
+Message when the result has invalid parameter
+
+     {message => "This key is invalid"}
+
+=item 2. default
+
+default value. This value is set if the result has missing parameter or has invalid parameter.
+
+    {default => 5}
+
+=item 3. copy
+
+the value is copied to result's data or not. default to 1.
+
+    {copy => 0}
+
+=back
+
+=head3 C<Multi-parameters validation>
+
+Multi-parameters validation is available.
 
     $data = {password1 => 'xxx', password2 => 'xxx'};
 
@@ -784,7 +776,7 @@ Multi-paramters validation is available.
 =head3 C<Multi-values validation>
 
 Multi-values validation is available
-if the paramter value is array reference.
+if the parameter value is array reference.
 Add "@" mark before constraint name.
 
     $data = {
@@ -800,7 +792,7 @@ Add "@" mark before constraint name.
 =head3 C<Validation of OR condition>
 
 OR condition validation is available.
-Write paramter name repeatedly.
+Write parameter name repeatedly.
 
     $rule = [
         email => [
@@ -812,7 +804,7 @@ Write paramter name repeatedly.
         ]
     ];
 
-=head3 (experimanetal) C<Negative validation> 
+=head3 C<Negative validation> 
 
 You can negativate a constraint function
 by adding '!' to the constraint name.
@@ -825,7 +817,7 @@ by adding '!' to the constraint name.
 
 This means that "age" is B<not> int.
 
-You can also combine this and Multi-paramters validation
+You can also combine this and Multi-parameters validation
 
     $rule = [
         ages => [
@@ -906,7 +898,7 @@ In this example, argument is I<[1, 5]>.
 
 And this function must return a value to check if the value is valid.
 
-In Multi-paramters validation, values is packed to array reference,
+In Multi-parameters validation, values is packed to array reference,
 value is ['xxx', 'xxx'].
 
     $data = {password1 => 'xxx', password2 => 'xxx'};
@@ -1004,11 +996,6 @@ Filter input data. If data is not hash reference, you can convert the data to ha
         }
     );
 
-=head2 (experimental) default_messages
-
-    my $default_messages = $vc->default_messages;
-    $vc                  = $vc->default_messages(\%default_messages);
-
 =head2 C<error_stock>
 
     my $error_stock = $vc->error_stcok;
@@ -1028,31 +1015,23 @@ Rule for validation.
 Validation rule has the following syntax.
 
     # Rule syntax
-    my $rule = [                          # 1. Validation rule is array ref
-        key1 => [                         # 2. Constraints is array ref
-            'constraint1_1',              # 3. Constraint is string
-            ['constraint1_2', 'error1_2'],#      or arrya ref (message)
-            {'constraint1_3' => 'string'} #      or hash ref (arguments)
-              
+    my $rule = [                              # 1. Rule is array ref
+        key => [                              # 2. Constraints is array ref
+            'constraint',                     # 3. Constraint is string
+            {'constraint' => 'args'}          #      or hash ref (arguments)
+            ['constraint', 'err'],            #      or arrya ref (message)
         ],
-        key2 => [
-            {'constraint2_1'              # 4. Argument is string
-              => 'string'},               #
-            {'constraint2_2'              #     or array ref
-              => ['arg1', 'arg2']},       #
-            {'constraint1_3'              #     or hash ref
-              => {k1 => 'v1', k2 => 'v2'}}#
+        key => [                           
+            [{constraint => 'args'}, 'err']   # 4. With argument and message
         ],
-        key3 => [                           
-            [{constraint3_1 => 'string'}, # 5. Combination argument
-             'error3_1' ]                 #     and message
+        {key => ['key1', 'key2']} => [        # 5. Multi-parameters validation
+            'constraint'
         ],
-        { key4 => ['key4_1', 'key4_2'] }  # 6. Multi-parameters validation
-            => [
-                'constraint4_1'
-               ],
-        key5 => [
-            '@constraint5_1'              # 7. Multi-values validation
+        key => [
+            '@constraint'                     # 6. Multi-values validation
+        ],
+        key => \%OPTIONS => [                 # 7. With options
+            'constraint'
         ]
     ];
 

@@ -62,6 +62,19 @@ sub invalid_rule_keys {
     return \@invalid_rule_keys;
 }
 
+sub is_valid {
+    my ($self, $name) = @_;
+    
+    # Deprecated
+    unless (defined $name) {
+        warn "Validator::Custom::Result is_valid() method without argument" .
+             " is deprecated. Use is_ok()";
+        return $self->is_ok;
+    }
+    
+    return exists $self->{_error_infos}->{$name} ? 0 : 1;
+}
+
 sub is_ok {
     my $self = shift;
     
@@ -76,7 +89,9 @@ sub message {
     croak 'Parameter name must be specified'
       unless $name;
     
-    return $self->messages_to_hash->{$name};
+    return $self->{_error_infos}->{$name}{message}
+        || $self->{_default_messages}{$name}
+        || $DEFAULT_MESSAGE;
 }
 
 sub messages {
@@ -89,10 +104,8 @@ sub messages {
                       $error_infos->{$b}{position} }
                keys %$error_infos;
     foreach my $name (@keys) {
-        my $message = $error_infos->{$name}{message}
-                   || $self->{_default_messages}{$name}
-                   || $DEFAULT_MESSAGE;
-        push @messages, $message if defined $message;
+        my $message = $self->message($name);
+        push @messages, $message;
     }
     
     return \@messages;
@@ -100,16 +113,11 @@ sub messages {
 
 sub messages_to_hash {
     my $self = shift;
-    
-    # Error informations
-    my $error_infos = $self->{_error_infos};
-    
+
     # Error messages
     my $messages = {};
-    foreach my $name (keys %$error_infos) {
-        $messages->{$name} = $error_infos->{$name}{message}
-                          || $self->{_default_messages}{$name}
-                          || $DEFAULT_MESSAGE;
+    foreach my $name (keys %{$self->{_error_infos}}) {
+        $messages->{$name} = $self->message($name);
     }
     
     return $messages;
@@ -147,8 +155,6 @@ sub invalid_keys {
          : shift->invalid_rule_keys(@_);
 }
 
-sub is_valid { shift->is_ok(@_) }
-
 sub remove_error_info {
     my ($self, $key) = @_;
     
@@ -169,32 +175,36 @@ Validator::Custom::Result - Result of validation
     # Result
     my $result = $vc->validate($data, $rule);
     
-    # (experimental) Chacke if the result is valid.
+    # Check the existence of missing parameter
+    my $has_missing_param = $result->has_missing;
+
+    # Chack if the data has invalid parameter(except for missing parameter)
+    my $has_invalid = $resutl->has_invalid;
+    
+    # Chacke if the result is valid.
+    # (this means result have neither missing nor invalid parameter)
     my $is_ok = $result->is_ok;
     
-    # (experimental) Check the existence of missing parameter
-    my $has_missing_param = $result->has_missing
-    
-    # (experimental) Missing parameters
+    # Check if one parameter is valid
+    my $title_is_valid = $result->is_valid('title');
+
+    # Missing parameters(this is original keys)
     my $missing_params = $result->missing_params;
     
-    # (experimental) Chack if the data has invalid parameter
-    my $has_invalid = $result->has_invalid;
-    
-    # Invalid parameter names
+    # Invalid parameter names(this is original keys)
     my $invalid_params = $result->invalid_params;
     
     # Invalid rule keys
     my $invalid_rule_keys = $result->invalid_rule_keys;
+
+    # A error message
+    my $message = $result->message('title');
 
     # Error messages
     my $messages = $result->messages;
 
     # Error messages to hash ref
     my $messages_hash = $result->message_to_hash;
-    
-    # A error message
-    my $message = $result->message('title');
     
     # Raw data
     my $raw_data = $result->raw_data;
@@ -211,7 +221,7 @@ Validator::Custom::Result - Result of validation
 
 Result data.
 
-=head2 C<(experimental) missing_params>
+=head2 C<missing_params>
 
     my $missing_params = $result->missing_params;
     $result            = $result->missing_params($missing_params);
@@ -243,13 +253,13 @@ and implements the following new ones.
 
 Error reason. This is constraint name.
 
-=head2 C<(experimental) has_invalid>
+=head2 C<has_invalid>
 
     my $has_invalid = $result->has_invalid;
 
 Check if the data has invalid parameter
 
-=head2 C<(experimental) has_missing>
+=head2 C<has_missing>
 
     my $has_missing_param = $result->has_missing;
 
@@ -259,8 +269,14 @@ Check the existence of missing parameter.
 
     $is_ok = $result->is_ok;
 
-Check if the result is ok. ok means that
+Check if the result is ok. this means that
 data has no missing parameter and no invalid parameter.
+
+=head2 C<is_valid>
+
+    my $title_is_valid = $result->is_valid('title');
+
+Check if one paramter is valid.
 
 =head2 C<message>
 
@@ -331,14 +347,6 @@ invalid_keys() is deprecated. Use invalid_rule_keys() instead.
     $invalid_keys = $result->invalid_keys;
 
 Invalid rule keys.
-
-=head2 C<(deprecated) is_valid>
-
-is_valid() is deprecated. Use is_ok() instead.
-
-    $is_valid = $result->is_valid;
-
-Check if the result is valid.
 
 =head2 C<(depricated) remove_error_info>
 

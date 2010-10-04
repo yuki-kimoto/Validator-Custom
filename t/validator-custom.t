@@ -1,5 +1,5 @@
-#use Test::More tests => 119;
-use Test::More 'no_plan';
+use Test::More tests => 131;
+#use Test::More 'no_plan';
 
 use strict;
 use warnings;
@@ -256,7 +256,8 @@ use T1;
     ];
     
     $result= $vc->validate($data, $rule);
-    ok(!$result->is_ok, 'corelative invalid_keys');
+    local $SIG{__WARN__} = sub {};
+    ok(!$result->is_valid, 'corelative invalid_keys');
     is(scalar @{$result->invalid_keys}, 1, 'corelative invalid_keys');
 }
 
@@ -1286,22 +1287,6 @@ $result = $vc->validate($data, $rule);
 ok(!$result->has_missing, "$test : missing");
 
 
-test 'default_messages';
-$data = {key1 => 'a'};
-$vc = Validator::Custom->new;
-$vc->default_messages({key1 => 'key1 is invalid'});
-$rule = [
-    key1 => [
-        'int'
-    ],
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_ok, "$test : invalid");
-is_deeply($result->messages, ['key1 is invalid'], "$test : messages");
-is_deeply($result->messages_to_hash, {key1 => 'key1 is invalid'}, "$test : messegas_to_hash");
-is($result->message('key1'), 'key1 is invalid', "$test: message");
-
-
 test 'duplication result value';
 $data = {key1 => 'a', key2 => 'a'};
 $rule = [
@@ -1312,3 +1297,109 @@ $rule = [
 $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
 is($result->data->{key3}, 'a', $test);
+
+
+test 'message option';
+$data = {key1 => 'a'};
+$rule = [
+    key1 => {message => 'error'} => [
+        'int'
+    ]
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+is($result->message('key1'), 'error', $test);
+
+
+test 'default option';
+$data = {};
+$rule = [
+    key1 => {default => 2} => [
+    
+    ]
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+ok($result->has_missing, "$test : has missing");
+is($result->data->{key1}, 2, "$test : data value");
+
+$data = {};
+$rule = [
+    key1 => {default => 2, copy => 0} => [
+    
+    ]
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+ok($result->has_missing, "$test : has missing ");
+ok(!exists $result->data->{key1}, "$test : missing : data value and no copy");
+
+$data = {key1 => 'a'};
+$rule = [
+    key1 => {default => 2} => [
+        'int'
+    ]
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+ok($result->has_invalid, "$test : has missing");
+is($result->data->{key1}, 2, "$test : invalid : data value");
+
+$data = {key1 => 'a'};
+$rule = [
+    key1 => {default => 2, copy => 0} => [
+        'int'
+    ]
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+ok($result->has_invalid, "$test : has missing");
+ok(!exists $result->data->{key1}, "$test : invalid : data value and no copy");
+
+test 'copy';
+$data = {key1 => 'a', 'key2' => 'a'};
+$rule = [
+    {key3 => ['key1', 'key2']} => {copy => 0} => [
+        'duplication'
+    ]
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+ok($result->is_ok, "$test : ok");
+is_deeply($result->data, {}, "$test : not copy");
+
+
+test 'error_stock plus';
+$data = {key1 => 'a', 'key2' => 'b', key4 => 'a'};
+$rule = [
+    key4  => {message => 'e1'} => [
+        'int'
+    ],
+    {key3 => ['key1', 'key2']} => {message => 'e2'} => [
+        'duplication'
+    ],
+];
+$vc = Validator::Custom->new;
+$vc->error_stock(0);
+$result = $vc->validate($data, $rule);
+is_deeply($result->messages, ['e1'], $test);
+
+
+test 'is_valid';
+$data = {key1 => 'a', key2 => 'b', key3 => 2};
+$rule = [
+    key1 => [
+        'int'
+    ],
+    key2 => [
+        'int'
+    ],
+    key3 => [
+        'int'
+    ]
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'), "$test : 1");
+ok(!$result->is_valid('key2'), "$test : 2");
+ok($result->is_valid('key3'), "$test : 3");
