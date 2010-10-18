@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1403';
+our $VERSION = '0.1404';
 
 use 5.008001;
 use strict;
@@ -393,10 +393,8 @@ Basic usages
     use Validator::Custom;
     my $vc = Validator::Custom->new;
 
-    # Data
     my $data = {age => 19, name => 'Ken Suzuki'};
     
-    # Rule
     my $rule = [
         age => [
             'int'
@@ -410,25 +408,21 @@ Basic usages
         ]
     ];
     
-    # Validate
     my $result = $vc->validate($data, $rule);
 
 Result of validation
     
-    # More than one parameter is missing
     if ($result->has_missing) {
-        # Do something
+        # Found missing parameters
     }
-    
-    # More than one parameter is invalid
     elsif ($result->has_invalid) {
-        # Do someting
+        unless ($result->is_valid('title') {
+            my $message = $result->message('title');
+            pritn $message;
+        }
     }
     
-    my $title_is_valid = $result->is_valid('title');
-    my $title_message  = $result->message('title');
-    
-Advanced features
+More features
 
     # Register constraint
     $vc->register_constraint(
@@ -455,64 +449,12 @@ Advanced features
     ];
     $result = $vc->validate($data, $rule);
 
-    # "OR" validation
-    $rule = [
-        email => [
-            'blank'
-        ],
-        email => [
-            'not_blank',
-            'emai_address'
-        ]
-    ];
-    
     # Negative validateion
     $rule = [
         'age' => [
             '!int'
         ]
     ];
-
-    # Data filter
-    $vc->data_filter(
-        sub { 
-            my $data = shift;
-            
-            # Convert data to hash reference
-            
-            return $data;
-        }
-    );
-            
-    # Register filter , instead of constraint
-    $vc->register_constraint(
-        trim => sub {
-            my $value = shift;
-            
-            $value =~ s/^\s+//;
-            $value =~ s/\s+$//;
-            
-            return [1, $value];
-        }
-    );
-
-Extending
-
-    ### Extending Validator:Custom
-    
-    package YourValidator;
-    use base 'Validator::Custom';
-    
-    __PACKAGE__->register_constraint(
-    $vc->register_constraint(
-        email => sub {
-            require Email::Valid;
-            return 0 unless $_[0];
-            return Email::Valid->address(-address => $_[0]) ? 1 : 0;
-        }
-    );
-    
-    1;
 
 =head1 DESCRIPTION
 
@@ -664,7 +606,7 @@ the value is valid.
         }
     );
 
-=head1 Constraints
+=head1 CONSTRAINTS
 
 =head2 C<ascii>
 

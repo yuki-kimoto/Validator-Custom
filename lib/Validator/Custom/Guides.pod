@@ -4,7 +4,7 @@ Validator::Custom::Guides - Validator::Custom Guides
 
 =head1 GUIDES
 
-=head2 2. Basic usages
+=head2 1. Basic usages
 
 Create a new L<Validator::Custom> object.
 
@@ -43,7 +43,7 @@ constraint must be sub reference, which check if the value is valid.
 
 Rule for validation has a specific format. the pairs of parameter name
 and constraint expressions. the format detail is explained in
-"4. Syntex of rule".
+"3. Syntex of rule".
 
     my $rule = [
         age => [
@@ -63,7 +63,7 @@ Validate the data. validate() return L<Validator::Custom::Result> object.
 
     my $result = $vc->validate($data, $rule);
 
-=head2 3. Result of validation
+=head2 2. Result of validation
 
 L<Validator::Custom::Result> object has the result of validation.
 See L<Validator::Custom::Result> in detail.
@@ -110,7 +110,7 @@ Combination with L<HTML::FillInForm>
         # Do something
     }
 
-=head2 4. Syntax of rule
+=head2 3. Syntax of rule
 
 =head3 C<Basic syntax>
 
@@ -297,7 +297,7 @@ head of each list of constraint expression.
         ['not_blank', 'Must be not blank']
     ]);
 
-=head2 5. Specification of constraint
+=head2 4. Specification of constraint
 
 I explain the specification of constraint.
 
@@ -386,7 +386,7 @@ and converted value.
         }
     );
 
-=head2 6. Extending
+=head2 5. Extending
 
 Validator::Custom is easy to extend. You can register constraint
 to Your class by register_constraint().
@@ -402,7 +402,7 @@ to Your class by register_constraint().
     
 L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good examples.
 
-=head2 7. Advanced features
+=head2 6. Advanced features
 
 =head3 
 
@@ -429,5 +429,15 @@ the invalid value is found. If you set error_stock to 0, Validation is
 finished soon after invalid value is found.
 
     $vc->error_stock(0);
+
+=head2 DEPRECATED METHODS
+
+These attributes and methods are deprecated.
+
+C<error_infos>, C<add_error_info>, C<errors>, C<error>,
+C<errors_to_hash>, C<invalid_keys>, C<remove_error_info>
+
+If you see the description of these methods,
+see document older than 0.1403.
 
 =cut

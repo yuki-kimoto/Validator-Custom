@@ -7,14 +7,13 @@ use base 'Object::Simple';
 
 use Carp 'croak';
 
-
+# Attrbutes
 __PACKAGE__->attr(data           => sub { {} });
 __PACKAGE__->attr(missing_params => sub { [] });
 __PACKAGE__->attr(raw_data       => sub { {} });
 
-
+# Default message
 our $DEFAULT_MESSAGE = 'Error message not specified';
-
 
 sub error_reason {
     my ($self, $name) = @_;
@@ -127,8 +126,6 @@ sub messages_to_hash {
 ### Deprecated attributes and methods
 
 __PACKAGE__->attr(error_infos    => sub { {} });
-
-
 sub add_error_info {
     my $self = shift;
     
@@ -235,13 +232,6 @@ Missing parameters
 
 Raw data soon after data_filter is excuted.
 
-=head2 C<(depricated) error_infos>
-
-    my $error_infos = $result->error_infos;
-    $result         = $result->error_infos($error_infos);
-
-Error informations.
-
 =head1 METHODS
 
 L<Validator::Custom::Result> inherits all methods from L<Object::Simple>
@@ -264,6 +254,18 @@ Check if the data has invalid parameter
     my $has_missing_param = $result->has_missing;
 
 Check the existence of missing parameter.
+
+=head2 C<invalid_params>
+
+    $invalid_params = $result->invalid_params;
+
+Invalid raw data parameter names.
+
+=head2 C<invalid_rule_keys>
+
+    $invalid_rule_keys = $result->invalid_rule_keys;
+
+Invalid rule keys
 
 =head2 C<is_ok>
 
@@ -295,63 +297,5 @@ Error messages.
     $messages = $result->messages_to_hash;
 
 Error messages to hash reference.
-
-=head2 C<invalid_params>
-
-    $invalid_params = $result->invalid_params;
-
-Invalid raw data parameter names.
-
-=head2 C<invalid_rule_keys>
-
-    $invalid_rule_keys = $result->invalid_rule_keys;
-
-Invalid rule keys
-
-=head2 C<(depricated) add_error_info>
-
-    $result->add_error_info($name => $error_info);
-
-Add error informations.
-
-=head2 C<(deprecated) errors>
-
-errors() is deprecated. Please use message() instead.
-
-    $errors = $result->errors;
-    @errors = $result->errors;
-
-Error messages.
-
-=head2 C<(deprecated) error> 
-
-error() is deprecated. Use message() instead.
-
-    $error = $result->error('title');
-
-A error message
-
-=head2 C<(deprecated) errors_to_hash>
-
-errors_to_hash() is deprecated. Please use messages_to_hash() instead.
-
-    $errors = $result->errors_to_hash;
-
-Error messages to hash reference.
-
-=head2 C<(deprecated) invalid_keys>
-
-invalid_keys() is deprecated. Use invalid_rule_keys() instead.
-
-    @invalid_keys = $result->invalid_keys;
-    $invalid_keys = $result->invalid_keys;
-
-Invalid rule keys.
-
-=head2 C<(depricated) remove_error_info>
-
-    $result->remove_error_info($name);
-
-Remove error information.
 
 =cut
