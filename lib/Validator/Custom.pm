@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1404';
+our $VERSION = '0.1405';
 
 use 5.008001;
 use strict;
@@ -12,9 +12,37 @@ use Carp 'croak';
 use Validator::Custom::Basic::Constraints;
 use Validator::Custom::Result;
 
-
+# Object::Simple "dual_attr" is deprecated. Don't use "dual_attr".
+# I rest this for the promiss of keeping backword compatible.
 __PACKAGE__->dual_attr('constraints', default => sub { {} },
                                       inherit => 'hash_copy');
+__PACKAGE__->register_constraint(
+    ascii             => \&Validator::Custom::Basic::Constraints::ascii,
+    between           => \&Validator::Custom::Basic::Constraints::between,
+    blank             => \&Validator::Custom::Basic::Constraints::blank,
+    decimal           => \&Validator::Custom::Basic::Constraints::decimal,
+    defined           => sub { defined $_[0] },
+    duplication       => \&Validator::Custom::Basic::Constraints::duplication,
+    equal_to          => \&Validator::Custom::Basic::Constraints::equal_to,
+    greater_than      => \&Validator::Custom::Basic::Constraints::greater_than,
+    http_url          => \&Validator::Custom::Basic::Constraints::http_url,
+    int               => \&Validator::Custom::Basic::Constraints::int,
+    in_array          => \&Validator::Custom::Basic::Constraints::in_array,
+    length            => \&Validator::Custom::Basic::Constraints::length,
+    less_than         => \&Validator::Custom::Basic::Constraints::less_than,
+    not_defined       => \&Validator::Custom::Basic::Constraints::not_defined,
+    not_space         => \&Validator::Custom::Basic::Constraints::not_space,
+    not_blank         => \&Validator::Custom::Basic::Constraints::not_blank,
+    uint              => \&Validator::Custom::Basic::Constraints::uint,
+    regex             => \&Validator::Custom::Basic::Constraints::regex,
+    selected_at_least => \&Validator::Custom::Basic::Constraints::selected_at_least,
+    shift             => \&Validator::Custom::Basic::Constraints::shift_array,
+    trim              => \&Validator::Custom::Basic::Constraints::trim,
+    trim_collapse     => \&Validator::Custom::Basic::Constraints::trim_collapse,
+    trim_lead         => \&Validator::Custom::Basic::Constraints::trim_lead,
+    trim_trail        => \&Validator::Custom::Basic::Constraints::trim_trail
+);
+
 __PACKAGE__->attr('data_filter');
 __PACKAGE__->attr(error_stock => 1);
 __PACKAGE__->attr('rule');
@@ -44,43 +72,14 @@ my $rule = [                              # 1. Rule is array ref
 
 EOS
 
-
-__PACKAGE__->register_constraint(
-    ascii             => \&Validator::Custom::Basic::Constraints::ascii,
-    between           => \&Validator::Custom::Basic::Constraints::between,
-    blank             => \&Validator::Custom::Basic::Constraints::blank,
-    decimal           => \&Validator::Custom::Basic::Constraints::decimal,
-    defined           => sub { defined $_[0] },
-    duplication       => \&Validator::Custom::Basic::Constraints::duplication,
-    equal_to          => \&Validator::Custom::Basic::Constraints::equal_to,
-    greater_than      => \&Validator::Custom::Basic::Constraints::greater_than,
-    http_url          => \&Validator::Custom::Basic::Constraints::http_url,
-    int               => \&Validator::Custom::Basic::Constraints::int,
-    in_array          => \&Validator::Custom::Basic::Constraints::in_array,
-    length            => \&Validator::Custom::Basic::Constraints::length,
-    less_than         => \&Validator::Custom::Basic::Constraints::less_than,
-    not_defined       => \&Validator::Custom::Basic::Constraints::not_defined,
-    not_space         => \&Validator::Custom::Basic::Constraints::not_space,
-    not_blank         => \&Validator::Custom::Basic::Constraints::not_blank,
-    uint              => \&Validator::Custom::Basic::Constraints::uint,
-    regex             => \&Validator::Custom::Basic::Constraints::regex,
-    selected_at_least => \&Validator::Custom::Basic::Constraints::selected_at_least,
-    shift             => \&Validator::Custom::Basic::Constraints::shift_array,
-    trim              => \&Validator::Custom::Basic::Constraints::trim,
-    trim_collapse     => \&Validator::Custom::Basic::Constraints::trim_collapse,
-    trim_lead         => \&Validator::Custom::Basic::Constraints::trim_lead,
-    trim_trail        => \&Validator::Custom::Basic::Constraints::trim_trail
-);
-
-
 sub register_constraint {
-    my $invocant = shift;
+    my $self = shift;
     
     # Merge
     my $constraints = ref $_[0] eq 'HASH' ? $_[0] : {@_};
-    $invocant->constraints({%{$invocant->constraints}, %$constraints});
+    $self->constraints({%{$self->constraints}, %$constraints});
     
-    return $invocant;
+    return $self;
 }
 
 our %VALID_OPTIONS = map {$_ => 1} qw/message default copy/;

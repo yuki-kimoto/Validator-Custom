@@ -388,19 +388,23 @@ and converted value.
 
 =head2 5. Extending
 
-Validator::Custom is easy to extend. You can register constraint
-to Your class by register_constraint().
+Validator::Custom is easy to extend. To register constarint,
+use C<register_constraint> in constructor.
     
     package YourValidator;
     use base 'Validator::Custom';
     
-    __PACKAGE__->register_constraint(
-        defined  => sub { defined $_[0] }
-    );
+    sub new {
+        my $self = shift->SUPER::new(@_);
+        $self->register_constraint(
+            defined  => sub { defined $_[0] }
+        );
+        return $self;
+    }
     
     1;
     
-L<Validator::Custom::Trim>, L<Validator::Custom::HTMLForm> is good examples.
+L<Validator::Custom::HTMLForm> is good examples.
 
 =head2 6. Advanced features
 

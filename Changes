@@ -1,4 +1,7 @@
+0.1405
+  updated document
 0.1404
+  deprecated calling register_constraint method from class.
   removed the document of deprecated methods
 0.1403
   moved documents to Validator::Custom::Guides
