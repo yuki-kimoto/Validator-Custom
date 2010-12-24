@@ -249,6 +249,9 @@ sub validate {
             # Constraint key
             else {
                 
+                # OR condition
+                my @cs = split '||', $constraint;
+                
                 # Array constraint
                 if($constraint =~ /^(\@?)(\!?)(.+)$/) {
                     $data_type->{array} = 1 if ($1 || '') eq '@';
@@ -384,6 +387,72 @@ sub validate {
     return $result;
 }
 
+sub _constraint_parser {
+    my ($self, $pattern) = @_;
+    
+    # Trim space
+    $pattern ||= '';
+    $pattern =~ s/^\s+//;
+    $pattern =~ s/\s+$//;
+    
+    # Target is array elemetns
+    my $array = 1 if $pattern =~ s/^@//;
+    croak qq{"\@" must be one at the top of constrinat name}
+      if index($pattern, '@') > -1;
+    
+    # Constraint functions
+    my @funcs;
+    
+    # "OR" constraint list
+    my @cs = split('||', $pattern);
+    foreach my $c (@cs) {
+        $c ||= '';
+        
+        # Trim space
+        $c =~ s/^\s+//;
+        $c =~ s/\s+$//;
+        
+        # Negative
+        my $negative = $c =~ s/^!// ? 1 : 0;
+        croak qq{"!" must be one at the top of constrinat name}
+          if index($pattern, '!') > -1;
+        
+        # Trim space
+        $c =~ s/^\s+//;
+        $c =~ s/\s+$//;
+        
+        # Constraint function
+        my $func = $self->constraints->{$c};
+        croak qq{"$func" is not registered}
+          unless $func;
+        
+        # Negativate
+        $func = sub { ! $func->(@_) } if $negative;
+        
+        # Add
+        push @funcs, $func;
+    }
+    
+    # Merge function
+    my $mfunc;
+    if (@funcs == 1) {
+        $mfunc = $funcs[0];
+    }
+    elsif (@funcs == 2) {
+        $mfunc = sub { $funcs[0]->(@_) || $funcs[1]->(@_) };
+    }
+    elsif (@funcs == 3) {
+        $mfunc = sub { $funcs[0]->(@_) ||
+                       $funcs[1]->(@_) ||
+                       $funcs[2]->(@_) };
+    }
+    else {
+        croak qq{Not support "or" validation more than three};
+    }
+    
+    return {array => $array, func => $mfunc};
+}
+
 sub _rule_syntax {
     my ($self, $rule) = @_;
     
@@ -398,7 +467,6 @@ sub _rule_syntax {
 
 # Deprecated
 __PACKAGE__->attr(shared_rule => sub { [] });
-
 
 1;
 
