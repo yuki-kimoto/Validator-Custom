@@ -264,15 +264,11 @@ Add "@" mark before constraint name.
 =head3 C<Validation of OR condition>
 
 OR condition validation is available.
-Write parameter name repeatedly.
+use C<||> for or condition.
 
     $rule = [
         email => [
-            'blank'
-        ],
-        email => [
-            'not_blank',
-            'emai_address'
+            'blank || email'
         ]
     ];
 

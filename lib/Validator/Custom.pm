@@ -70,7 +70,13 @@ my $rule = [                              # 1 Rule is array ref
     ],
     key => {message => 'err', ... } => [  # 7 With options
         'constraint'
-    ]
+    ],
+    key => [
+        '!constraint'                     # 8 Negativate constraint
+    ],
+    key => [
+        'constraint1 || constraint2'      # 9 "OR" condition
+    ],
 ];
 
 EOS
@@ -249,26 +255,12 @@ sub validate {
             # Constraint key
             else {
                 
-                # OR condition
-                my @cs = split '||', $constraint;
-                
-                # Array constraint
-                if($constraint =~ /^(\@?)(\!?)(.+)$/) {
-                    $data_type->{array} = 1 if ($1 || '') eq '@';
-                    $negative = 1 if ($2 || '') eq '!';
-                    $constraint = $3;
-                }
-                
-                # Check constraint key
-                croak "Constraint type '$constraint' must be [A-Za-z0-9_]"
-                  if $constraint =~ /\W/;
-                
+                # Constirnt infomation
+                my $cinfo = $self->_parse_constraint($constraint);
+                $data_type->{array} = 1 if $cinfo->{array};
+                                                
                 # Constraint function
-                $constraint_function = $self->constraints->{$constraint};
-                
-                # Check constraint function
-                croak "'$constraint' is not registered"
-                  unless ref $constraint_function eq 'CODE'
+                $constraint_function = $cinfo->{func};
             }
             
             # Is valid?
@@ -306,9 +298,6 @@ sub validate {
                         $is_valid = $constraint_result;
                     }
                     
-                    # Negative
-                    $is_valid = !$is_valid if $negative;
-                    
                     # Validation error
                     last unless $is_valid;
                 }
@@ -336,9 +325,6 @@ sub validate {
                 else {
                     $is_valid = $constraint_result;
                 }
-
-                # Negative
-                $is_valid = !$is_valid if $negative;
             }
             
             # Add error if it is invalid
@@ -387,7 +373,7 @@ sub validate {
     return $result;
 }
 
-sub _constraint_parser {
+sub _parse_constraint {
     my ($self, $pattern) = @_;
     
     # Trim space
@@ -404,7 +390,7 @@ sub _constraint_parser {
     my @funcs;
     
     # "OR" constraint list
-    my @cs = split('||', $pattern);
+    my @cs = split(/\|\|/, $pattern);
     foreach my $c (@cs) {
         $c ||= '';
         
@@ -414,23 +400,26 @@ sub _constraint_parser {
         
         # Negative
         my $negative = $c =~ s/^!// ? 1 : 0;
-        croak qq{"!" must be one at the top of constrinat name}
-          if index($pattern, '!') > -1;
+        croak qq{"!" must be one at the top of constraint name}
+          if index($c, '!') > -1;
         
         # Trim space
         $c =~ s/^\s+//;
         $c =~ s/\s+$//;
         
         # Constraint function
-        my $func = $self->constraints->{$c};
-        croak qq{"$func" is not registered}
-          unless $func;
+        croak "Constraint name '$c' must be [A-Za-z0-9_]"
+          if $c =~ /\W/;
+        my $func = $self->constraints->{$c} || '';
+        croak qq{"$c" is not registered}
+          unless ref $func eq 'CODE';
         
         # Negativate
-        $func = sub { ! $func->(@_) } if $negative;
+        if ($negative) { $DB::single = 1 }
+        my $rfunc = $negative ? sub { ! $func->(@_) } : $func;
         
         # Add
-        push @funcs, $func;
+        push @funcs, $rfunc;
     }
     
     # Merge function
@@ -620,24 +609,33 @@ Rule for validation.
 Validation rule has the following syntax.
 
     # Rule syntax
-    my $rule = [                              # 1. Rule is array ref
-        key => [                              # 2. Constraints is array ref
-            'constraint',                     # 3. Constraint is string
-            {'constraint' => 'args'}          #      or hash ref (arguments)
-            ['constraint', 'err'],            #      or arrya ref (message)
+    my $rule = [                              # 1 Rule is array ref
+        key => [                              # 2 Constraints is array ref
+            'constraint',                     # 3 Constraint is string
+            {'constraint' => 'args'}          #     or hash ref (arguments)
+            ['constraint', 'err'],            #     or arrya ref (message)
         ],
         key => [                           
-            [{constraint => 'args'}, 'err']   # 4. With argument and message
+            [{constraint => 'args'}, 'err']   # 4 With argument and message
         ],
-        {key => ['key1', 'key2']} => [        # 5. Multi-parameters validation
+        {key => ['key1', 'key2']} => [        # 5.1 Multi-parameters validation
+            'constraint'
+        ],
+        {key => qr/^key/} => [                # 5.2 Multi-parameters validation
+            'constraint'                              using regular expression
+        ],
+        key => [
+            '@constraint'                     # 6 Multi-values validation
+        ],
+        key => {message => 'err', ... } => [  # 7 With options
             'constraint'
         ],
         key => [
-            '@constraint'                     # 6. Multi-values validation
+            '!constraint'                     # 8 Negativate constraint
         ],
-        key => \%OPTIONS => [                 # 7. With options
-            'constraint'
-        ]
+        key => [
+            'constraint1 || constraint2'      # 9 "OR" condition
+        ],
     ];
 
 =head2 C<syntax>

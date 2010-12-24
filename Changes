@@ -1,7 +1,7 @@
 0.1406
-  added merge filter
+  (experimental) added merge filter
   deprecated shared_rule attribute
-  improved "or" condition validation syntax
+  (experimental)improved "or" condition validation syntax
 0.1405
   updated document
 0.1404

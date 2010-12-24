@@ -265,15 +265,11 @@ B<サンプル:>
 =head3 C<OR条件によるバリデーション>
 
 OR条件によるバリデーションが利用できます。
-パラメータ名を繰り返し書いてください。
+C<||>を使ってください。
 
     $rule = [
         email => [
-            'blank'
-        ],
-        email => [
-            'not_blank',
-            'emai_address'
+            'blank || email'
         ]
     ];
 
