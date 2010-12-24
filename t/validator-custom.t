@@ -8,6 +8,8 @@ use lib 't/validator-custom';
 my $test;
 sub test {$test = shift}
 
+my $value;
+
 use Validator::Custom;
 
 our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
@@ -1414,3 +1416,18 @@ $rule = [
 $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
 is($result->data->{key}, 'abc', $test);
+
+test 'Multi-Paramater validation using regex';
+$data = {key1 => 'a', key2 => 'b', key3 => 'c', p => 'd'};
+$rule = [
+    {key => qr/^key/} => [
+        'merge'
+    ],
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+$value = $result->data->{key};
+ok(index($value, 'a') > -1, "$test : 1");
+ok(index($value, 'b') > -1, "$test : 2");
+ok(index($value, 'c') > -1, "$test : 3");
+ok(index($value, 'd') == -1, "$test : 4");

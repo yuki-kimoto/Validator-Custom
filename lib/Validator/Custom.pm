@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1405';
+our $VERSION = '0.1406';
 
 use 5.008001;
 use strict;
@@ -47,26 +47,28 @@ __PACKAGE__->register_constraint(
 __PACKAGE__->attr('data_filter');
 __PACKAGE__->attr(error_stock => 1);
 __PACKAGE__->attr('rule');
-__PACKAGE__->attr(shared_rule => sub { [] });
 
 __PACKAGE__->attr(syntax => <<'EOS');
 ### Syntax of validation rule
-my $rule = [                              # 1. Rule is array ref
-    key => [                              # 2. Constraints is array ref
-        'constraint',                     # 3. Constraint is string
-        {'constraint' => 'args'}          #      or hash ref (arguments)
-        ['constraint', 'err'],            #      or arrya ref (message)
+my $rule = [                              # 1 Rule is array ref
+    key => [                              # 2 Constraints is array ref
+        'constraint',                     # 3 Constraint is string
+        {'constraint' => 'args'}          #     or hash ref (arguments)
+        ['constraint', 'err'],            #     or arrya ref (message)
     ],
     key => [                           
-        [{constraint => 'args'}, 'err']   # 4. With argument and message
+        [{constraint => 'args'}, 'err']   # 4 With argument and message
     ],
-    {key => ['key1', 'key2']} => [        # 5. Multi-parameters validation
+    {key => ['key1', 'key2']} => [        # 5.1 Multi-parameters validation
         'constraint'
     ],
-    key => [
-        '@constraint'                     # 6. Multi-values validation
+    {key => qr/^key/} => [                # 5.2 Multi-parameters validation
+        'constraint'                              using regular expression
     ],
-    key => \%OPTIONS => [                 # 7. With options
+    key => [
+        '@constraint'                     # 6 Multi-values validation
+    ],
+    key => {message => 'err', ... } => [  # 7 With options
         'constraint'
     ]
 ];
@@ -163,8 +165,22 @@ sub validate {
             $result_key = $first_key;
             $key         = $key->{$first_key};
         }
-        my $keys = ref $key eq 'ARRAY' ? $key : [$key];
         
+        # Real keys
+        my $keys;
+        
+        if (ref $key eq 'ARRAY') {
+            $keys = $key;
+        }
+        elsif (ref $key eq 'Regexp') {
+           $keys = [];
+           foreach my $k (keys %$data) {
+               push @$keys, $k if $k =~ /$key/;
+           }
+        }
+        else {
+            $keys = [$key];
+        }
         # Check option
         foreach my $oname (keys %$options) {
             croak qq{Option "$oname" of "$result_key" is invalid name}
@@ -380,6 +396,10 @@ sub _rule_syntax {
     return $message;
 }
 
+# Deprecated
+__PACKAGE__->attr(shared_rule => sub { [] });
+
+
 1;
 
 =head1 NAME
@@ -412,13 +432,13 @@ Basic usages
 
 Result of validation
     
-    if ($result->has_missing) {
-        # Found missing parameters
-    }
-    elsif ($result->has_invalid) {
-        unless ($result->is_valid('title') {
-            my $message = $result->message('title');
-            pritn $message;
+    unless ($result->is_ok) {
+        if ($result->has_missing) {
+            my $missing_params = $result->missing_params;
+            # Found missing parameters
+        }
+        elsif ($result->has_invalid) {
+            my $messages = $result->messages_to_hash;
         }
     }
     
@@ -459,7 +479,7 @@ More features
 =head1 DESCRIPTION
 
 L<Validator::Custom> validates user input.
-The features are  the following ones.
+The features are the following ones.
 
 =over 4
 
@@ -552,18 +572,6 @@ Validation rule has the following syntax.
         ]
     ];
 
-=head2 C<shared_rule>
-
-    my $shared_rule = $vc->shared_rule;
-    $vc             = $vc->shared_rule(\@rule);
-
-Shared rule. Shared rule is added the head of normal rule.
-
-    $vc->shared_rule([
-        ['defined',   'Must be defined'],
-        ['not_blank', 'Must be not blank']
-    ]);
-
 =head2 C<syntax>
 
     my $syntax = $vc->syntax;
@@ -605,6 +613,21 @@ the value is valid.
             return $is_valid;
         }
     );
+
+=head2 C<(deprecated) shared_rule>
+
+B<This method is now deprecated> because I know in almost all case
+We specify a constraint for each paramters.
+
+    my $shared_rule = $vc->shared_rule;
+    $vc             = $vc->shared_rule(\@rule);
+
+Shared rule. Shared rule is added the head of normal rule.
+
+    $vc->shared_rule([
+        ['defined',   'Must be defined'],
+        ['not_blank', 'Must be not blank']
+    ]);
 
 =head1 CONSTRAINTS
 

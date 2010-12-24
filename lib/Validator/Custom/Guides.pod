@@ -233,6 +233,18 @@ Multi-parameters validation is available.
 "password1" and "password2" is parameter names.
 "password_check" is result key.
 
+You can also use the reference of regular expression.
+
+    $data = {person1 => 'Taro', person2 => 'Rika', person3 => 'Ken'};
+
+    $rule = [
+        {password_check => qr/^person;/} => [
+            'merge',
+            'trim',
+            'not_blank'
+        ]
+    ];
+
 =head3 C<Multi-values validation>
 
 Multi-values validation is available
@@ -284,18 +296,6 @@ You can also combine this and Multi-parameters validation
             '@!int';
         ]
     ];
-
-=head3 C<Shared rule>
-
-Can share rule with all parameters.
-Shared rule is added to the
-head of each list of constraint expression.
-
-    $vc->shared_rule([
-        ['defined',   'Must be defined'],
-        ['trim'],
-        ['not_blank', 'Must be not blank']
-    ]);
 
 =head2 4. Specification of constraint
 
@@ -433,7 +433,7 @@ the invalid value is found. If you set error_stock to 0, Validation is
 finished soon after invalid value is found.
 
     $vc->error_stock(0);
-
+    
 =head2 DEPRECATED METHODS
 
 These attributes and methods are deprecated.

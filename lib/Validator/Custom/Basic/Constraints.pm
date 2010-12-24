@@ -120,12 +120,7 @@ sub less_than {
 sub merge {
     my ($values) = shift;
     
-    my $merge;
-    foreach my $value (@$values) {
-        $merge .= $value;
-    }
-    
-    return [1, $merge];
+    return [1, join('', @$values)];
 }
 
 sub not_blank   { $_[0] ne '' }
