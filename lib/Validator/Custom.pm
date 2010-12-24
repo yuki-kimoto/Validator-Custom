@@ -30,6 +30,7 @@ __PACKAGE__->register_constraint(
     in_array          => \&Validator::Custom::Basic::Constraints::in_array,
     length            => \&Validator::Custom::Basic::Constraints::length,
     less_than         => \&Validator::Custom::Basic::Constraints::less_than,
+    merge             => \&Validator::Custom::Basic::Constraints::merge,
     not_defined       => \&Validator::Custom::Basic::Constraints::not_defined,
     not_space         => \&Validator::Custom::Basic::Constraints::not_space,
     not_blank         => \&Validator::Custom::Basic::Constraints::not_blank,
@@ -734,6 +735,19 @@ Numeric comparison
             {less_than => 25}
         ]
     ];
+
+=head2 C<merge>
+
+Merge the values
+    
+    $data = {key1 => 'a', key2 => 'b', key3 => 'c'};
+    $rule = [
+        {key => ['key1', 'key2', 'key3']} => [
+            'merge'
+        ],
+    ];
+    
+    $result->data->{key} is 'abc'
 
 =head2 C<not_blank>
 

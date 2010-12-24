@@ -117,6 +117,17 @@ sub less_than {
     return $value < $target ? 1 : 0;
 }
 
+sub merge {
+    my ($values) = shift;
+    
+    my $merge;
+    foreach my $value (@$values) {
+        $merge .= $value;
+    }
+    
+    return [1, $merge];
+}
+
 sub not_blank   { $_[0] ne '' }
 sub not_defined { !defined $_[0] }
 sub not_space   { $_[0] !~ '^\s*$' ? 1 : 0 }
@@ -206,6 +217,8 @@ Constraint functions is explained in L<Validator::Custom>
 =head2 C<length>
 
 =head2 C<less_than>
+
+=head2 C<merge>
 
 =head2 C<not_blank>
 

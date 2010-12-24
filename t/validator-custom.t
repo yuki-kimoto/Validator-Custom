@@ -1,4 +1,4 @@
-use Test::More tests => 131;
+use Test::More 'no_plan'; #tests => 131;
 #use Test::More 'no_plan';
 
 use strict;
@@ -1403,3 +1403,14 @@ $result = $vc->validate($data, $rule);
 ok(!$result->is_valid('key1'), "$test : 1");
 ok(!$result->is_valid('key2'), "$test : 2");
 ok($result->is_valid('key3'), "$test : 3");
+
+test 'merge';
+$data = {key1 => 'a', key2 => 'b', key3 => 'c'};
+$rule = [
+    {key => ['key1', 'key2', 'key3']} => [
+        'merge'
+    ],
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+is($result->data->{key}, 'abc', $test);
