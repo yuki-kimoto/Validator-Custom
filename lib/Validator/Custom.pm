@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1407';
+our $VERSION = '0.1408';
 
 use 5.008001;
 use strict;
@@ -38,6 +38,7 @@ __PACKAGE__->register_constraint(
     regex             => \&Validator::Custom::Basic::Constraints::regex,
     selected_at_least => \&Validator::Custom::Basic::Constraints::selected_at_least,
     shift             => \&Validator::Custom::Basic::Constraints::shift_array,
+    space             => \&Validator::Custom::Basic::Constraints::space,
     trim              => \&Validator::Custom::Basic::Constraints::trim,
     trim_collapse     => \&Validator::Custom::Basic::Constraints::trim_collapse,
     trim_lead         => \&Validator::Custom::Basic::Constraints::trim_lead,
@@ -534,7 +535,7 @@ Constraint functions.
 =head2 C<data_filter>
 
     my $filter = $vc->data_filter;
-    $vc        = $vc->data_filter(\&filter);
+    $vc        = $vc->data_filter(\&data_filter);
 
 Filter input data. If data is not hash reference, you can convert the data to hash reference.
 
@@ -658,7 +659,6 @@ Shared rule. Shared rule is added the head of normal rule.
 =head2 C<ascii>
 
     my $data => {name => 'Ken'};
-
     my $rule = [
         name => [
             'ascii'
@@ -680,14 +680,14 @@ Between A and B.
 
 =head2 C<blank>
 
-Blank.
-
     my $data => {name => ''};
     my $rule = [
         name => [
             'blank'
         ]
     ];
+
+Blank.
 
 =head2 C<decimal>
     
@@ -787,7 +787,7 @@ Check if the values is in array.
     my $rule => [
         value1 => [
             {'length' => 3}
-        ]
+        ],
         value2 => [
             {'length' => [2, 5]} # 'bb' to 'bbbbb'
         ]
@@ -838,6 +838,17 @@ Not defined.
     ];
 
 Not contain only space characters. 
+
+=head2 C<space>
+
+    my $data = {name => '   '};
+    my $rule = [
+        name => [
+            'space' # '', ' ', '   '
+        ]
+    ];
+
+White space or empty stirng.
 
 =head2 C<uint>
 

@@ -1,4 +1,4 @@
-use Test::More tests => 138;
+use Test::More tests => 139;
 #use Test::More 'no_plan';
 
 use strict;
@@ -1449,6 +1449,7 @@ $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_rule_keys, ['key3']);
 
+
 test 'or condtioon new syntax';
 $data = {key1 => '3', key2 => '', key3 => 'a'};
 $rule = [
@@ -1466,3 +1467,20 @@ $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_rule_keys, ['key1']);
 
+
+test 'space';
+$data = {key1 => '', key2 => ' ', key3 => 'a'};
+$rule = [
+    key1 => [
+        'space'
+    ],
+    key2 => [
+        'space'
+    ],
+    key3 => [
+        'space'
+    ],
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+is_deeply($result->invalid_rule_keys, ['key3'], $test);

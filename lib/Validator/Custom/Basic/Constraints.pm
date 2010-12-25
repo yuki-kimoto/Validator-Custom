@@ -150,6 +150,8 @@ sub shift_array {
     return [1, shift @$values];
 }
 
+sub space { $_[0] =~ '^\s*$' ? 1 : 0 }
+
 sub trim {
     my $value = shift;
     $value =~ s/^\s*(.*?)\s*$/$1/ms;
@@ -183,9 +185,9 @@ sub trim_trail{
 
 Validator::Custom::Basic::Constraints - Basic constraint functions
 
-=head1 CONSTRAINT FUNCTIONS
+=head1 FUNCTIONS
 
-Constraint functions is explained in L<Validator::Custom>
+These functions is explained in L<Validator::Custom>
 
 =head2 C<ascii>
 
@@ -229,6 +231,8 @@ Constraint functions is explained in L<Validator::Custom>
 
 =head2 C<shift_array>
 
+=head2 C<space>
+
 =head2 C<trim>
 
 =head2 C<trim_collapse>
@@ -236,17 +240,6 @@ Constraint functions is explained in L<Validator::Custom>
 =head2 C<trim_lead>
 
 =head2 C<trim_trail>
-
-=head1 AUTHOR
-
-Yuki Kimoto, C<< <kimoto.yuki at gmail.com> >>
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright 2009 Yuki Kimoto, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
 
 =cut
 
