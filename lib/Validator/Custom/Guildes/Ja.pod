@@ -408,32 +408,4 @@ L<Validator::Custom>を拡張するのは簡単です。
     
 L<Validator::Custom::HTMLForm>はよいサンプルです。
 
-=head2 6. 応用的な機能
-
-=head3 C<データフィルタリング>
-
-データがハッシュリファレンスでない場合は、
-data_filterメソッドを使ってデータをハッシュリファレンス
-に変換することができます。
-
-    $vc->data_filter(
-        sub { 
-            my $data = shift;
-            
-            # Convert data to hash reference
-            
-            return $data;
-        }
-    );
-
-=head3 C<メッセージの蓄積>
-
-デフォルトでは、すべてのパラメータがvalidateメソッドによって
-チェックされます。もしデータが正しいかどうかのみを確かめたい
-場合は、不正な値が見つかったときにバリデーションを終えたほう
-がよいです。error_stockを0に設定すれば、
-バリデーションは不正な値が見つかるとすぐに終了します。
-
-    $vc->error_stock(0);
-
 =cut

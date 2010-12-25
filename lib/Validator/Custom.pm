@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1408';
+our $VERSION = '0.1409';
 
 use 5.008001;
 use strict;
@@ -888,11 +888,11 @@ In other word, the array contains at least specified count element.
 
 =head2 C<merge>
 
-    $data = {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'};
-    $rule = [
+    my $data = {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'};
+    my $rule = [
         {merged_name => ['name1', 'name2', 'name3']} => [
             'merge' # KenRikaTaro
-        ],
+        ]
     ];
 
 Merge the values.

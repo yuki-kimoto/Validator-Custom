@@ -216,14 +216,18 @@ Validator::Custom::Result - Result of validation
     my $data = $result->data;
     $result  = $result->data($data);
 
-Result data.
+Get the data in the end state. L<Validator::Custom> has filtering ability
+if you need.
+The data passed to C<validate()> is converted to other data by filter.
+You can get filtered data using C<data()>.
 
 =head2 C<missing_params>
 
     my $missing_params = $result->missing_params;
     $result            = $result->missing_params($missing_params);
 
-Missing parameters
+You can get missing paramter names using C<missing_params()>.
+In this example, return value is the following one.
 
 =head2 C<raw_data>
 
@@ -247,13 +251,16 @@ Error reason. This is constraint name.
 
     my $has_invalid = $result->has_invalid;
 
-Check if the data has invalid parameter
+If at least one of parameter value is invalid,
+C<has_invalid()> return true value.
 
 =head2 C<has_missing>
 
     my $has_missing_param = $result->has_missing;
 
-Check the existence of missing parameter.
+If at least one of parameter names specified in the rule
+is not found in the data,
+C<has_missing()> return true value.
 
 =head2 C<invalid_params>
 
@@ -271,8 +278,10 @@ Invalid rule keys
 
     $is_ok = $result->is_ok;
 
-Check if the result is ok. this means that
-data has no missing parameter and no invalid parameter.
+If you check the data is completely valid, use C<is_ok()>.
+C<is_ok()> return true value
+if invalid parameter values is not found and all parameter
+names specified in the rule is found in the data.
 
 =head2 C<is_valid>
 
@@ -284,18 +293,20 @@ Check if one paramter is valid.
 
     $message = $result->message('title');
 
-Error message.
+Get a message corresponding to the parameter name which value is invalid.
 
 =head2 C<messages>
 
     $messages = $result->messages;
 
-Error messages.
+Get messages corresponding to the parameter names which value is invalid.
+Messages keep the order of the rule.
 
 =head2 C<messages_to_hash>
 
     $messages = $result->messages_to_hash;
 
-Error messages to hash reference.
+You can get the pairs of invalid parameter name and message
+using C<messages_to_hash()>.
 
 =cut
