@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1406';
+our $VERSION = '0.1407';
 
 use 5.008001;
 use strict;
@@ -133,7 +133,7 @@ sub validate {
     my $valid_keys = {};
     
     # Error position
-    my $position = 0;
+    my $pos = 0;
     
     # Found missing paramteters
     my $found_missing_params = {};
@@ -143,19 +143,19 @@ sub validate {
     for (my $i = 0; $i < @{$rule}; $i += 2) {
         
         # Increment position
-        $position++;
+        $pos++;
         
         # Key, options, and constraints
         my $key = $rule->[$i];
-        my $options = $rule->[$i + 1];
+        my $opts = $rule->[$i + 1];
         my $constraints;
-        if (ref $options eq 'HASH') {
+        if (ref $opts eq 'HASH') {
             $constraints = $rule->[$i + 2];
             $i++;
         }
         else {
-            $constraints = $options;
-            $options = {};
+            $constraints = $opts;
+            $opts = {};
         }
         
         # Check constraints
@@ -188,14 +188,14 @@ sub validate {
             $keys = [$key];
         }
         # Check option
-        foreach my $oname (keys %$options) {
+        foreach my $oname (keys %$opts) {
             croak qq{Option "$oname" of "$result_key" is invalid name}
               unless $VALID_OPTIONS{$oname};
         }
         
         # Is data copy?
         my $copy = 1;
-        $copy = $options->{copy} if exists $options->{copy};
+        $copy = $opts->{copy} if exists $opts->{copy};
         
         # Check missing parameters
         my $found_missing_param;
@@ -209,8 +209,8 @@ sub validate {
             }
         }
         if ($found_missing_param) {
-            $result->data->{$result_key} = $options->{default}
-              if exists $options->{default} && $copy;
+            $result->data->{$result_key} = $opts->{default}
+              if exists $opts->{default} && $copy;
             next;
         }
         
@@ -242,14 +242,14 @@ sub validate {
             }
             
             # Constraint function
-            my $constraint_function;
+            my $cfunc;
             my $negative;
             
             # Sub reference
             if( ref $constraint eq 'CODE') {
                 
                 # Constraint function
-                $constraint_function = $constraint;
+                $cfunc = $constraint;
             }
             
             # Constraint key
@@ -260,7 +260,7 @@ sub validate {
                 $data_type->{array} = 1 if $cinfo->{array};
                                                 
                 # Constraint function
-                $constraint_function = $cinfo->{func};
+                $cfunc = $cinfo->{func};
             }
             
             # Is valid?
@@ -284,18 +284,18 @@ sub validate {
                     my $element;
                     
                     # Validation
-                    my $constraint_result
-                      = $constraint_function->($data, $arg, $self);
+                    my $cresult
+                      = $cfunc->($data, $arg, $self);
                     
                     # Constrint result
-                    if (ref $constraint_result eq 'ARRAY') {
-                        ($is_valid, $element) = @$constraint_result;
+                    if (ref $cresult eq 'ARRAY') {
+                        ($is_valid, $element) = @$cresult;
                         
                         $elements ||= [];
                         push @$elements, $element;
                     }
                     else {
-                        $is_valid = $constraint_result;
+                        $is_valid = $cresult;
                     }
                     
                     # Validation error
@@ -316,14 +316,14 @@ sub validate {
                   unless defined $value;
                 
                 # Validation
-                my $constraint_result
-                  = $constraint_function->($value, $arg, $self);
+                my $cresult
+                  = $cfunc->($value, $arg, $self);
                 
-                if (ref $constraint_result eq 'ARRAY') {
-                    ($is_valid, $value) = @$constraint_result;
+                if (ref $cresult eq 'ARRAY') {
+                    ($is_valid, $value) = @$cresult;
                 }
                 else {
-                    $is_valid = $constraint_result;
+                    $is_valid = $cresult;
                 }
             }
             
@@ -331,18 +331,18 @@ sub validate {
             unless ($is_valid) {
                 
                 # Resist error info
-                $message = $options->{message} unless defined $message;
+                $message = $opts->{message} unless defined $message;
                 $result->{_error_infos}->{$result_key} = {
                     message      => $message,
-                    position     => $position,
+                    position     => $pos,
                     reason       => $constraint,
                     original_key => $key
                 }
                   unless exists $result->{_error_infos}->{$result_key};
                 
                 # Set default value
-                $result->data->{$result_key} = $options->{default}
-                  if exists $options->{default} && $copy;
+                $result->data->{$result_key} = $opts->{default}
+                  if exists $opts->{default} && $copy;
                 
                 # No Error strock
                 unless ($error_stock) {
@@ -374,72 +374,70 @@ sub validate {
 }
 
 sub _parse_constraint {
-    my ($self, $pattern) = @_;
+    my ($self, $constraint) = @_;
+    
+    # Constraint infomation
+    my $cinfo = {};
     
     # Trim space
-    $pattern ||= '';
-    $pattern =~ s/^\s+//;
-    $pattern =~ s/\s+$//;
+    $constraint ||= '';
+    $constraint =~ s/^\s+//;
+    $constraint =~ s/\s+$//;
     
     # Target is array elemetns
-    my $array = 1 if $pattern =~ s/^@//;
+    $cinfo->{array} = 1 if $constraint =~ s/^@//;
     croak qq{"\@" must be one at the top of constrinat name}
-      if index($pattern, '@') > -1;
+      if index($constraint, '@') > -1;
     
     # Constraint functions
-    my @funcs;
+    my @cfuncs;
     
-    # "OR" constraint list
-    my @cs = split(/\|\|/, $pattern);
-    foreach my $c (@cs) {
-        $c ||= '';
+    # Constraint names
+    my @cnames = split(/\|\|/, $constraint);
+    
+    # Convert constarint names to constraint funcions
+    foreach my $cname (@cnames) {
+        $cname ||= '';
         
         # Trim space
-        $c =~ s/^\s+//;
-        $c =~ s/\s+$//;
+        $cname =~ s/^\s+//;
+        $cname =~ s/\s+$//;
         
         # Negative
-        my $negative = $c =~ s/^!// ? 1 : 0;
+        my $negative = $cname =~ s/^!// ? 1 : 0;
         croak qq{"!" must be one at the top of constraint name}
-          if index($c, '!') > -1;
+          if index($cname, '!') > -1;
         
         # Trim space
-        $c =~ s/^\s+//;
-        $c =~ s/\s+$//;
+        $cname =~ s/^\s+//;
+        $cname =~ s/\s+$//;
         
         # Constraint function
-        croak "Constraint name '$c' must be [A-Za-z0-9_]"
-          if $c =~ /\W/;
-        my $func = $self->constraints->{$c} || '';
-        croak qq{"$c" is not registered}
-          unless ref $func eq 'CODE';
+        croak "Constraint name '$cname' must be [A-Za-z0-9_]"
+          if $cname =~ /\W/;
+        my $cfunc = $self->constraints->{$cname} || '';
+        croak qq{"$cname" is not registered}
+          unless ref $cfunc eq 'CODE';
         
         # Negativate
-        if ($negative) { $DB::single = 1 }
-        my $rfunc = $negative ? sub { ! $func->(@_) } : $func;
+        my $f = $negative ? sub { ! $cfunc->(@_) } : $cfunc;
         
         # Add
-        push @funcs, $rfunc;
+        push @cfuncs, $f;
     }
     
     # Merge function
-    my $mfunc;
-    if (@funcs == 1) {
-        $mfunc = $funcs[0];
-    }
-    elsif (@funcs == 2) {
-        $mfunc = sub { $funcs[0]->(@_) || $funcs[1]->(@_) };
-    }
-    elsif (@funcs == 3) {
-        $mfunc = sub { $funcs[0]->(@_) ||
-                       $funcs[1]->(@_) ||
-                       $funcs[2]->(@_) };
-    }
-    else {
-        croak qq{Not support "or" validation more than three};
-    }
+    croak qq{Not support "or" validation more than three}
+      if @cfuncs > 3;
     
-    return {array => $array, func => $mfunc};
+    $cinfo->{func} = @cfuncs == 1 ? $cfuncs[0]
+                   : @cfuncs == 2 ? sub {$cfuncs[0]->(@_) || $cfuncs[1]->(@_)}
+                   : @cfuncs == 3 ? sub {$cfuncs[0]->(@_) ||
+                                         $cfuncs[1]->(@_) ||
+                                         $cfuncs[2]->(@_)}
+                   : sub { return $_[0] };
+    
+    return $cinfo;
 }
 
 sub _rule_syntax {
@@ -465,74 +463,38 @@ Validator::Custom - Validates user input easily
 
 =head1 SYNOPSYS
 
-Basic usages
-
     use Validator::Custom;
     my $vc = Validator::Custom->new;
 
     my $data = {age => 19, name => 'Ken Suzuki'};
     
     my $rule = [
-        age => [
+        age => {message => 'age must be integer'} => [
+            'not_blank',
             'int'
         ],
-        name => [
-            ['not_blank',        "Name must be exists"],
-            [{length => [1, 5]}, "Name length must be 1 to 5"]
+        name => {message => 'name must be string. the length 1 to 5'} => [
+            'not_blank',
+            {length => [1, 5]}
         ],
-        price => {default => 1000, message => 'price must be integer'} => [
+        price => [
+            'not_blank',
             'int'
         ]
     ];
     
     my $result = $vc->validate($data, $rule);
 
-Result of validation
-    
     unless ($result->is_ok) {
         if ($result->has_missing) {
             my $missing_params = $result->missing_params;
-            # Found missing parameters
         }
-        elsif ($result->has_invalid) {
+        
+        if ($result->has_invalid) {
             my $messages = $result->messages_to_hash;
         }
     }
     
-More features
-
-    # Register constraint
-    $vc->register_constraint(
-        email => sub {
-            require Email::Valid;
-            return 0 unless $_[0];
-            return Email::Valid->address(-address => $_[0]) ? 1 : 0;
-        }
-    );
-    
-    # Multi parameters validation
-    $data = {password1 => 'xxx', password2 => 'xxx'};
-    $vc->register_constraint(
-        same => sub {
-            my $values = shift;
-            my $is_valid = $values->[0] eq $values->[1];
-            return [$is_valid, $values->[0]];
-        }
-    );
-    $rule = [
-        {password_check => [qw/password1 password2/]} => [
-            ['same', 'Two password must be equal']
-        ]
-    ];
-    $result = $vc->validate($data, $rule);
-
-    # Negative validateion
-    $rule = [
-        'age' => [
-            '!int'
-        ]
-    ];
-
 =head1 DESCRIPTION
 
 L<Validator::Custom> validates user input.
@@ -542,23 +504,19 @@ The features are the following ones.
 
 =item *
 
-Can set a message for each parameter. the messages is added to
-the result when the parameter is invalid. the messages keeps the order.
+Can set messages for each parameter when data has invalid parameter.
+The order of messages is keeped, and also can set messages for each reason.
 
 =item *
 
-Can register constraint function. such as "int", "defined".
-constraint function can receive any arguments, other than parameter value.
+Can register constraint functions or filter functions.
+And useful constraint and filter is registered by default,
+such as C<not_blank>, C<int>, C<trim>, etc.
 
 =item *
 
-Can create original class, extending Validator::Custom
-(See L<Validator::Custom::HTMLForm>)
-
-=item *
-
-Support multi-parameters validation, multi-values validation,
-OR condition validation, negative validation.
+Support C<OR> condition validation, negativate validation, 
+array validation, 
 
 =back
 
@@ -579,16 +537,6 @@ Constraint functions.
     $vc        = $vc->data_filter(\&filter);
 
 Filter input data. If data is not hash reference, you can convert the data to hash reference.
-
-    $vc->data_filter(
-        sub {
-            my $data = shift;
-            
-            # Convert data to hash reference.
-            
-            return $data;
-        }
-    );
 
 =head2 C<error_stock>
 
@@ -657,15 +605,15 @@ and implements the following new ones.
 
 Validate the data.
 Return value is L<Validator::Custom::Result> object.
-If the rule of second arument is ommited, rule attribute is used for validation.
+If the rule of second arument is ommited,
+The value of C<rule> attribute is used for validation.
 
 =head2 C<register_constraint>
 
     $vc->register_constraint(%constraint);
     $vc->register_constraint(\%constraint);
 
-Register constraint. constraint must be sub reference, which check if
-the value is valid.
+Register a constraint function or filter function.
     
     $vc->register_constraint(
         int => sub {
@@ -677,8 +625,18 @@ the value is valid.
             my $value    = shift;
             my $is_valid = $value =~ /^[\x21-\x7E]+$/;
             return $is_valid;
+        },
+        trim => sub {
+            my $value = shift;
+            $value =~ s/^\s+//;
+            $value =~ s/\s+$//;
+            
+            return [1, $value];
         }
     );
+
+If you register filter function, you must return array reference,
+which contain [IS_VALID_OR_NOT, FILTERED_VALUE].
 
 =head2 C<(deprecated) shared_rule>
 
@@ -699,42 +657,65 @@ Shared rule. Shared rule is added the head of normal rule.
 
 =head2 C<ascii>
 
-check is the data consists of only ascii code.
+    my $data => {name => 'Ken'};
+
+    my $rule = [
+        name => [
+            'ascii'
+        ]
+    ];
+
+Ascii.
 
 =head2 C<between>
 
-Numeric comparison
-
+    my $data = {age => 19};
     my $rule = [
         age => [
-            {between => [1, 20]}
+            {between => [1, 20]} # (1, 2, .. 19, 20)
         ]
     ];
+
+Between A and B.
 
 =head2 C<blank>
 
-Check if the is blank.
+Blank.
 
-=head2 C<decimal>
-    
-    my $data = { num => '123.45678' };
-    my $rule => [
-        num => [
-            {'decimal' => [3, 5]}
+    my $data => {name => ''};
+    my $rule = [
+        name => [
+            'blank'
         ]
     ];
 
-    Validator::Custom::HTMLForm->new->validate($data,$rule);
+=head2 C<decimal>
+    
+    my $data = {num1 => '123.45678', num2 => '1.45'};
+    my $rule => [
+        num1 => [
+            'decimal'
+        ],
+        num2 => [
+            {'decimal' => [1, 2]}
+        ]
+    ];
 
-Each numbers (3,5) mean maximum digits before/after '.'
+Decimal. You can specify maximus digits number at before
+and after '.'.
 
 =head2 C<defined>
 
-Check if the data is defined.
+    my $data => {name => 'Ken'};
+    my $rule = [
+        name => [
+            'defined'
+        ]
+    ];
+
+Defined.
 
 =head2 C<duplication>
-
-Check if the two data are same or not.
 
     my $data = {mail1 => 'a@somehost.com', mail2 => 'a@somehost.com'};
     my $rule => [
@@ -743,140 +724,145 @@ Check if the two data are same or not.
         ]
     ];
 
+Check if the two data are same or not.
+
 =head2 C<equal_to>
 
-Numeric comparison
-
+    my $data = {price => 1000};
     my $rule = [
-        age => [
-            {equal_to => 25}
+        price => [
+            {'equal_to' => 1000}
         ]
     ];
-    
+
+Numeric equal comparison.
+
 =head2 C<greater_than>
 
-Numeric comparison
-
+    my $data = {price => 1000};
     my $rule = [
-        age => [
-            {greater_than => 25}
+        price => [
+            {'greater_than' => 900}
         ]
     ];
+
+Numeric "greater than" comparison
 
 =head2 C<http_url>
 
-Verify it is a http(s)-url
-
-    my $data = { url => 'http://somehost.com' };
+    my $data = {url => 'http://somehost.com'};
     my $rule => [
         url => [
             'http_url'
         ]
     ];
 
+HTTP(or HTTPS) URL.
+
 =head2 C<int>
 
-Check if the data is integer.
-    
-    # valid data
-    123
-    -134
+    my $data = {age => 19};
+    my $rule = [
+        age => [
+            'int'
+        ]
+    ];
+
+Integer.
 
 =head2 C<in_array>
 
-Check if the food ordered is in menu
-
+    my $data = {food => 'sushi'};
     my $rule = [
         food => [
-            {in_array => [qw/sushi bread apple/]}
+            {'in_array' => [qw/sushi bread apple/]}
         ]
     ];
+
+Check if the values is in array.
 
 =head2 C<length>
 
-Check the length of the data.
-
-The following sample check if the length of the data is 4 or not.
-
-    my $data = { str => 'aaaa' };
+    my $data = {value1 => 'aaa', value2 => 'bbbbb'};
     my $rule => [
-        num => [
-            {'length' => 4}
+        value1 => [
+            {'length' => 3}
+        ]
+        value2 => [
+            {'length' => [2, 5]} # 'bb' to 'bbbbb'
         ]
     ];
 
-When you set two arguments, it checks if the length of data is in
-the range between 4 and 10.
-    
-    my $data = { str => 'aaaa' };
-    my $rule => [
-        num => [
-            {'length' => [4, 10]}
-        ]
-    ];
+Length of the value.
 
 =head2 C<less_than>
 
-Numeric comparison
-
+    my $data = {num => 20};
     my $rule = [
-        age => [
-            {less_than => 25}
+        num => [
+            {'less_than' => 25}
         ]
     ];
 
-=head2 C<merge>
-
-Merge the values
-    
-    $data = {key1 => 'a', key2 => 'b', key3 => 'c'};
-    $rule = [
-        {key => ['key1', 'key2', 'key3']} => [
-            'merge'
-        ],
-    ];
-    
-    $result->data->{key} is 'abc'
+Numeric "less than" comparison.
 
 =head2 C<not_blank>
 
-Check if the data is not blank.
-
-=head2 C<not_defined>
-
-Check if the data is not defined.
-
-=head2 C<not_space>
-
-Check if the data do not containe space.
-
-=head2 C<uint>
-
-Check if the data is unsigned integer.
-
-    # valid data
-    123
-    
-=head2 C<regex>
-
-Check with regular expression.
-    
-    my $data = {str => 'aaa'};
-    my $rule => [
-        str => [
-            {regex => qr/a{3}/}
+    my $data = {name => 'Ken'};
+    my $rule = [
+        name => [
+            'not_blank' # Except for ''
         ]
     ];
 
+Not blank.
+
+=head2 C<not_defined>
+
+    my $data = {name => 'Ken'};
+    my $rule = [
+        name => [
+            'not_defined'
+        ]
+    ];
+
+Not defined.
+
+=head2 C<not_space>
+
+    my $data = {name => 'Ken'};
+    my $rule = [
+        name => [
+            'not_space' # Except for '', ' ', '   '
+        ]
+    ];
+
+Not contain only space characters. 
+
+=head2 C<uint>
+
+    my $data = {age => 19};
+    my $rule = [
+        age => [
+            'uint'
+        ]
+    ];
+
+Unsigned integer.
+    
+=head2 C<regex>
+
+    my $data = {num => '123'};
+    my $rule => [
+        num => [
+            {'regex' => qr/\d{0,3}/}
+        ]
+    ];
+
+Match a regular expression.
+
 =head2 C<selected_at_least>
 
-Verify the quantity of selected parameters is counted over allowed minimum.
-
-    <input type="checkbox" name="hobby" value="music" /> Music
-    <input type="checkbox" name="hobby" value="movie" /> Movie
-    <input type="checkbox" name="hobby" value="game"  /> Game
-    
-    
     my $data = {hobby => ['music', 'movie' ]};
     my $rule => [
         hobby => [
@@ -884,56 +870,77 @@ Verify the quantity of selected parameters is counted over allowed minimum.
         ]
     ];
 
+Selected at least specified count item.
+In other word, the array contains at least specified count element.
+
+=head1 FILTERS
+
+=head2 C<merge>
+
+    $data = {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'};
+    $rule = [
+        {merged_name => ['name1', 'name2', 'name3']} => [
+            'merge' # KenRikaTaro
+        ],
+    ];
+
+Merge the values.
+
 =head2 C<shift>
 
-Shift the head of array reference.
-
-    my $data = {nums => [1, 2]};
+    my $data = {names => ['Ken', 'Taro']};
     my $rule => [
-        nums => [
-            'shift'
+        names => [
+            'shift' # 'Ken'
         ]
     ];
+
+Shift the head element of array.
 
 =head2 C<trim>
 
-Trim leading and trailing white space
-
+    my $data = {name => '  Ken  '};
     my $rule = [
-        key1 => [
-            ['trim']           # ' 123 ' -> '123'
-        ],
+        name => [
+            'trim' # 'Ken'
+        ]
     ];
-    
+
+Trim leading and trailing white space.
+
 =head2 C<trim_collapse>
 
-Trim leading and trailing white space, and collapse all whitespace characters into a single space.
-
+    my $data = {name => '  Ken   Takagi  '};
     my $rule = [
-        key1 => [
-            ['trim_collapse']  # "  \n a \r\n b\nc  \t" -> 'a b c'
-        ],
+        name => [
+            'trim_collapse' # 'Ken Takagi'
+        ]
     ];
+
+Trim leading and trailing white space,
+and collapse all whitespace characters into a single space.
 
 =head2 C<trim_lead>
 
-Trim leading white space
-
+    my $data = {name => '  Ken  '};
     my $rule = [
-        key1 => [
-            ['trim_lead']      # '  abc  ' -> 'abc   '
-        ],
+        name => [
+            'trim_lead' # 'Ken  '
+        ]
     ];
+
+Trim leading white space.
 
 =head2 C<trim_trail>
 
-Trim trailing white space
-
+    my $data = {name => '  Ken  '};
     my $rule = [
-        key1 => [
-            ['trim_trail']     # '  def  ' -> '   def'
+        name => [
+            'trim_trail' # '  Ken'
         ]
     ];
+
+Trim trailing white space.
 
 =head1 BUGS
 
@@ -943,8 +950,10 @@ C<< <kimoto.yuki at gmail.com> >>
 
 =head1 STABILITY
 
-L<Validator::Custom> and L<Validator::Custom::Result> is stable. All methods in 
-this documentation (except for experimantal marking ones) keep backword compatible in the future.
+L<Validator::Custom> and L<Validator::Custom::Result> is stable now.
+All methods in these documentations
+(except for experimantal marking ones)
+keep backword compatible in the future.
 
 =head1 AUTHOR
 
