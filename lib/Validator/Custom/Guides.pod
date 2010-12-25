@@ -266,6 +266,9 @@ You can negative a constraint function
 
 "!" is added to the head of the constraint name
 if you negative a constrint function.
+'!int' means not 'int'.
+
+In this example, 
 
 =head3 C<"OR" of constraint functions>
 
@@ -278,6 +281,7 @@ You can create "OR" of constraint functions
     ];
 
 Use "||" to create "OR" of constraint functions.
+'blank || email' means 'blank' or 'email'.
 
 You can combine "||" and "!".
 
@@ -309,7 +313,8 @@ to validate all the elements of array.
 =head3 Register constraint function
 
 L<Validator::Custom> has various constraint functions.
-You can see default constraint functions L<Validator::Custom/"CONSTRAINTS">.
+You can see constraint functions registered by default
+L<Validator::Custom/"CONSTRAINTS">.
 
 and you can register your constraint function if you need.
 
@@ -327,10 +332,10 @@ and you can register your constraint function if you need.
 
 Constraint function for telephone number is registered.
 
-Constraint function receive a scalar value and
+Constraint function receive a scalar value as first argument and
 return boolean value which check if the value is valid.
 
-Constraint function also receive argument of constraint function as second argument
+Constraint function receive argument of constraint function as second argument
 and L<Validator::Custom> object as third argument.
 
     $vc->register_constraint(
@@ -340,6 +345,9 @@ and L<Validator::Custom> object as third argument.
             return $is_valid;
         }
     );
+
+If you know the implementations of constraint functions,
+see the soruce of L<Validator::Custom::Basic::Constraints>.
 
 =head3 Register filter function
 
@@ -357,17 +365,18 @@ Filter function is same as constraint function except for return value;
         }
     );
 
-Return value must be array reference in filter function.
+Return value of filter function must be array reference.
 First element is boolean value which chekc if the value is valid.
 Second element is filtered value.
 
-In this example, The function return 1 as first argument
+In this example, First element of array reference is set to 1
 because this function intend to do only filtering.
 
 =head2 5. Extending
 
-Validator::Custom is easy to extend. 
-use C<register_constraint> in constructor to register constarint.
+It is easy to define your class extending L<Validator::Custom>.
+Register constraint function using C<register_constraint>
+in the constructor.
 
     package Validator::Custom::Your;
     use base 'Validator::Custom';

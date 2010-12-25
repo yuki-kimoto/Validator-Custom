@@ -230,168 +230,148 @@ C<password_check>のような新しいキーを指定しなければなりませ
 
     ['Taro', 'Rika', 'Ken']
 
-=head3 C<否定のバリデーション> 
+=head3 C<制約関数の否定> 
 
-制約名の前に「!」を付けることによって、
-制約関数の否定を行うことができます。
+制約関数の真偽を反転させることができます。
 
-    $rule = [
+    my $rule = [
         age => [
-            '!int';
-        ],
-    ];
-
-この意味は「age」は「int」ではないという意味です。
-これはマルチバリューバリデーションと組み合わせることができます。
-
-    $rule = [
-        ages => [
-            '@!int';
+            '!int'
         ]
     ];
 
-=head3 C<OR条件によるバリデーション>
+制約関数の真偽を反転させるには、
+「!」を制約関数名の先頭に追加します。
+「!int」は「intではない」という意味になります。
 
-OR条件によるバリデーションが利用できます。
-C<||>を使ってください。
+=head3 C<制約関数の論理和>
 
-    $rule = [
+制約関数の論理和を作成することができます。
+
+    my $rule = [
         email => [
             'blank || email'
         ]
     ];
 
+論理和を作成するには「||」を使用します。
+「blank あるいは email」という意味になります。
 
+「||」と「!」を組み合わせることもできます。
 
-=head3 C<マルチバリューバリデーション>
+    my $rule = [
+        email => [
+            'blank || !int'
+        ]
+    ];
 
-パラメータの値がハッシュのリファレンスであった場合に、
-マルチバリューバリデーションが利用できます。
-「@」マークを制約関数名の前に追加してください。
+=head3 C<配列のバリデーション>
 
-    $data = {
+配列のすべての要素が正しいかどうかをチェックすることができます。
+
+    my $data = {
         nums => [1, 2, 3]
     };
     
-    $rule = [
+    my $rule = [
         'nums' => [
             '@int'
         ]
     ];
 
-=head2 4. 制約関数の仕様
+配列のすべての要素のバリデーションを行うには、
+制約関数名の前に「@」を追加します。
 
-制約関数の仕様を解説します。
+=head2 4. 制約関数
 
-    # Register constraint
+=head3 制約関数の登録
+
+L<Validator::Custom>はさまざまな制約関数を持ちます。
+デフォルトで登録されている制約関数は
+L<Validator::Custom/"CONSTRAINTS">で見ることができます。
+
+また必要であれば制約関数を登録することができます。
+
     $vc->register_constraint(
-        consrtaint_name => sub {
-            my ($value, $args, $vc) = @_;
+        telephone => sub {
+            my $value = shift;
             
-            # Do something
+            my $is_valid;
+            if ($value =~ /^[\d-]+$/) {
+                $is_valid = 1;
+            }
+            return $is_valid;
+        }
+    );
+
+電話番号のための制約関数を登録しました。
+
+制約関数は第一引数としてスカラ値を受け取り、
+その値が正しいかどうかを示す真偽値を返します。
+
+制約関数は第二引数として制約関数の引数、第三引数として
+L<Validator::Custom>オブジェクトを受け取ります。
+
+    $vc->register_constraint(
+        telephone => sub {
+            my ($value, $arg, $vc) = @_;
             
             return $is_valid;
         }
-    )
+    );
 
-=head3 C<引数と戻り値>
+制約関数の実装を知りたい場合はL<Validator::Custom::Basic::Constraints>
+のソースコードを参考にしてみてください。
 
-制約関数は3つの引数を受け取ります。
+=head3 フィルタ関数の登録
 
-=over 4
+C<register_constraint()>はフィルタ関数を登録するためにも
+利用することができます。
 
-=item 1.
-
-値
-
-=item 2.
-
-(ルールの)引数
-
-=item 3.
-
-L<Validator::Custom>オブジェクト
-
-=back
-
-=over 4
-
-=item 1. 値
-
-これはデータの値です。
-
-    my $data = {name => 'Ken Suzuki'};
-
-この例では、値は「Ken Suzuki」です。
-
-=item 2. ルールの引数
-
-ルールの中で制約関数に引数を渡すことができます。
-
-    my $rule = [
-        name => [
-            {length => [1, 5]}
-        ]
-    ];
-
-この例では、引数は「[1, 5]」になります。
-
-=back
-
-また制約関数は値が正しいかどうかを
-チェックするための値を返却する必要があります。
-
-マルチパラメータバリデーションにおいては、
-値は配列のリファレンスにパックされます。
-値は「['xxx', 'xxx']」のようになります。
-
-    $data = {password1 => 'xxx', password2 => 'xxx'};
-
-    $rule = [
-        {password_check => [qw/password1 password2/]} => [
-            ['duplication', 'Two password must be equal']
-        ]
-    ];
-
-=head3 C<フィルタ関数>
-
-制約関数は、変換した値を返却することもできます。
-もし変換された値を返却したい場合は、
-配列のリファレンスを返す必要があります。
-一番目の要素は「値が正しいかどうかを確認するための値」、
-二番目の引数は、「変換された値」です。
+フィルタ関数は戻り値を除いて制約関数と同じです。
 
     $vc->register_constraint(
-        trim => sub {
+        to_upper_case => sub {
             my $value = shift;
             
-            $value =~ s/^\s+//;
-            $value =~ s/\s+$//;
-            
+            $value = uc $value;
+                        
             return [1, $value];
         }
     );
 
-=head2 5. 拡張
+フィルタ関数の戻り値は配列のリファレンスである必要があります。
+最初の要素は値が正しいかどうかを示す真偽値です。
+ふたつめの要素はファイルタリングされた値です。
 
-L<Validator::Custom>を拡張するのは簡単です。
-制約関数を登録するには、継承したクラスの
-コンストラクタの中でregister_constraintメソッドを
-使用します。
-    
-    package YourValidator;
+このサンプルでは、
+この関数はフィルタリングをことだけを意図しているので、
+配列のリファレンスのひとつ目の要素に1を設定しています。
+
+=head2 5. 継承
+
+L<Validator::Custom>を継承してユーザクラスを定義するのは簡単です。
+コンストラクタの中でC<register_constraint>を使って、
+制約関数を登録してください。
+
+use C<register_constraint> in constructor to register constarint.
+
+    package Validator::Custom::Your;
     use base 'Validator::Custom';
     
     sub new {
         my $self = shift->SUPER::new(@_);
         $self->register_constraint(
-            defined  => sub { defined $_[0] }
+            telephone => sub { ... }
         );
         return $self;
     }
     
     1;
     
-L<Validator::Custom::HTMLForm>はよいサンプルです。
+L<Validator::Custom::HTMLForm>は継承のよいサンプルになっています。
 
-=cut
+=head2 6. サンプル
+
+L<Validator::Custom/"Examples">を見てください。
+
