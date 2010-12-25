@@ -2,201 +2,149 @@
 
 =head1 NAME
 
-Validator::Custom::Guides - Validator::Customの日本語ガイド
+Validator::Custom::Guides::Ja - Validator::Customの日本語ガイド
 
 =head1 ガイド
 
-=head2 1. 基本的な使用方法
+=head2 1. 基本
 
-新しいL<Validator::Custom>オブジェクトの生成。
+B<1. 新しいL<Validator::Custom>オブジェクトの生成>
 
     use Validator::Custom;
     my $vc = Validator::Custom->new;
 
-バリデーションにおけるデータはハッシュリファレンスである必要があります。
+B<2. バリデーションのためのデータの準備>
 
-    my $data = { 
-        age => 19, 
-        name => 'Ken Suzuki'
-    };
+    my $data = {age => 19, name => 'Ken Suzuki'};
 
-制約関数の登録。
-制約は、値が正しいかどうかをチェックするためのもので、
-サブルーチンのリファレンスでなければなりません。
 
-    $vc->register_constraint(
-        int => sub {
-            my $value    = shift;
-            my $is_valid = $value =~ /^\d+$/;
-            return $is_valid;
-        },
-        not_blank => sub {
-            my $value = shift;
-            my $is_valid = $value ne '';
-            return $is_valid;
-        },
-        length => sub {
-            my ($value, $args) = @_;
-            my ($min, $max) = @$args;
-            my $length = length $value;
-            my $is_valid = $length >= $min && $length <= $max;
-            return $is_valid;
-        },
-    );
+データはハッシュリファレンスでなければなりません。
 
-バリデーションのためのルールは、
-パラメータ名と制約関数のペアによる特別なフォーマットを持ちます。
-フォーマットの詳細については「3. ルールの文法」で解説しています。
+B<3. バリデーションのためのルールの準備>
 
     my $rule = [
-        age => [
+        age => {message => 'age must be integer'} => [
+            'not_blank',
             'int'
         ],
-        name => [
-            ['not_blank',        "Name must be exists"],
-            [{length => [1, 5]}, "Name length must be 1 to 5"]
+        name => {message => 'name must be string. the length 1 to 5'} => [
+            'not_blank',
+            {length => [1, 5]}
         ],
-        # PARAMETER_NAME => [
-        #    CONSTRIANT_EXPRESSION1
-        #    CONSTRAINT_EXPRESSION2
-        # ]
-    ];
-
-データのバリデーション。validateメソッドはL<Validator::Custom::Result>
-オブジェクトを返却します。
-
-    my $result = $vc->validate($data, $rule);
-
-=head2 2. バリデーションの結果
-
-L<Validator::Custom::Result>オブジェクトはバリデーションの結果を
-持ちます。詳細はL<Validator::Custom::Result>を見てください。
-
-B<サンプル:>
-
-存在しないパラメータを持つかどうか、また不正なパラメータを持つかどうか
-をチェックします。
-    
-    if ($result->has_missing) {
-        # ...
-    }
-    elsif ($result->has_invalid) {
-        
-        print $result->message('title')
-          unless $result->is_valid('title');
-        
-        print $result->message('author')
-          unless $result->is_valid('author');
-    }
-
-すべてのメッセージの取得
-
-    if ($result->has_missing) {
-        # ...
-    }
-    elsif ($result->has_invalid) {
-        
-        my $messages = $result->messages;
-    }
-
-
-L<HTML::FillInForm>との連携
-
-    unless ($result->is_ok) {
-        
-        my $html = get_something_way();
-        
-        # Fill in form
-        $html = HTML::FillInForm->fill(
-            \$html, $result->raw_data,
-            ignore_fields => $result->invalid_params
-        );
-        
-        # Do something
-    }
-
-=head2 3. ルールの文法
-
-=head3 C<基本的な文法>
-
-「ルール」は配列のリファレンスでなければなりません。
-これは不正なパラメータ名の順序を維持するためです。
-
-    my $rule = [
-    
-    ];
-
-「ルール」は、「パラメータ名」と「制約表現」の複数の組を含みます。
-
-    my $rule = [
-        name => [
-            'not_blank'
-        ],
-        age => [
+        price => [
             'not_blank',
             'int'
         ]
-        price => {default => 1000, message => 'price must be integer'} => [
-            'int'
-        ]
-
-        # パラメータ名 => (オプション) => [
-        #    制約表現1
-        #    制約表現
-        # ]
     ];
 
-=head3 C<制約表現>
+データが完全に正しいものであるかどうかを調べるには、
+C<is_ok()>を使用します。
+C<is_ok()>は「不正なパラメータの値が存在しない」かつ
+「ルールで指定されたすべてのパラメータ名がデータの中に存在する」
+ときに真の値を返します。
 
-制約表現は次の四つのうちのひとつです。
+ルールの中で指定されたパラメータ名のうち少なくともひとつが
+データの中にない場合は、C<has_missing()>は真の値を返します。
 
-=over 4
+発見できなかったパラメータ名を取得するには、C<missing_params()>
+を使用します。このサンプルの場合は戻り値は以下になります。
 
-=item 1.
+    ['price']
 
-制約関数名
+パラメータの値のうち少なくともひとつが不正なものであった場合は、
+C<has_invalid()>は真の値を返します。この例では
+戻り値は以下になります。
 
-    制約関数名
+    {
+        name => 'name must be string. the length 1 to 5'
+    }
 
-=item 2.
+L<Validator::Custom::Result>の詳細は
+L</"2. バリデーションの結果">で解説されています。
 
-制約関数名とメッセージ
+=head2 2. バリデーションの結果
 
-    [制約関数名, メッセージ]
+C<validate()>はL<Validator::Custom::Result>オブジェクトを返します。
+さまざまなメソッドを使って結果を扱うことができます。
 
-=item 3.
+C<is_ok()>, C<has_missing()>, C<has_invalid()>, C<missing_params()>,
+C<messages_to_hash()>はすでにL</"1. 基本">で解説しました。
 
-制約関数名と引数
+次のものはよく使うメソッドです。
 
-    {制約関数名 => 引数}
+B<data()>
 
-=item 4.
+    my $data = $result->data;
 
-制約関数名と引数とメッセージ
+最終状態のデータを取得します。L<Validator::Custom>はフィルタリングの
+機能を持っています。C<validate()>に渡されたデータのパラメータの値は
+フィルターによって他のデータに変換されているかもしれません。
+C<data()>によってフィルタ後のデータを取得することができます。
 
-    [{制約関数名 => 引数}, メッセージ]
+B<messages()>
 
-=back
+    my $messages = $result->messages;
 
-B<サンプル:>
+パラメータの値が不正であったパラメータ名に対応するメッセージ(すべて)を
+取得します。メッセージはルールで指定されたパラメータ名の順序を保持して
+います。
+
+B<message()>
+
+    my $message = $result->message('name');
+
+パラメータの値が不正であったパラメータ名に対応するメッセージ(ひとつ)を
+取得します。
+
+L<Validator::Custom::Result>のすべてのAPIは
+L<Validator::Custom::Result>のPODの中で解説されています。
+
+=head2 3. ルールの文法
+
+=head3 C<基本>
+
+ルールは特定の構造を持ちます。
+
+「ルール」は配列のリファレンスでなければなりません。
 
     my $rule = [
-        age => [
-            # 1. 制約関数名
-            'defined',
-            
-            # 2. 制約関数名とメッセージ
-            ['not_blank', 'Must be not blank'],
-            
-            # 3. 制約関数名と引数
-            {length => [1, 5]},
-            
-            # 4. 制約関数名と引数とメッセージ
-            [{regex => qr/\d+/}, 'Invalid string']
+    
+    ];
+
+これは不正なパラメータ名の順序を維持するためです。
+
+ルールはパラメータ名と(ひとつあるいは複数の)制約関数のペアを持ちます。
+
+    my $rule = [
+        age =>  [              # paramter name1        
+            'not_blank',       #   constraint function1
+            'int'              #   constraint function2
+        ],                                                   
+                                                             
+        name => [              # parameter name2       
+            'not_blank',       #   constraint function1
+            {length => [1, 5]} #   constraint function2
         ]
     ];
 
-=head3 C<ルールオプション>
+制約関数は、ハッシュを使うと、引数を受け取ることができます。
+
+    my $rule = [
+        name => [
+            {'length' => [1, 5]}
+        ]
+    ];
+
+それぞれの制約関数ごとにメッセージを設定するができます。
+
+    my $rule = [
+        name => [
+            ['not_blank', 'name must be not blank'],
+            [{'length' => [1, 5]}, 'name must be 1 to 5 length']
+        ]
+    ];
+
+=head3 C<オプション>
 
 ルールにはオプションを設定することができます。
 
@@ -206,72 +154,81 @@ B<サンプル:>
         ]
     ];
 
+You can set options for each paramter name.
+
+    my $rule = [
+               # Option #
+        age => {message => 'age must be integer'} => [
+            'not_blank',
+        ]
+    ];
+
+Option is located after the paramter name,
+and option must be hash reference.
+
+The following options is available.
+
 =over 4
 
 =item 1. message
 
-結果が不正なパラメータを持つときのためのメッセージ。
-個々にメッセージが設定されない場合は、このメッセージが利用されます。
+     {message => "This is invalid"}
 
-     {message => "This key is invalid"}
+パラメータの値が不正なパラメータ名に対応するメッセージを指定します。
 
 =item 2. default
 
-デフォルト値。この値は、結果が存在しないパラメータを持つときか、
-不正なパラメータを持つときに設定されます。
-
     {default => 5}
+
+デフォルト値。パラメータの値が不正な場合、あるいは
+ルールで指定されたパラメータ名がデータの中に見つからない場合
+に、自動的にデータに設定されます。
 
 =item 3. copy
 
-結果のdataにパラメータをコピーするかどうかをしています。
-デフォルトは1で、コピーを行います。
-
     {copy => 0}
+
+この値が0の場合は結果のデータにパラメータの値がコピーされません。
+
+デフォルトは1で、パラメータの値はコピーされます。
 
 =back
 
 =head3 C<マルチパラメータバリデーション>
 
-複数パラメータのバリデーションが利用できます。
+複数のパラメータのバリデーションを行うことができます。
 
-    $data = {password1 => 'xxx', password2 => 'xxx'};
-
-    $rule = [
+    my $data = {password1 => 'xxx', password2 => 'xxx'};
+    my $rule = [
         {password_check => [qw/password1 password2/]} => [
-            ['duplication', 'Two password must be equal']
+            'duplication'
         ]
     ];
 
-"password1"と"password2"はパラメータ名です。
-"password_check"は結果のキーです。
+このサンプルでは、'password1' と 'password2' が同じことを
+確認しています。
+制約関数C<duplication>には
 
-=head3 C<マルチバリューバリデーション>
-
-パラメータの値がハッシュのリファレンスであった場合に、
-マルチバリューバリデーションが利用できます。
-「@」マークを制約関数名の前に追加してください。
-
-    $data = {
-        nums => [1, 2, 3]
-    };
+    ['xxx', 'xxx']
     
-    $rule = [
-        'nums' => [
-            '@int'
+という値が渡されます。
+
+C<password_check>のような新しいキーを指定しなければなりません。
+これはL<Validator::Result>オブジェクトによって利用されます。
+
+必要であれば正規表現のリファレンスを使うことも可能です。
+
+    my $data = {person1 => 'Taro', person2 => 'Rika', person3 => 'Ken'};
+    my $rule = [
+        {merged_person => qr/^person;/} => [
+            'merge', # TaroRikaKen
         ]
     ];
 
-=head3 C<OR条件によるバリデーション>
+マッチしたパラメータ名のすべての値が配列のリファレンスとして
+制約関数にわたされます。この例では以下の値が渡されます。
 
-OR条件によるバリデーションが利用できます。
-C<||>を使ってください。
-
-    $rule = [
-        email => [
-            'blank || email'
-        ]
-    ];
+    ['Taro', 'Rika', 'Ken']
 
 =head3 C<否定のバリデーション> 
 
@@ -290,6 +247,35 @@ C<||>を使ってください。
     $rule = [
         ages => [
             '@!int';
+        ]
+    ];
+
+=head3 C<OR条件によるバリデーション>
+
+OR条件によるバリデーションが利用できます。
+C<||>を使ってください。
+
+    $rule = [
+        email => [
+            'blank || email'
+        ]
+    ];
+
+
+
+=head3 C<マルチバリューバリデーション>
+
+パラメータの値がハッシュのリファレンスであった場合に、
+マルチバリューバリデーションが利用できます。
+「@」マークを制約関数名の前に追加してください。
+
+    $data = {
+        nums => [1, 2, 3]
+    };
+    
+    $rule = [
+        'nums' => [
+            '@int'
         ]
     ];
 

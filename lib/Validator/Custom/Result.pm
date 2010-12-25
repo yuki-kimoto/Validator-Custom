@@ -300,7 +300,7 @@ Get a message corresponding to the parameter name which value is invalid.
     $messages = $result->messages;
 
 Get messages corresponding to the parameter names which value is invalid.
-Messages keep the order of the rule.
+Messages keep the order of parameter names of the rule.
 
 =head2 C<messages_to_hash>
 

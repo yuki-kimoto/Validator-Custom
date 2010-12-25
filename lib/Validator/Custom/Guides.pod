@@ -36,10 +36,10 @@ B<3. Prepare a rule for validation>
 
 Rule has specific structure.
 which consists of several parts, such as 
-C<parameter name>, C<options>, C<constraint function>, C<constrint argument>
+C<parameter name>, C<option>, C<constraint function>, C<constraint argument>
 
     my $rule = [
-        PARAMETER_NAME => \%OPTIONS => [
+        PARAMETER_NAME => \%OPTION => [
             CONSTRAINT_NAME1
             {CONSTRAINT_NAME2 => CONSTAINT_ARGUMENT}
         ],
@@ -113,9 +113,9 @@ B<data()>
 
     my $data = $result->data;
 
-Get the data in the end state. L<Validator::Custom> has filtering ability
-if you need.
-The data passed to C<validate()> is converted to other data by filter.
+Get the data in the end state. L<Validator::Custom> has filtering ability.
+The parameter values in data passed to C<validate()>
+is maybe converted to other data by filter.
 You can get filtered data using C<data()>.
 
 B<messages()>
@@ -123,7 +123,7 @@ B<messages()>
     my $messages = $result->messages;
 
 Get messages corresponding to the parameter names which value is invalid.
-Messages keep the order of the rule.
+Messages keep the order of parameter names of the rule.
 
 B<message()>
 
@@ -152,14 +152,14 @@ parameter names.
 Rule has pairs of parameter name and constraint functions.
 
     my $rule = [
-        age =>  [              # paramter name1          #
-            'not_blank',       #   constraint function1  #
-            'int'              #   constraint function2  #
+        age =>  [              # paramter name1
+            'not_blank',       #   constraint function1
+            'int'              #   constraint function2
         ],                                                   
                                                              
-        name => [              # parameter name2         #
-            'not_blank',       #   constraint function1  #
-            {length => [1, 5]} #   constraint function2  #
+        name => [              # parameter name2       
+            'not_blank',       #   constraint function1
+            {'length' => [1, 5]} #   constraint function2
         ]
     ];
 
@@ -209,7 +209,7 @@ Message corresponding to the parameter name which value is invalid.
     {default => 5}
 
 Default value. This value is automatically set to result data
-if the paramter value is invalid or the paramter name is missing in the data.
+if the paramter value is invalid or the paramter name specified in rule is missing in the data.
 
 =item 3. copy
 
@@ -217,7 +217,7 @@ if the paramter value is invalid or the paramter name is missing in the data.
 
 If this value is 0, The parameter value is not copied to result data. 
 
-Default to 1.
+Default to 1. Parameter value is copied to the data.
 
 =back
 
@@ -232,7 +232,11 @@ Multiple parameters validation is available.
         ]
     ];
 
-In this example, We check if 'password1' and 'password2' is same. 
+In this example, We check if 'password1' and 'password2' is same.
+The following value is passed to constraint function C<duplication>.
+
+    ['xxx', 'xxx']
+
 You must specify new key, such as C<password_check>.
 This is used by L<Validator::Result> object.
 
@@ -244,6 +248,11 @@ You can also use the reference of regular expression if you need.
             'merge', # TaroRikaKen
         ]
     ];
+
+All matched value is passed to constraint function as array reference.
+In this example, the following value is passed.
+
+    ['Taro', 'Rika', 'Ken']
 
 =head3 C<Negative constraint function> 
 
