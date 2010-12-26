@@ -277,7 +277,6 @@ sub validate {
                 $value = [$value] unless ref $value eq 'ARRAY';
                 
                 # Validation loop
-                my $elements = [];
                 for (my $i = 0; $i < @$value; $i++) {
                     my $data = $value->[$i];
                     
@@ -289,15 +288,13 @@ sub validate {
                         my $cresult = $cfunc->($data, $arg, $self);
                         
                         # Constrint result
-                        my $element;
+                        my $v;
                         if (ref $cresult eq 'ARRAY') {
-                            ($is_valid, $element) = @$cresult;
-                            $elements->[$i] = $element;
-
+                            ($is_valid, $v) = @$cresult;
+                            $value->[$i] = $v;
                         }
                         else {
                             $is_valid = $cresult;
-                            $elements->[$i] = $value->[$i];
                         }
                         
                         last if $is_valid;
@@ -306,30 +303,26 @@ sub validate {
                     # Validation error
                     last unless $is_valid;
                 }
-                
-                # Update value
-                $value = $elements;
             }
             
             # Data is scalar
             else {
 
                 # Validation
-                my $v;
                 foreach my $cfunc (@$cfuncs) {
                     my $cresult = $cfunc->($value, $arg, $self);
                     
                     if (ref $cresult eq 'ARRAY') {
+                        my $v;
                         ($is_valid, $v) = @$cresult;
+                        $value = $v if $is_valid;
                     }
                     else {
                         $is_valid = $cresult;
-                        $v = $value;
                     }
                     
                     last if $is_valid;
                 }
-                $value = $v;
             }
             
             # Add error if it is invalid
