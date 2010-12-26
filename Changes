@@ -1,3 +1,6 @@
+0.1410
+  fix negativate constraint bug
+  fix "or" condition constraint function
 0.1409
   added space constraint function
 0.1408
@@ -209,5 +212,3 @@
   first release
 0.01_01
   first develope release
-a
- 

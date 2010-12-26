@@ -1,5 +1,4 @@
-use Test::More tests => 139;
-#use Test::More 'no_plan';
+use Test::More 'no_plan';
 
 use strict;
 use warnings;
@@ -1248,6 +1247,31 @@ $rule = [
 $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_params, ['key2'], "$test: multi values");
 
+$data = {key1 => 2, key2 => 1};
+$vc = Validator::Custom->new;
+$vc->register_constraint(
+    one => sub {
+        my $value = shift;
+        
+        if ($value == 1) {
+            return [1, $value];
+        }
+        else {
+            return [0, $value];
+        }
+    }
+);
+$rule = [
+    key1 => [
+        '!one',
+    ],
+    key2 => [
+        '!one'
+    ]
+];
+$result = $vc->validate($data, $rule);
+is_deeply($result->invalid_params, ['key2'], "$test: filter value");
+
 
 test 'missing_params';
 $data = {key1 => 1};
@@ -1452,7 +1476,7 @@ $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_rule_keys, ['key3']);
 
 
-test 'or condtioon new syntax';
+test 'or condition new syntax';
 $data = {key1 => '3', key2 => '', key3 => 'a'};
 $rule = [
     key1 => [
@@ -1488,3 +1512,101 @@ $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_rule_keys, ['key3'], $test);
 
 
+test 'or condition filter';
+$data = {key1 => '2010/11/04', key2 => '2010-11-04', key3 => '2010 11 04'};
+$rule = [
+    key1 => [
+        'date1 || date2 || date3'
+    ],
+    key2 => [
+        'date1 || date2 || date3'
+    ],
+    key3 => [
+        'date1 || date2 || date3'
+    ],
+];
+$vc = Validator::Custom->new;
+$vc->register_constraint(
+    date1 => sub {
+        my $value = shift;
+        if ($value =~ m#(\d{4})/(\d{2})/(\d{2})#) {
+            return [1, "$1$2$3"];
+        }
+        else {
+            return [0, undef];
+        }
+    },
+    date2 => sub {
+        my $value = shift;
+        if ($value =~ /(\d{4})-(\d{2})-(\d{2})/) {
+            return [1, "$1$2$3"];
+        }
+        else {
+            return [0, undef];
+        }
+    },
+    date3 => sub {
+        my $value = shift;
+        if ($value =~ /(\d{4}) (\d{2}) (\d{2})/) {
+            return [1, "$1$2$3"];
+        }
+        else {
+            return [0, undef];
+        }
+    }
+
+);
+$result = $vc->validate($data, $rule);
+ok($result->is_ok);
+is_deeply($result->data, {key1 => '20101104', key2 => '20101104',
+                          key3 => '20101104'}, $test);
+
+
+test 'or condition filter array';
+$data = {
+    key1 => ['2010/11/04', '2010-11-04', '2010 11 04'],
+    key2 => ['2010/11/04', '2010-11-04', 'xxx']
+};
+$rule = [
+    key1 => [
+        '@ date1 || date2 || date3'
+    ],
+    key2 => [
+        '@ date1 || date2 || date3'
+    ],
+];
+$vc = Validator::Custom->new;
+$vc->register_constraint(
+    date1 => sub {
+        my $value = shift;
+        if ($value =~ m#(\d{4})/(\d{2})/(\d{2})#) {
+            return [1, "$1$2$3"];
+        }
+        else {
+            return [0, undef];
+        }
+    },
+    date2 => sub {
+        my $value = shift;
+        if ($value =~ /(\d{4})-(\d{2})-(\d{2})/) {
+            return [1, "$1$2$3"];
+        }
+        else {
+            return [0, undef];
+        }
+    },
+    date3 => sub {
+        my $value = shift;
+        if ($value =~ /(\d{4}) (\d{2}) (\d{2})/) {
+            return [1, "$1$2$3"];
+        }
+        else {
+            return [0, undef];
+        }
+    }
+
+);
+$result = $vc->validate($data, $rule);
+is_deeply($result->invalid_params, ['key2'], $test);
+is_deeply($result->data, {key1 => ['20101104', '20101104', '20101104'],
+                          }, $test);
