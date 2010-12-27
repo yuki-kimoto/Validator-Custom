@@ -1,7 +1,7 @@
 <!html>
   <head>
     <meta http-equiv="content-type" content="text/html;charset=utf-8">
-    <title>フォームの自動入力ボタン</title>
+    <title>>Fill Form Random</title>
   </head>
   <body>
 
@@ -13,7 +13,18 @@
 window.onload = function() {
     
     (function () {
-
+    
+      var values = {
+        "text1" : ["a", "b", "c"],
+        "text2" : ["a", "b", "c"],
+        "textarea1" : ["a", "b", "c"],
+        "textarea2" : ["a", "b", "c"],
+        "hidden1" : ["a", "b", "c"],
+        "hidden2" : ["a", "b", "c"],
+        "password1" : ["a", "b", "c"],
+        "password2" : ["a", "b", "c"]
+      };
+	    
 			var addEvent = (function(){
 			  if(document.addEventListener) {
 			    return function(node,type,handler){
@@ -33,35 +44,36 @@ window.onload = function() {
 			button.setAttribute("value","Fill Form");
 	    document.body.insertBefore(button, document.body.firstChild)
 
-      var values = {
-        "text1" : ["a", "b", "c"],
-        "text2" : ["a", "b", "c"],
-        "textarea1" : ["a", "b", "c"],
-        "textarea2" : ["a", "b", "c"],
-        "hidden1" : ["a", "b", "c"],
-        "hidden2" : ["a", "b", "c"],
-        "password1" : ["a", "b", "c"],
-        "password2" : ["a", "b", "c"]
-      };
-	    
 	    addEvent(
 	      button,
 	      "click",
 	      function () {
 	        
 	        var input_elems = document.getElementsByTagName('input');
+	        var radio_names = {};
+	        var checkbox_names = {};
 	        for (var i = 0; i < input_elems.length; i++) {
 	          var e = input_elems[i];
-	          
+
+	          var name = e.getAttribute("name");
 	          var type = e.getAttribute("type");
 	          if (type === "text" || type === "hidden" || type === "password") {
-	              var name = e.getAttribute("name");
-	              
-	              if (!values[name]) { continue }
-	              
-	              var num = Math.floor(Math.random() * values[name].length);
-	              e.setAttribute("value", values[name][num]);
+	            if (!values[name]) { continue }
+	            var num = Math.floor(Math.random() * values[name].length);
+	            e.setAttribute("value", values[name][num]);
 	          }
+	          else if (type === "checkbox") {
+	            e.checked = Math.floor(Math.random() * 2) ? true : false;
+	          }
+	          else if (type === "radio") {
+	            radio_names[name] = 1;
+	          }
+	        }
+	        
+	        for (name in radio_names) {
+	          var elems = document.getElementsByName(name);
+	          var num = Math.floor(Math.random() * elems.length);
+	          elems[num].checked = true;
 	        }
 	        
 	        var textarea_elems = document.getElementsByTagName("textarea");
@@ -81,14 +93,28 @@ window.onload = function() {
             
             e.appendChild(text);
 	        }
+	        
+	        var select_elems = document.getElementsByTagName("select");
+	        for (var i = 0; i < select_elems.length; i++) {
+	          var e = select_elems[i];
+	          var options = e.options;
+	          if (e.multiple) {
+	            for (var k = 0; k < options.length; k++) {
+	              options[k].selected = Math.floor(Math.random() * 2) ? true : false;
+	            }
+	          }
+	          else {
+	            var num = Math.floor(Math.random() * options.length);
+	            e.selectedIndex = num;
+	          }
+	        }
 	      }
 	    );
     })();
-
 };
 
 </script>
-    <h1>フォームをランダムで埋めるボタン</h1>
+    <h1>Fill Form Random</h1>
     <input type="text" name="text1" >
     <input type="text" name="text2" >
     <input type="hidden" name="hidden1" >
@@ -97,5 +123,35 @@ window.onload = function() {
     <input type="password" name="password2" >
     <textarea name="textarea1"></textarea>
     <textarea name="textarea2"></textarea>
+    <input type="radio" name="radio1">
+    <input type="radio" name="radio1">
+    <input type="radio" name="radio1">
+    <input type="radio" name="radio2">
+    <input type="radio" name="radio2">
+    <input type="radio" name="radio2">
+    <input type="checkbox" name="checkbox1">
+    <input type="checkbox" name="checkbox1">
+    <input type="checkbox" name="checkbox1">
+    <input type="checkbox" name="checkbox2">
+    <input type="checkbox" name="checkbox2">
+    <input type="checkbox" name="checkbox2">
+    
+    <select name="select1">
+      <option>a</option>
+      <option>a</option>
+      <option>a</option>
+      <option>a</option>
+      <option>a</option>
+    </select>
+    
+    <select name="select2" multiple >
+      <option>a</option>
+      <option>a</option>
+      <option>a</option>
+      <option>a</option>
+      <option>a</option>
+    </select>
+    
+    
   </body>
 </html>
