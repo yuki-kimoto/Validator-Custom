@@ -1,4 +1,4 @@
-use Test::More tests => 144;
+use Test::More 'no_plan'; #tests => 144;
 
 use strict;
 use warnings;
@@ -8,6 +8,8 @@ my $test;
 sub test {$test = shift}
 
 my $value;
+my $r;
+my $js;
 
 use Validator::Custom;
 
@@ -1610,3 +1612,55 @@ $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_params, ['key2'], $test);
 is_deeply($result->data, {key1 => ['20101104', '20101104', '20101104'],
                           }, $test);
+
+
+test '_parse_random_string_rule';
+$rule = {
+    name1 => '[ab]{3}@[de]{2}.com',
+    name2 => '[ab]{2}c{2}p{1}',
+    name3 => '',
+    name4 => 'abc',
+    name5 => 'a{10}'
+};
+$vc = Validator::Custom->new;
+$r = $vc->_parse_random_string_rule($rule);
+is_deeply(
+    $r,
+    {
+        name1 => [['a', 'b'], ['a', 'b'], ['a', 'b'], ['@'], ['d', 'e'], ['d', 'e'], ['.'], ['c'], ['o'], ['m']],
+        name2 => [['a', 'b'], ['a', 'b'], ['c'], ['c'], ['p']],
+        name3 => [],
+        name4 => [['a'], ['b'], ['c']],
+        name5 => [['a'], ['a'], ['a'], ['a'], ['a'], ['a'], ['a'], ['a'], ['a'], ['a']]
+    }, $test);
+
+test 'js_fill_form_button';
+$rule = {
+    name1 => 'ab',
+    name2 => 'c{3}'
+};
+$vc = Validator::Custom->new;
+$js = $vc->js_fill_form_button($rule);
+like($js, qr/name1/);
+like($js, qr/name2/);
+
+# For JavaScript Test
+if ($ENV{PERL5_VALIDATOR_CUSTOM_TEST}) {
+    $vc = Validator::Custom->new;
+    $rule = {
+        "text1" => '[ab]{2}',
+        "text2" => '[ab]{2}',
+        "textarea1" => '[ab]{2}',
+        "textarea2" => '[ab]{2}',
+        "hidden1" => '[ab]{2}',
+        "hidden2" => '[ab]{2}',
+        "password1" => '[ab]{2}',
+        "password2" => '[ab]{2}'
+    };
+    $js = $vc->js_fill_form_button($rule);
+    
+    use FindBin;
+    open my $fh, '>', "$FindBin::Bin/js_fill_form_button_test.tmp"
+      or die $!;
+    print $fh $js;
+}
