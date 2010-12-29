@@ -1,6 +1,10 @@
+0.1412
+  fixed tests
+0.1411
+  added experimental js_fill_form_button method
 0.1410
-  fix negativate constraint bug
-  fix "or" condition constraint function
+  fixed negativate constraint bug
+  fixed "or" condition constraint function
 0.1409
   added space constraint function
 0.1408

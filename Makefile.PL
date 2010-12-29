@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
     NAME                => 'Validator::Custom',
-    AUTHOR              => 'Yuki Kimoto <kimoto.yuki@gmail.com>',
+    AUTHOR              => q{Yuki Kimoto <kimoto.yuki@gmail.com>},
     VERSION_FROM        => 'lib/Validator/Custom.pm',
     ABSTRACT_FROM       => 'lib/Validator/Custom.pm',
     ($ExtUtils::MakeMaker::VERSION >= 6.3002
@@ -13,6 +13,7 @@ WriteMakefile(
     PL_FILES            => {},
     PREREQ_PM => {
         'Test::More' => 0,
+        'Object::Simple' => 3.0302
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Validator-Custom-*' },
