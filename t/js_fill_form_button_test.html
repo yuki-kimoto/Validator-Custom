@@ -48,7 +48,7 @@ window.onload = function() {
   	
   	var button = document.createElement("input");
   	button.setAttribute("type","button");
-  	button.setAttribute("value","Fill Form");
+  	button.value = "Fill Form";
     document.body.insertBefore(button, document.body.firstChild)
 
     addEvent(
@@ -66,7 +66,7 @@ window.onload = function() {
           var type = e.getAttribute("type");
           if (type === "text" || type === "hidden" || type === "password") {
             var value = create_random_value(rule, name);
-            e.setAttribute("value", value);
+            e.value = value;
           }
           else if (type === "checkbox") {
             e.checked = Math.floor(Math.random() * 2) ? true : false;

@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1412';
+our $VERSION = '0.1413';
 
 use 5.008001;
 use strict;
@@ -17,6 +17,7 @@ use Validator::Custom::Result;
 __PACKAGE__->dual_attr('constraints', default => sub { {} },
                                       inherit => 'hash_copy');
 __PACKAGE__->register_constraint(
+    any               => sub { 1 },
     ascii             => \&Validator::Custom::Basic::Constraints::ascii,
     between           => \&Validator::Custom::Basic::Constraints::between,
     blank             => \&Validator::Custom::Basic::Constraints::blank,
@@ -206,7 +207,7 @@ sub js_fill_form_button {
   	
   	var button = document.createElement("input");
   	button.setAttribute("type","button");
-  	button.setAttribute("value","Fill Form");
+  	button.value = "Fill Form";
     document.body.insertBefore(button, document.body.firstChild)
 
     addEvent(
@@ -224,7 +225,7 @@ sub js_fill_form_button {
           var type = e.getAttribute("type");
           if (type === "text" || type === "hidden" || type === "password") {
             var value = create_random_value(rule, name);
-            e.setAttribute("value", value);
+            e.value = value;
           }
           else if (type === "checkbox") {
             e.checked = Math.floor(Math.random() * 2) ? true : false;

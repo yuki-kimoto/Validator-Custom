@@ -1,4 +1,4 @@
-use Test::More tests => 145;
+use Test::More 'no_plan';
 
 use strict;
 use warnings;
@@ -1563,6 +1563,17 @@ ok($result->is_ok);
 is_deeply($result->data, {key1 => '20101104', key2 => '20101104',
                           key3 => '20101104'}, $test);
 
+$data = {key1 => 'aaa', key2 => 'bbb'};
+$rule = [
+    key1 => [
+        'not_blank || blank'
+    ],
+    key2 => [
+        'blank || not_blank'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_ok);
 
 test 'or condition filter array';
 $data = {
@@ -1634,3 +1645,19 @@ is_deeply(
         name5 => [['a'], ['a'], ['a'], ['a'], ['a'], ['a'], ['a'], ['a'], ['a'], ['a']]
     }, $test);
 
+
+test 'any';
+$data = {
+    key1 => undef, key2 => 1
+};
+$rule = [
+    key1 => [
+        'any'
+    ],
+    key2 => [
+        'any'
+    ],
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+ok($result->is_ok, $test);
