@@ -118,7 +118,9 @@ sub less_than {
 }
 
 sub merge {
-    my ($values) = shift;
+    my $values = shift;
+    
+    $values = [$values] unless ref $values eq 'ARRAY';
     
     return [1, join('', @$values)];
 }

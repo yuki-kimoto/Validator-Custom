@@ -1459,6 +1459,17 @@ ok(index($value, 'b') > -1, "$test : 2");
 ok(index($value, 'c') > -1, "$test : 3");
 ok(index($value, 'd') == -1, "$test : 4");
 
+$data = {key1 => 'a'};
+$rule = [
+    {key => qr/^key/} => [
+        'merge'
+    ],
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+$value = $result->data->{key};
+ok(index($value, 'a') > -1, "$test : 1");
+
 
 test 'or condtioon new syntax';
 $data = {key1 => '3', key2 => '', key3 => 'a'};

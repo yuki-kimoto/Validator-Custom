@@ -395,6 +395,95 @@ L<Validator::Custom::HTMLForm> is good extending examples.
 
 =head2 6. Examples
 
-Now writing.
+=head3 At least one parameter must be not blank
 
-=cut
+    
+    use Validator::Custom;
+    
+    my $vc = Validator::Custom->new;
+    
+    my $params = {
+        "books-1" => 'aaa',
+        "books-2" => 'bbb',
+        "books-3" => ''
+    };
+    
+    my $rule = [
+        {at_least_one_book => qr/^books-\d+$/} => [
+            'merge',
+            'not_blank'
+        ]
+    ];
+    
+    foreach my $i (0 .. 2) {
+        push @$rule, "books-$i" => [
+            'any'
+        ]
+    }
+    
+    my $vresult = $vc->validate($data, $params);
+
+This is a little tricky technique. C<merge> filter combine
+C<books-0>, C<books-1>, and C<books-2>. and If the merged text
+is C<not_blank>, At least one text is filled.
+
+And It is good to add rule for C<books-0>, C<books-1>,
+and C<books-2> usgin C<any> constraint. So you can get
+data using C<data> method of result.
+
+    my $data = $result->data;
+
+=head3 with Mojolicious::Lite and AJAX
+
+    use strict;
+    use warnings;
+    
+    use Mojolicious::Lite;
+    
+    use Validator::Custom;
+    use DBIx::Custom;
+    
+    my $vc = Validator::Custom->new;
+    my $dbi = DBIx::Custom->connect(
+        data_source => "dbi:SQLite:dbname=:memory:");
+    
+    post '/book/register' => sub {
+        my $self = shift;
+        
+        my $params = $self->req->body_param->to_hash;
+        
+        my $rule = [
+            name => {message => 'Must be filled'} => [
+                'not_blank'
+            ],
+            price => {message => 'Must be integer'} => [
+                'int'
+            ]
+        ];
+        
+        my $vresult = $vc->validate($params, $rule);
+        
+        if ($vresult->is_ok) {
+            
+            eval {$dbi->insert(param => $vresult->data)};
+            $self->render_json(!$@ ? {} : {error => 'db'});
+        }
+        else {
+            if ($vresult->has_missing) {
+                $self->render_json({
+                    error => 'missing',
+                    missing_params => $vresult->missing_params
+                });
+            }
+            elsif ($vresult->has_invalid) {
+                $self->render_json({
+                    error => 'invalid',
+                    messages => $vresult->messages_to_hash
+                });
+            }
+        }
+        
+    } => 'book-register';
+    
+    app->start;
+
