@@ -27,8 +27,6 @@ sub date_to_timepiece {
     my $value = shift;
     
     require Time::Piece;
-        
-    $DB::single = 1;
     
     # To Time::Piece object
     if (ref $value eq 'ARRAY') {
