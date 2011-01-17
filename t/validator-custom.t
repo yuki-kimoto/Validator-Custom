@@ -1671,3 +1671,39 @@ $rule = [
 $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
 ok($result->is_ok);
+
+
+test 'to_hash';
+$vc = Validator::Custom->new;
+$data = {key1 => 1, key2 => 'a', key3 => 'a'};
+$rule = [
+    key1 => [
+        'int'
+    ],
+    key2 => {message => 'a'} => [
+        'int'
+    ],
+    key3 => {message => 'b'} => [
+        'int'
+    ],
+    key4 => [
+        'int'
+    ],
+    key5 => [
+        'int'
+    ],
+];
+$result = $vc->validate($data, $rule);
+is_deeply($result->to_hash, {
+    ok => $result->is_ok, invalid => $result->has_invalid,
+    missing => $result->has_missing,
+    missing_params => $result->missing_params,
+    messages => $result->messages_to_hash
+});
+is_deeply($result->to_hash, {
+    ok => 0, invalid => 1,
+    missing => 1,
+    missing_params => ['key4', 'key5'],
+    messages => {key2 => 'a', key3 => 'b'}
+});
+
