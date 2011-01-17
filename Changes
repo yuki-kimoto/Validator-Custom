@@ -1,3 +1,7 @@
+0.1415
+  added experimental Validator::Custom::Result to_hash method
+  added experimental date_to_timepiece constraint
+  added experimental Validator::Custom::Result end_filter method
 0.1414
   fixed merge constraint bug
 0.1413

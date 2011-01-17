@@ -122,6 +122,19 @@ sub messages_to_hash {
     return $messages;
 }
 
+sub to_hash {
+    my $self = shift;
+    
+    # Result
+    my $result = {};
+    $result->{ok}      = $self->is_ok;
+    $result->{invalid} = $self->has_invalid;
+    $result->{missing} = $self->has_missing;
+    $result->{missing_params} = $self->missing_params;
+    $result->{messages} = $self->messages_to_hash;
+    
+    return $result;
+}
 
 ### Deprecated attributes and methods
 
@@ -203,6 +216,9 @@ Validator::Custom::Result - Result of validation
     # Error messages to hash ref
     my $messages_hash = $result->message_to_hash;
     
+    # Result to hash
+    my $rhash = $result->to_hash;
+    
     # Raw data
     my $raw_data = $result->raw_data;
     
@@ -264,19 +280,19 @@ C<has_missing()> return true value.
 
 =head2 C<invalid_params>
 
-    $invalid_params = $result->invalid_params;
+    my $invalid_params = $result->invalid_params;
 
 Invalid raw data parameter names.
 
 =head2 C<invalid_rule_keys>
 
-    $invalid_rule_keys = $result->invalid_rule_keys;
+    my $invalid_rule_keys = $result->invalid_rule_keys;
 
 Invalid rule keys
 
 =head2 C<is_ok>
 
-    $is_ok = $result->is_ok;
+    my $is_ok = $result->is_ok;
 
 If you check the data is completely valid, use C<is_ok()>.
 C<is_ok()> return true value
@@ -291,22 +307,37 @@ Check if one paramter is valid.
 
 =head2 C<message>
 
-    $message = $result->message('title');
+    my $message = $result->message('title');
 
 Get a message corresponding to the parameter name which value is invalid.
 
 =head2 C<messages>
 
-    $messages = $result->messages;
+    my $messages = $result->messages;
 
 Get messages corresponding to the parameter names which value is invalid.
 Messages keep the order of parameter names of the rule.
 
 =head2 C<messages_to_hash>
 
-    $messages = $result->messages_to_hash;
+    my $messages = $result->messages_to_hash;
 
 You can get the pairs of invalid parameter name and message
 using C<messages_to_hash()>.
+
+=head2 C<(experimental) to_hash>
+
+    my $rhash = $result->to_hash;
+
+Convert result information to hash reference.
+The following keys is set.
+
+    {
+        ok =>      $result->is_ok,
+        missing => $result->has_missing,
+        invalid => $result->has_invalid,
+        missing_params => $result->missing_params,
+        messages => $result->messages_to_hash
+    }
 
 =cut
