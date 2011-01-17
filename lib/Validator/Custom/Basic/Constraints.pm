@@ -23,6 +23,44 @@ sub between {
 
 sub blank { $_[0] eq '' }
 
+sub date_to_timepiece {
+    my $value = shift;
+    
+    require Time::Piece;
+        
+    $DB::single = 1;
+    
+    # To Time::Piece object
+    if (ref $value eq 'ARRAY') {
+        my $year = $value->[0];
+        my $mon  = $value->[1];
+        my $mday = $value->[2];
+        
+        if ($year =~ /^\d{1,2}$/ && $mon =~ /^\d{1,2}$/
+         && $mday =~ /^\d{1,2}$/) 
+        {
+            return [0, undef];
+        } 
+        
+        my $date = sprintf("%04s-%02s-%02s", $year, $mon, $mday);
+        
+        my $tp;
+        eval { $tp = Time::Piece->strptime($date, '%Y-%m-%d') };
+        
+        return $@ ? [0, undef] : [1, $tp];
+    }
+    else {
+        $value ||= '';
+        $value =~ s/[^\d]//g;
+        
+        return [0, undef] unless $value =~ /^\d{8}$/;
+        
+        my $tp;
+        eval { $tp = Time::Piece->strptime($value, '%Y%m%d')};
+        return $@ ? [0, undef] : [1, $tp];
+    }
+}
+
 sub decimal {
     my ($value, $digits) = @_;
     

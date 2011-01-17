@@ -16,36 +16,6 @@ use Validator::Custom::Result;
 # I rest this for the promiss of keeping backword compatible.
 __PACKAGE__->dual_attr('constraints', default => sub { {} },
                                       inherit => 'hash_copy');
-__PACKAGE__->register_constraint(
-    any               => sub { 1 },
-    ascii             => \&Validator::Custom::Basic::Constraints::ascii,
-    between           => \&Validator::Custom::Basic::Constraints::between,
-    blank             => \&Validator::Custom::Basic::Constraints::blank,
-    decimal           => \&Validator::Custom::Basic::Constraints::decimal,
-    defined           => sub { defined $_[0] },
-    duplication       => \&Validator::Custom::Basic::Constraints::duplication,
-    equal_to          => \&Validator::Custom::Basic::Constraints::equal_to,
-    greater_than      => \&Validator::Custom::Basic::Constraints::greater_than,
-    http_url          => \&Validator::Custom::Basic::Constraints::http_url,
-    int               => \&Validator::Custom::Basic::Constraints::int,
-    in_array          => \&Validator::Custom::Basic::Constraints::in_array,
-    length            => \&Validator::Custom::Basic::Constraints::length,
-    less_than         => \&Validator::Custom::Basic::Constraints::less_than,
-    merge             => \&Validator::Custom::Basic::Constraints::merge,
-    not_defined       => \&Validator::Custom::Basic::Constraints::not_defined,
-    not_space         => \&Validator::Custom::Basic::Constraints::not_space,
-    not_blank         => \&Validator::Custom::Basic::Constraints::not_blank,
-    uint              => \&Validator::Custom::Basic::Constraints::uint,
-    regex             => \&Validator::Custom::Basic::Constraints::regex,
-    selected_at_least => \&Validator::Custom::Basic::Constraints::selected_at_least,
-    shift             => \&Validator::Custom::Basic::Constraints::shift_array,
-    space             => \&Validator::Custom::Basic::Constraints::space,
-    trim              => \&Validator::Custom::Basic::Constraints::trim,
-    trim_collapse     => \&Validator::Custom::Basic::Constraints::trim_collapse,
-    trim_lead         => \&Validator::Custom::Basic::Constraints::trim_lead,
-    trim_trail        => \&Validator::Custom::Basic::Constraints::trim_trail
-);
-
 __PACKAGE__->attr('data_filter');
 __PACKAGE__->attr(error_stock => 1);
 __PACKAGE__->attr('rule');
@@ -82,85 +52,6 @@ my $rule = [                              # 1 Rule is array ref
 ];
 
 EOS
-
-sub _parse_random_string_rule {
-    my $self = shift;
-    
-    # Rule
-    my $rule = ref $_[0] eq 'HASH' ? $_[0] : {@_};
-    
-    # Result
-    my $result = {};
-    
-    # Parse string rule
-    foreach my $name (keys %$rule) {
-        
-        # Pettern
-        my $pattern = $rule->{$name};
-        $pattern = '' unless $pattern;
-        
-        # State
-        my $state = 'character';
-
-        # Count
-        my $count = '';
-        
-        # Chacacter sets
-        my $csets = [];
-        my $cset = [];
-        
-        # Parse pattern
-        my $c;
-        while (defined ($c = substr($pattern, 0, 1, '')) && length $c) {
-            
-            # Character class
-            if ($state eq 'character_class') {
-                if ($c eq ']') {
-                    $state = 'character';
-                    push @$csets, $cset;
-                    $cset = [];
-                    $state = 'character';
-                }
-                else {
-                    push @$cset, $c;
-                }
-            }
-            
-            # Count
-            elsif ($state eq 'count') {
-                if ($c eq '}') {
-                    $count = 1 if $count < 1;
-                    for (my $i = 0; $i < $count - 1; $i++) {
-                        push @$csets, [@{$csets->[-1] || ['']}];
-                    }
-                    $count = '';
-                    $state = 'character';
-                }
-                else {
-                    $count .= $c;
-                }
-            }
-            
-            # Character
-            else {
-                if ($c eq '[') {
-                    $state = 'character_class';
-                }
-                elsif ($c eq '{') {
-                    $state = 'count';
-                }
-                else {
-                    push @$csets, [$c];
-                }
-            }
-        }
-        
-        # Add Charcter sets
-        $result->{$name} = $csets;
-    }
-    
-    return $result;
-}
 
 sub js_fill_form_button {
     my ($self, $rule) = @_;
@@ -277,6 +168,43 @@ sub js_fill_form_button {
 EOS
 
     return $javascript;
+}
+
+sub new {
+    my $self = shift->SUPER::new(@_);
+
+    $self->register_constraint(
+        any               => sub { 1 },
+        ascii             => \&Validator::Custom::Basic::Constraints::ascii,
+        between           => \&Validator::Custom::Basic::Constraints::between,
+        blank             => \&Validator::Custom::Basic::Constraints::blank,
+        date_to_timepiece => \&Validator::Custom::Basic::Constraints::date_to_timepiece,
+        decimal           => \&Validator::Custom::Basic::Constraints::decimal,
+        defined           => sub { defined $_[0] },
+        duplication       => \&Validator::Custom::Basic::Constraints::duplication,
+        equal_to          => \&Validator::Custom::Basic::Constraints::equal_to,
+        greater_than      => \&Validator::Custom::Basic::Constraints::greater_than,
+        http_url          => \&Validator::Custom::Basic::Constraints::http_url,
+        int               => \&Validator::Custom::Basic::Constraints::int,
+        in_array          => \&Validator::Custom::Basic::Constraints::in_array,
+        length            => \&Validator::Custom::Basic::Constraints::length,
+        less_than         => \&Validator::Custom::Basic::Constraints::less_than,
+        merge             => \&Validator::Custom::Basic::Constraints::merge,
+        not_defined       => \&Validator::Custom::Basic::Constraints::not_defined,
+        not_space         => \&Validator::Custom::Basic::Constraints::not_space,
+        not_blank         => \&Validator::Custom::Basic::Constraints::not_blank,
+        uint              => \&Validator::Custom::Basic::Constraints::uint,
+        regex             => \&Validator::Custom::Basic::Constraints::regex,
+        selected_at_least => \&Validator::Custom::Basic::Constraints::selected_at_least,
+        shift             => \&Validator::Custom::Basic::Constraints::shift_array,
+        space             => \&Validator::Custom::Basic::Constraints::space,
+        trim              => \&Validator::Custom::Basic::Constraints::trim,
+        trim_collapse     => \&Validator::Custom::Basic::Constraints::trim_collapse,
+        trim_lead         => \&Validator::Custom::Basic::Constraints::trim_lead,
+        trim_trail        => \&Validator::Custom::Basic::Constraints::trim_trail
+    );
+    
+    return $self;
 }
 
 sub register_constraint {
@@ -646,6 +574,85 @@ sub _parse_constraint {
     return $cinfo;
 }
 
+sub _parse_random_string_rule {
+    my $self = shift;
+    
+    # Rule
+    my $rule = ref $_[0] eq 'HASH' ? $_[0] : {@_};
+    
+    # Result
+    my $result = {};
+    
+    # Parse string rule
+    foreach my $name (keys %$rule) {
+        
+        # Pettern
+        my $pattern = $rule->{$name};
+        $pattern = '' unless $pattern;
+        
+        # State
+        my $state = 'character';
+
+        # Count
+        my $count = '';
+        
+        # Chacacter sets
+        my $csets = [];
+        my $cset = [];
+        
+        # Parse pattern
+        my $c;
+        while (defined ($c = substr($pattern, 0, 1, '')) && length $c) {
+            
+            # Character class
+            if ($state eq 'character_class') {
+                if ($c eq ']') {
+                    $state = 'character';
+                    push @$csets, $cset;
+                    $cset = [];
+                    $state = 'character';
+                }
+                else {
+                    push @$cset, $c;
+                }
+            }
+            
+            # Count
+            elsif ($state eq 'count') {
+                if ($c eq '}') {
+                    $count = 1 if $count < 1;
+                    for (my $i = 0; $i < $count - 1; $i++) {
+                        push @$csets, [@{$csets->[-1] || ['']}];
+                    }
+                    $count = '';
+                    $state = 'character';
+                }
+                else {
+                    $count .= $c;
+                }
+            }
+            
+            # Character
+            else {
+                if ($c eq '[') {
+                    $state = 'character_class';
+                }
+                elsif ($c eq '{') {
+                    $state = 'count';
+                }
+                else {
+                    push @$csets, [$c];
+                }
+            }
+        }
+        
+        # Add Charcter sets
+        $result->{$name} = $csets;
+    }
+    
+    return $result;
+}
+
 sub _rule_syntax {
     my ($self, $rule) = @_;
     
@@ -899,7 +906,7 @@ Between A and B.
 
 =head2 C<blank>
 
-    my $data => {name => ''};
+    my $data = {name => ''};
     my $rule = [
         name => [
             'blank'
@@ -907,6 +914,36 @@ Between A and B.
     ];
 
 Blank.
+
+=head2 C<(experimental) date_to_timepiece>
+
+    my $data = {date => '2010/11/12'};
+    my $rule = [
+        date => [
+            'date_to_timepiece'
+        ]
+    ];
+
+The value witch is looks like date is converted
+to L<Time::Piece> object.
+If the value contains 8 digits, the value is assumed date.
+
+    2010/11/12 # ok
+    2010-11-12 # ok
+    20101112   # ok
+    2010       # NG
+    2010111106 # NG
+
+And year and month and mday combination is ok.
+
+    my $data = {year => 2011, month => 3, mday => 9};
+    my $rule = [
+        {date => ['year', 'month', 'mday']} => [
+            'date_to_timepiece'
+        ]
+    ];
+
+Note that L<Time::Piece> is required.
 
 =head2 C<decimal>
     
