@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1415';
+our $VERSION = '0.1416';
 
 use 5.008001;
 use strict;
@@ -179,6 +179,7 @@ sub new {
         between           => \&Validator::Custom::Basic::Constraints::between,
         blank             => \&Validator::Custom::Basic::Constraints::blank,
         date_to_timepiece => \&Validator::Custom::Basic::Constraints::date_to_timepiece,
+        datetime_to_timepiece => \&Validator::Custom::Basic::Constraints::datetime_to_timepiece,
         decimal           => \&Validator::Custom::Basic::Constraints::decimal,
         defined           => sub { defined $_[0] },
         duplication       => \&Validator::Custom::Basic::Constraints::duplication,
@@ -924,7 +925,7 @@ Blank.
         ]
     ];
 
-The value witch is looks like date is converted
+The value which looks like date is converted
 to L<Time::Piece> object.
 If the value contains 8 digits, the value is assumed date.
 
@@ -940,6 +941,37 @@ And year and month and mday combination is ok.
     my $rule = [
         {date => ['year', 'month', 'mday']} => [
             'date_to_timepiece'
+        ]
+    ];
+
+Note that L<Time::Piece> is required.
+
+=head2 C<(experimental) datetime_to_timepiece>
+
+    my $data = {datetime => '2010/11/12 12:14:45'};
+    my $rule = [
+        datetime => [
+            'datetime_to_timepiece'
+        ]
+    ];
+
+The value which looks like date and time is converted
+to L<Time::Piece> object.
+If the value contains 14 digits, the value is assumed date and time.
+
+    2010/11/12 12:14:45 # ok
+    2010-11-12 12:14:45 # ok
+    20101112 121445     # ok
+    2010                # NG
+    2010111106 12       # NG
+
+And year and month and mday combination is ok.
+
+    my $data = {year => 2011, month => 3, mday => 9
+                hour => 10, min => 30, sec => 30};
+    my $rule = [
+        {datetime => ['year', 'month', 'mday', 'hour', 'min', 'sec']} => [
+            'datetime_to_timepiece'
         ]
     ];
 

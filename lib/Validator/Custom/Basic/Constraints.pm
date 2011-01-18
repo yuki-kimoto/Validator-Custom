@@ -34,16 +34,16 @@ sub date_to_timepiece {
         my $mon  = $value->[1];
         my $mday = $value->[2];
         
-        if ($year =~ /^\d{1,2}$/ && $mon =~ /^\d{1,2}$/
+        unless ($year =~ /^\d{1,4}$/ && $mon =~ /^\d{1,2}$/
          && $mday =~ /^\d{1,2}$/) 
         {
             return [0, undef];
         } 
         
-        my $date = sprintf("%04s-%02s-%02s", $year, $mon, $mday);
+        my $date = sprintf("%04s%02s%02s", $year, $mon, $mday);
         
         my $tp;
-        eval { $tp = Time::Piece->strptime($date, '%Y-%m-%d') };
+        eval { $tp = Time::Piece->strptime($date, '%Y%m%d') };
         
         return $@ ? [0, undef] : [1, $tp];
     }
@@ -55,6 +55,47 @@ sub date_to_timepiece {
         
         my $tp;
         eval { $tp = Time::Piece->strptime($value, '%Y%m%d')};
+        return $@ ? [0, undef] : [1, $tp];
+    }
+}
+
+sub datetime_to_timepiece {
+    my $value = shift;
+    
+    require Time::Piece;
+    
+    # To Time::Piece object
+    if (ref $value eq 'ARRAY') {
+        my $year = $value->[0] || '';
+        my $mon  = $value->[1] || '';
+        my $mday = $value->[2] || '';
+        my $hour = $value->[3] || '';
+        my $min  = $value->[4] || '';
+        my $sec  = $value->[5] || '';
+        
+        unless ($year =~ /^\d{1,4}$/ && $mon =~ /^\d{1,2}$/
+         && $mday =~ /^\d{1,2}$/ && $hour =~ /^\d{1,2}$/
+         && $min =~ /^\d{1,2}$/ && $sec =~ /^\d{1,2}$/) 
+        {
+            return [0, undef];
+        } 
+        
+        my $date = sprintf("%04s%02s%02s%02s%02s%02s", 
+                           $year, $mon, $mday,
+                           $hour, $min, $sec);
+        my $tp;
+        eval { $tp = Time::Piece->strptime($date, '%Y%m%d%H%M%S') };
+        
+        return $@ ? [0, undef] : [1, $tp];
+    }
+    else {
+        $value ||= '';
+        $value =~ s/[^\d]//g;
+        
+        return [0, undef] unless $value =~ /^\d{14}$/;
+        
+        my $tp;
+        eval { $tp = Time::Piece->strptime($value, '%Y%m%d%H%M%S')};
         return $@ ? [0, undef] : [1, $tp];
     }
 }
