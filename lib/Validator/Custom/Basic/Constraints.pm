@@ -274,6 +274,10 @@ These functions is explained in L<Validator::Custom>
 
 =head2 C<blank>
 
+=head2 C<date_to_timepiece>
+
+=head2 C<datetime_to_timepiece>
+
 =head2 C<decimal>
     
 =head2 C<defined>

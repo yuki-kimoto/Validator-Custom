@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1416';
+our $VERSION = '0.1417';
 
 use 5.008001;
 use strict;
@@ -811,6 +811,12 @@ Syntax of rule.
 
 L<Validator::Custom> inherits all methods from L<Object::Simple>
 and implements the following new ones.
+
+=head2 C<new>
+
+    my $vc = Validator::Custom->new;
+
+Create a new L<Validator::Custom> object.
 
 =head2 C<(experimental) js_fill_form_button>
 
