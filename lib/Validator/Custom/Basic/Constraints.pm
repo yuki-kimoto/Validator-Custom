@@ -43,7 +43,12 @@ sub date_to_timepiece {
         my $date = sprintf("%04s%02s%02s", $year, $mon, $mday);
         
         my $tp;
-        eval { $tp = Time::Piece->strptime($date, '%Y%m%d') };
+        eval {
+            local $SIG{__WARN__} = sub {
+                die @_;
+            };
+            $tp = Time::Piece->strptime($date, '%Y%m%d');
+        };
         
         return $@ ? [0, undef] : [1, $tp];
     }
@@ -84,7 +89,12 @@ sub datetime_to_timepiece {
                            $year, $mon, $mday,
                            $hour, $min, $sec);
         my $tp;
-        eval { $tp = Time::Piece->strptime($date, '%Y%m%d%H%M%S') };
+        eval {
+            local $SIG{__WARN__} = sub {
+                die @_;
+            };
+            $tp = Time::Piece->strptime($date, '%Y%m%d%H%M%S');
+        };
         
         return $@ ? [0, undef] : [1, $tp];
     }
