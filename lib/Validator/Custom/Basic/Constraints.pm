@@ -59,7 +59,12 @@ sub date_to_timepiece {
         return [0, undef] unless $value =~ /^\d{8}$/;
         
         my $tp;
-        eval { $tp = Time::Piece->strptime($value, '%Y%m%d')};
+        eval {
+            local $SIG{__WARN__} = sub {
+                die @_;
+            };
+            $tp = Time::Piece->strptime($value, '%Y%m%d');
+        };
         return $@ ? [0, undef] : [1, $tp];
     }
 }
@@ -105,7 +110,12 @@ sub datetime_to_timepiece {
         return [0, undef] unless $value =~ /^\d{14}$/;
         
         my $tp;
-        eval { $tp = Time::Piece->strptime($value, '%Y%m%d%H%M%S')};
+        eval {
+            local $SIG{__WARN__} = sub {
+                die @_;
+            };
+            $tp = Time::Piece->strptime($value, '%Y%m%d%H%M%S');
+        };
         return $@ ? [0, undef] : [1, $tp];
     }
 }
