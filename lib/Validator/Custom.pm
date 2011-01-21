@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1419';
+our $VERSION = '0.1420';
 
 use 5.008001;
 use strict;
@@ -9,7 +9,7 @@ use warnings;
 use base 'Object::Simple';
 
 use Carp 'croak';
-use Validator::Custom::Basic::Constraints;
+use Validator::Custom::Constraint;
 use Validator::Custom::Result;
 
 # Object::Simple "dual_attr" is deprecated. Don't use "dual_attr".
@@ -175,34 +175,34 @@ sub new {
 
     $self->register_constraint(
         any               => sub { 1 },
-        ascii             => \&Validator::Custom::Basic::Constraints::ascii,
-        between           => \&Validator::Custom::Basic::Constraints::between,
-        blank             => \&Validator::Custom::Basic::Constraints::blank,
-        date_to_timepiece => \&Validator::Custom::Basic::Constraints::date_to_timepiece,
-        datetime_to_timepiece => \&Validator::Custom::Basic::Constraints::datetime_to_timepiece,
-        decimal           => \&Validator::Custom::Basic::Constraints::decimal,
+        ascii             => \&Validator::Custom::Constraint::ascii,
+        between           => \&Validator::Custom::Constraint::between,
+        blank             => \&Validator::Custom::Constraint::blank,
+        date_to_timepiece => \&Validator::Custom::Constraint::date_to_timepiece,
+        datetime_to_timepiece => \&Validator::Custom::Constraint::datetime_to_timepiece,
+        decimal           => \&Validator::Custom::Constraint::decimal,
         defined           => sub { defined $_[0] },
-        duplication       => \&Validator::Custom::Basic::Constraints::duplication,
-        equal_to          => \&Validator::Custom::Basic::Constraints::equal_to,
-        greater_than      => \&Validator::Custom::Basic::Constraints::greater_than,
-        http_url          => \&Validator::Custom::Basic::Constraints::http_url,
-        int               => \&Validator::Custom::Basic::Constraints::int,
-        in_array          => \&Validator::Custom::Basic::Constraints::in_array,
-        length            => \&Validator::Custom::Basic::Constraints::length,
-        less_than         => \&Validator::Custom::Basic::Constraints::less_than,
-        merge             => \&Validator::Custom::Basic::Constraints::merge,
-        not_defined       => \&Validator::Custom::Basic::Constraints::not_defined,
-        not_space         => \&Validator::Custom::Basic::Constraints::not_space,
-        not_blank         => \&Validator::Custom::Basic::Constraints::not_blank,
-        uint              => \&Validator::Custom::Basic::Constraints::uint,
-        regex             => \&Validator::Custom::Basic::Constraints::regex,
-        selected_at_least => \&Validator::Custom::Basic::Constraints::selected_at_least,
-        shift             => \&Validator::Custom::Basic::Constraints::shift_array,
-        space             => \&Validator::Custom::Basic::Constraints::space,
-        trim              => \&Validator::Custom::Basic::Constraints::trim,
-        trim_collapse     => \&Validator::Custom::Basic::Constraints::trim_collapse,
-        trim_lead         => \&Validator::Custom::Basic::Constraints::trim_lead,
-        trim_trail        => \&Validator::Custom::Basic::Constraints::trim_trail
+        duplication       => \&Validator::Custom::Constraint::duplication,
+        equal_to          => \&Validator::Custom::Constraint::equal_to,
+        greater_than      => \&Validator::Custom::Constraint::greater_than,
+        http_url          => \&Validator::Custom::Constraint::http_url,
+        int               => \&Validator::Custom::Constraint::int,
+        in_array          => \&Validator::Custom::Constraint::in_array,
+        length            => \&Validator::Custom::Constraint::length,
+        less_than         => \&Validator::Custom::Constraint::less_than,
+        merge             => \&Validator::Custom::Constraint::merge,
+        not_defined       => \&Validator::Custom::Constraint::not_defined,
+        not_space         => \&Validator::Custom::Constraint::not_space,
+        not_blank         => \&Validator::Custom::Constraint::not_blank,
+        uint              => \&Validator::Custom::Constraint::uint,
+        regex             => \&Validator::Custom::Constraint::regex,
+        selected_at_least => \&Validator::Custom::Constraint::selected_at_least,
+        shift             => \&Validator::Custom::Constraint::shift_array,
+        space             => \&Validator::Custom::Constraint::space,
+        trim              => \&Validator::Custom::Constraint::trim,
+        trim_collapse     => \&Validator::Custom::Constraint::trim_collapse,
+        trim_lead         => \&Validator::Custom::Constraint::trim_lead,
+        trim_trail        => \&Validator::Custom::Constraint::trim_trail
     );
     
     return $self;
@@ -734,7 +734,11 @@ array validation,
 
 =back
 
-See L<Validator::Custom::Guides> to know usages of L<Validator::Custom>.
+See L<Validator::Custom::Guide> to know usages of L<Validator::Custom>.
+
+=head1 GUIDE
+
+L<Validator::Custom::Guide> - L<Validator::Custom> complete guide
 
 =head1 ATTRIBUTES
 

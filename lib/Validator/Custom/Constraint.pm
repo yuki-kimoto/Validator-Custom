@@ -1,4 +1,4 @@
-package Validator::Custom::Basic::Constraints;
+package Validator::Custom::Constraint;
 
 use strict;
 use warnings;

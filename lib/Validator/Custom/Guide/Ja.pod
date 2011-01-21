@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Validator::Custom::Guides::Ja - Validator::Customの日本語ガイド
+Validator::Custom::Guide::Ja - Validator::Customの日本語ガイド
 
 =head1 ガイド
 
@@ -320,7 +320,7 @@ L<Validator::Custom>オブジェクトを受け取ります。
         }
     );
 
-制約関数の実装を知りたい場合はL<Validator::Custom::Basic::Constraints>
+制約関数の実装を知りたい場合はL<Validator::Custom::Constraint>
 のソースコードを参考にしてみてください。
 
 =head3 フィルタ関数の登録
@@ -371,7 +371,8 @@ use C<register_constraint> in constructor to register constarint.
     
 L<Validator::Custom::HTMLForm>は継承のよいサンプルになっています。
 
-=head2 6. サンプル
+=head1 サンプル
 
-L<Validator::Custom/"Examples">を見てください。
+L<Validator::Custom Wiki|https://github.com/yuki-kimoto/Validator-Custom/wiki>をご覧に
+なってみてください。たくさんのサンプルが掲載されています。
 
