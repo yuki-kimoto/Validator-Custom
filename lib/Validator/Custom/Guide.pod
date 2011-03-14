@@ -1,8 +1,8 @@
 =head1 NAME
 
-Validator::Custom::Guide - Validator::Custom Guides
+Validator::Custom::Guide - Validator::Custom Guide
 
-=head1 GUIDES
+=head1 GUIDE
 
 =head2 1. Basic
 
