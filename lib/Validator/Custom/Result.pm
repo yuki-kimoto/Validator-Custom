@@ -325,7 +325,7 @@ Messages keep the order of parameter names of the rule.
 You can get the pairs of invalid parameter name and message
 using C<messages_to_hash()>.
 
-=head2 C<(experimental) to_hash>
+=head2 C<to_hash>
 
     my $rhash = $result->to_hash;
 

@@ -1,3 +1,7 @@
+0.1421
+    - removed EXPERIMENTAL status from DBIx::Custom::Result to_hash()
+    - removed EXPERIMENTAL status from js_fill_form_button, 
+    - removed EXPERIMENTAL status from datetime_to_timepiece, date_to_timepiece
 0.1420
   updated pod
 0.1419

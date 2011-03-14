@@ -282,7 +282,7 @@ sub trim_trail{
 
 =head1 NAME
 
-Validator::Custom::Basic::Constraints - Basic constraint functions
+Validator::Custom::Constraint - Constraint functions
 
 =head1 FUNCTIONS
 

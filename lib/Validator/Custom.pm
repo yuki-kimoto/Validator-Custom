@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1420';
+our $VERSION = '0.1421';
 
 use 5.008001;
 use strict;
@@ -822,7 +822,7 @@ and implements the following new ones.
 
 Create a new L<Validator::Custom> object.
 
-=head2 C<(experimental) js_fill_form_button>
+=head2 C<js_fill_form_button>
 
     my $js_code = $self->js_fill_form_button(
         mail => '[abc]{3}@[abc]{2}.com,
@@ -926,7 +926,7 @@ Between A and B.
 
 Blank.
 
-=head2 C<(experimental) date_to_timepiece>
+=head2 C<date_to_timepiece>
 
     my $data = {date => '2010/11/12'};
     my $rule = [
@@ -956,7 +956,7 @@ And year and month and mday combination is ok.
 
 Note that L<Time::Piece> is required.
 
-=head2 C<(experimental) datetime_to_timepiece>
+=head2 C<datetime_to_timepiece>
 
     my $data = {datetime => '2010/11/12 12:14:45'};
     my $rule = [
