@@ -219,6 +219,13 @@ If this value is 0, The parameter value is not copied to result data.
 
 Default to 1. Parameter value is copied to the data.
 
+=item 4. require
+
+If this value is 0 and parameter value is not found,
+the parameter is not added to missing paramter list.
+
+Default to 1.
+
 =back
 
 =head3 C<Multiple parameters validation>

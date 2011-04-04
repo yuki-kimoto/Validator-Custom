@@ -1707,3 +1707,37 @@ is_deeply($result->to_hash, {
     messages => {key2 => 'a', key3 => 'b'}
 });
 
+test 'not_required';
+$vc = Validator::Custom->new;
+$data = {key1 => 1};
+$rule = [
+    key1 => [
+        'int'
+    ],
+    key2 => {message => 'a'} => [
+        'int'
+    ],
+    key3 => {require => 0} => [
+        'int'
+    ],
+];
+$result = $vc->validate($data, $rule);
+is_deeply($result->missing_params, ['key2']);
+ok(!$result->is_ok);
+
+$vc = Validator::Custom->new;
+$data = {key1 => 1};
+$rule = [
+    key1 => {require => 0} => [
+        'int'
+    ],
+    key2 => {require => 0} => [
+        'int'
+    ],
+    key3 => {require => 0} => [
+        'int'
+    ],
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_ok);
+ok(!$result->has_invalid);

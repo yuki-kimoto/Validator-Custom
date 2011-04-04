@@ -1,3 +1,5 @@
+0.1422
+    - added require option
 0.1421
     - removed EXPERIMENTAL status from DBIx::Custom::Result to_hash()
     - removed EXPERIMENTAL status from js_fill_form_button, 

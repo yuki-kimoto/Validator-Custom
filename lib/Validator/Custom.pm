@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1421';
+our $VERSION = '0.1422';
 
 use 5.008001;
 use strict;
@@ -218,7 +218,7 @@ sub register_constraint {
     return $self;
 }
 
-our %VALID_OPTIONS = map {$_ => 1} qw/message default copy/;
+our %VALID_OPTIONS = map {$_ => 1} qw/message default copy require/;
 
 sub validate {
     my ($self, $data, $rule) = @_;
@@ -325,13 +325,16 @@ sub validate {
         $copy = $opts->{copy} if exists $opts->{copy};
         
         # Check missing parameters
+        my $require = exists $opts->{require} ? $opts->{require} : 1;
         my $found_missing_param;
         my $missing_params = $result->missing_params;
         foreach my $key (@$keys) {
             unless (exists $data->{$key}) {
-                push @$missing_params, $key
-                  unless $found_missing_params->{$key};
-                $found_missing_params->{$key}++;
+                if ($require) {
+                    push @$missing_params, $key
+                      unless $found_missing_params->{$key};
+                    $found_missing_params->{$key}++;
+                }
                 $found_missing_param = 1;
             }
         }
