@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1422';
+our $VERSION = '0.1423';
 
 use 5.008001;
 use strict;
@@ -669,14 +669,14 @@ sub _rule_syntax {
     return $message;
 }
 
-# Deprecated
+# DEPRECATED!
 __PACKAGE__->attr(shared_rule => sub { [] });
 
 1;
 
 =head1 NAME
 
-Validator::Custom - Validates user input easily
+Validator::Custom - Validate user input easily
 
 =head1 SYNOPSYS
 
@@ -714,34 +714,39 @@ Validator::Custom - Validates user input easily
     
 =head1 DESCRIPTION
 
-L<Validator::Custom> validates user input.
+L<Validator::Custom> validate user input easily.
 The features are the following ones.
 
 =over 4
 
 =item *
 
-Can set messages for each parameter when data has invalid parameter.
-The order of messages is keeped, and also can set messages for each reason.
+Many constraint functions are available by default, such as C<not_blank>,
+C<int>, C<defined>, C<in_array>, C<length>.
 
 =item *
 
-Can register constraint functions or filter functions.
-And useful constraint and filter is registered by default,
-such as C<not_blank>, C<int>, C<trim>, etc.
+Several filter functions are available by default, such as C<trim>,
+C<datetime_to_timepiece>, C<date_to_timepiece>.
 
 =item *
 
-Support C<OR> condition validation, negativate validation, 
-array validation, 
+You can register your constraint function.
+
+=item *
+
+You can set error messages for invalid parameter value.
+The order of messages is keeped.
+
+=item *
+
+Support C<OR> condtion constraint, Negativate constraint,
 
 =back
 
-See L<Validator::Custom::Guide> to know usages of L<Validator::Custom>.
-
 =head1 GUIDE
 
-L<Validator::Custom::Guide> - L<Validator::Custom> complete guide
+L<Validator::Custom::Guide> - L<Validator::Custom> Guide
 
 =head1 ATTRIBUTES
 
@@ -757,55 +762,35 @@ Constraint functions.
     my $filter = $vc->data_filter;
     $vc        = $vc->data_filter(\&data_filter);
 
-Filter input data. If data is not hash reference, you can convert the data to hash reference.
+Filter for input data. If data is not hash reference, you can convert
+the data to hash reference.
+
+    $vc->data_filter(sub {
+        my $data = shift;
+        
+        my $hash = {};
+        
+        # Convert data to hash reference
+        
+        return $hash;
+    });
 
 =head2 C<error_stock>
 
     my $error_stock = $vc->error_stcok;
     $vc             = $vc->error_stock(1);
 
-If error_stock is set to 1, all validation error is stocked.
-If error_stock is set 0, Validation is finished soon after a error occur.
+If error_stock is set to 0, C<validate()> return soon after invalid value is found.
 
 Default to 1. 
 
 =head2 C<rule>
 
     my $rule = $vc->rule;
-    $vc      = $vc->rule($rule);
+    $vc      = $vc->rule(\@rule);
 
-Rule for validation.
-Validation rule has the following syntax.
-
-    # Rule syntax
-    my $rule = [                              # 1 Rule is array ref
-        key => [                              # 2 Constraints is array ref
-            'constraint',                     # 3 Constraint is string
-            {'constraint' => 'args'}          #     or hash ref (arguments)
-            ['constraint', 'err'],            #     or arrya ref (message)
-        ],
-        key => [                           
-            [{constraint => 'args'}, 'err']   # 4 With argument and message
-        ],
-        {key => ['key1', 'key2']} => [        # 5.1 Multi-parameters validation
-            'constraint'
-        ],
-        {key => qr/^key/} => [                # 5.2 Multi-parameters validation
-            'constraint'                              using regular expression
-        ],
-        key => [
-            '@constraint'                     # 6 Multi-values validation
-        ],
-        key => {message => 'err', ... } => [  # 7 With options
-            'constraint'
-        ],
-        key => [
-            '!constraint'                     # 8 Negativate constraint
-        ],
-        key => [
-            'constraint1 || constraint2'      # 9 "OR" condition
-        ],
-    ];
+Validation rule. If second argument of C<validate()> is not specified.
+this rule is used.
 
 =head2 C<syntax>
 
@@ -827,17 +812,19 @@ Create a new L<Validator::Custom> object.
 
 =head2 C<js_fill_form_button>
 
-    my $js_code = $self->js_fill_form_button(
+    my $button = $self->js_fill_form_button(
         mail => '[abc]{3}@[abc]{2}.com,
         title => '[pqr]{5}'
     );
 
-Create button javascript source code to fill form at random
-using pattern like regular expression.
-And checkbox radio group and list box also is automatically selected.
-This help you to input form in tests.
+Create javascript button source code to fill form.
+You can specify string or pattern like regular expression.
 
-Note that this methos require L<JSON> module.
+If you click this button, each text box is filled with the
+specified pattern string,
+and checkbox, radio button, and list box is automatically selected.
+
+Note that this methods require L<JSON> module.
 
 =head2 C<validate>
 
@@ -846,15 +833,15 @@ Note that this methos require L<JSON> module.
 
 Validate the data.
 Return value is L<Validator::Custom::Result> object.
-If the rule of second arument is ommited,
-The value of C<rule> attribute is used for validation.
+If second argument is not specified,
+C<rule> attribute is used.
 
 =head2 C<register_constraint>
 
     $vc->register_constraint(%constraint);
     $vc->register_constraint(\%constraint);
 
-Register a constraint function or filter function.
+Register constraint function.
     
     $vc->register_constraint(
         int => sub {
@@ -866,7 +853,12 @@ Register a constraint function or filter function.
             my $value    = shift;
             my $is_valid = $value =~ /^[\x21-\x7E]+$/;
             return $is_valid;
-        },
+        }
+    );
+
+You can register filter function.
+
+    $vc->register_constraint(
         trim => sub {
             my $value = shift;
             $value =~ s/^\s+//;
@@ -876,23 +868,80 @@ Register a constraint function or filter function.
         }
     );
 
-If you register filter function, you must return array reference,
-which contain [IS_VALID_OR_NOT, FILTERED_VALUE].
+Filter function return array reference,
+first element is the value if the value is valid or not,
+second element is the converted value by filter function.
 
-=head2 C<(deprecated) shared_rule>
+=head1 RULE SYNTAX
 
-B<This method is now deprecated> because I know in almost all case
-We specify a constraint for each paramters.
+Validation rule has the following syntax.
 
-    my $shared_rule = $vc->shared_rule;
-    $vc             = $vc->shared_rule(\@rule);
+    # Rule syntax
+    my $rule = [                              # 1 Rule is array ref
+        key => [                              # 2 Constraints is array ref
+            'constraint',                     # 3 Constraint is string
+            {'constraint' => 'args'}          #     or hash ref (arguments)
+            ['constraint', 'err'],            #     or arrya ref (message)
+        ],
+        key => [                           
+            [{constraint => 'args'}, 'err']   # 4 With argument and message
+        ],
+        {key => ['key1', 'key2']} => [        # 5.1 Multi-parameters validation
+            'constraint'
+        ],
+        {key => qr/^key/} => [                # 5.2 Multi-parameters validation
+            'constraint'                              using regular expression
+        ],
+        key => [
+            '@constraint'                     # 6 Multi-values validation
+        ],
+        key => {message => 'err', ... } => [  # 7 With option
+            'constraint'
+        ],
+        key => [
+            '!constraint'                     # 8 Negativate constraint
+        ],
+        key => [
+            'constraint1 || constraint2'      # 9 "OR" condition constraint
+        ],
+    ];
 
-Shared rule. Shared rule is added the head of normal rule.
+Rule can have option, following options is available.
 
-    $vc->shared_rule([
-        ['defined',   'Must be defined'],
-        ['not_blank', 'Must be not blank']
-    ]);
+=over 4
+
+=item 1. message
+
+     {message => "Input right value"}
+
+Message for invalid value.
+
+=item 2. default
+
+    {default => 5}
+
+Default value, set to C<data> of C<Validator::Custom::Result>
+when invalid value or missing value is found
+
+=item 3. copy
+
+    {copy => 0}
+
+If C<copy> is 0, the value is not copied to C<data> of C<Validator::Custom::Result>. 
+
+Default to 1. 
+
+=item 4. require
+
+    {require => 0}
+
+If C<require> is 0,
+The value is not appended to missing parameter list
+even if the value is not found
+
+Default to 1.
+
+=back
 
 =head1 CONSTRAINTS
 
@@ -928,67 +977,6 @@ Between A and B.
     ];
 
 Blank.
-
-=head2 C<date_to_timepiece>
-
-    my $data = {date => '2010/11/12'};
-    my $rule = [
-        date => [
-            'date_to_timepiece'
-        ]
-    ];
-
-The value which looks like date is converted
-to L<Time::Piece> object.
-If the value contains 8 digits, the value is assumed date.
-
-    2010/11/12 # ok
-    2010-11-12 # ok
-    20101112   # ok
-    2010       # NG
-    2010111106 # NG
-
-And year and month and mday combination is ok.
-
-    my $data = {year => 2011, month => 3, mday => 9};
-    my $rule = [
-        {date => ['year', 'month', 'mday']} => [
-            'date_to_timepiece'
-        ]
-    ];
-
-Note that L<Time::Piece> is required.
-
-=head2 C<datetime_to_timepiece>
-
-    my $data = {datetime => '2010/11/12 12:14:45'};
-    my $rule = [
-        datetime => [
-            'datetime_to_timepiece'
-        ]
-    ];
-
-The value which looks like date and time is converted
-to L<Time::Piece> object.
-If the value contains 14 digits, the value is assumed date and time.
-
-    2010/11/12 12:14:45 # ok
-    2010-11-12 12:14:45 # ok
-    20101112 121445     # ok
-    2010                # NG
-    2010111106 12       # NG
-
-And year and month and mday combination is ok.
-
-    my $data = {year => 2011, month => 3, mday => 9
-                hour => 10, min => 30, sec => 30};
-    my $rule = [
-        {datetime => ['year', 'month', 'mday', 'hour', 'min', 'sec']} => [
-            'datetime_to_timepiece'
-        ]
-    ];
-
-Note that L<Time::Piece> is required.
 
 =head2 C<decimal>
     
@@ -1187,6 +1175,67 @@ In other word, the array contains at least specified count element.
 
 =head1 FILTERS
 
+=head2 C<date_to_timepiece>
+
+    my $data = {date => '2010/11/12'};
+    my $rule = [
+        date => [
+            'date_to_timepiece'
+        ]
+    ];
+
+The value which looks like date is converted
+to L<Time::Piece> object.
+If the value contains 8 digits, the value is assumed date.
+
+    2010/11/12 # ok
+    2010-11-12 # ok
+    20101112   # ok
+    2010       # NG
+    2010111106 # NG
+
+And year and month and mday combination is ok.
+
+    my $data = {year => 2011, month => 3, mday => 9};
+    my $rule = [
+        {date => ['year', 'month', 'mday']} => [
+            'date_to_timepiece'
+        ]
+    ];
+
+Note that L<Time::Piece> is required.
+
+=head2 C<datetime_to_timepiece>
+
+    my $data = {datetime => '2010/11/12 12:14:45'};
+    my $rule = [
+        datetime => [
+            'datetime_to_timepiece'
+        ]
+    ];
+
+The value which looks like date and time is converted
+to L<Time::Piece> object.
+If the value contains 14 digits, the value is assumed date and time.
+
+    2010/11/12 12:14:45 # ok
+    2010-11-12 12:14:45 # ok
+    20101112 121445     # ok
+    2010                # NG
+    2010111106 12       # NG
+
+And year and month and mday combination is ok.
+
+    my $data = {year => 2011, month => 3, mday => 9
+                hour => 10, min => 30, sec => 30};
+    my $rule = [
+        {datetime => ['year', 'month', 'mday', 'hour', 'min', 'sec']} => [
+            'datetime_to_timepiece'
+        ]
+    ];
+
+Note that L<Time::Piece> is required.
+
 =head2 C<merge>
 
     my $data = {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'};
@@ -1254,17 +1303,10 @@ Trim leading white space.
 
 Trim trailing white space.
 
-=head1 BUGS
-
-Please tell me the bugs.
-
-C<< <kimoto.yuki at gmail.com> >>
-
 =head1 STABILITY
 
-L<Validator::Custom> and L<Validator::Custom::Result> is stable now.
 All methods in these documentations
-(except for experimantal marking ones)
+(except for EXPERIMENTAL marking ones)
 keep backword compatible in the future.
 
 =head1 AUTHOR
@@ -1275,7 +1317,7 @@ L<http://github.com/yuki-kimoto/Validator-Custom>
 
 =head1 COPYRIGHT & LICENCE
 
-Copyright 2009 Yuki Kimoto, all rights reserved.
+Copyright 2009-2011 Yuki Kimoto, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
