@@ -1741,3 +1741,19 @@ $rule = [
 $result = $vc->validate($data, $rule);
 ok($result->is_ok);
 ok(!$result->has_invalid);
+
+
+test 'to_array filter';
+$vc = Validator::Custom->new;
+$data = {key1 => 1, key2 => [1, 2]};
+$rule = [
+    key1 => [
+        'to_array'
+    ],
+    key2 => [
+        'to_array'
+    ],
+];
+$result = $vc->validate($data, $rule);
+is_deeply($result->data->{key1}, [1]);
+is_deeply($result->data->{key2}, [1, 2]);

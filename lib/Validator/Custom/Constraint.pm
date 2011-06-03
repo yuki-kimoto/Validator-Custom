@@ -251,6 +251,14 @@ sub shift_array {
 
 sub space { $_[0] =~ '^\s*$' ? 1 : 0 }
 
+sub to_array {
+    my $value = shift;
+    
+    $value = [$value] unless ref $value eq 'ARRAY';
+    
+    return [1, $value];
+}
+
 sub trim {
     my $value = shift;
     $value =~ s/^\s*(.*?)\s*$/$1/ms;

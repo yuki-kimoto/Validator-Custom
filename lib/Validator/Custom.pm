@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1423';
+our $VERSION = '0.1424';
 
 use 5.008001;
 use strict;
@@ -199,6 +199,7 @@ sub new {
         selected_at_least => \&Validator::Custom::Constraint::selected_at_least,
         shift             => \&Validator::Custom::Constraint::shift_array,
         space             => \&Validator::Custom::Constraint::space,
+        to_array          => \&Validator::Custom::Constraint::to_array,
         trim              => \&Validator::Custom::Constraint::trim,
         trim_collapse     => \&Validator::Custom::Constraint::trim_collapse,
         trim_lead         => \&Validator::Custom::Constraint::trim_lead,
@@ -1257,6 +1258,18 @@ Merge the values.
     ];
 
 Shift the head element of array.
+
+=head2 C<to_array>
+
+    my $data = {languages => 'Japanese'};
+    my $rule = [
+        languages => [
+            'to_array' # ['Japanese']
+        ],
+    ];
+    
+Convert non array reference data to array reference.
+This is useful to check checkbox values or select multiple values.
 
 =head2 C<trim>
 
