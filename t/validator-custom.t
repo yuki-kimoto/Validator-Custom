@@ -1383,6 +1383,24 @@ $result = $vc->validate($data, $rule);
 ok($result->has_invalid, "has missing");
 ok(!exists $result->data->{key1}, "invalid : data value and no copy");
 
+$data = {key1 => 'a', key3 => 'b'};
+$rule = [
+    key1 => {default => sub { return $_[0] }} => [
+        'int'
+    ],
+    key2 => {default => sub { return 5 }} => [
+        'int'
+    ],
+    key3 => {default => undef} => [
+        'int'
+    ],
+];
+$vc = Validator::Custom->new;
+$result = $vc->validate($data, $rule);
+is($result->data->{key1}, $vc, "data value");
+is($result->data->{key2}, 5, "data value");
+ok(exists $result->data->{key3} && !defined $result->data->{key3});
+
 test 'copy';
 $data = {key1 => 'a', 'key2' => 'a'};
 $rule = [
@@ -1757,3 +1775,26 @@ $rule = [
 $result = $vc->validate($data, $rule);
 is_deeply($result->data->{key1}, [1]);
 is_deeply($result->data->{key2}, [1, 2]);
+
+
+test 'loose_data';
+$vc = Validator::Custom->new;
+$data = {key1 => 1, key2 => 2};
+$rule = [
+    key1 => [
+        'to_array'
+    ],
+];
+$result = $vc->validate($data, $rule);
+is_deeply($result->loose_data->{key1}, [1]);
+is_deeply($result->loose_data->{key2}, 2);
+
+$vc = Validator::Custom->new;
+$data = {key1 => 'a'};
+$rule = [
+    key1 => {default => 5} => [
+        'int'
+    ]
+];
+$result = $vc->validate($data, $rule);
+is_deeply($result->loose_data->{key1}, 5);

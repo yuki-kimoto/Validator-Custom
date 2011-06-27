@@ -81,6 +81,11 @@ sub is_ok {
     return !$self->has_invalid && !$self->has_missing ? 1 : 0;
 }
 
+sub loose_data {
+    my $self = shift;
+    return {%{$self->raw_data}, %{$self->data}};
+}
+
 sub message {
     my ($self, $name) = @_;
     
@@ -304,6 +309,15 @@ names specified in the rule is found in the data.
     my $title_is_valid = $result->is_valid('title');
 
 Check if one paramter is valid.
+
+=head2 C<loose_data> EXPERIMENTAL
+
+    my $loose_data = $result->loose_data;
+
+Loose data, which is data merged C<raw_data> and C<data>
+
+    # Loose data
+    {%{$self->raw_data}, %{$self->data}}
 
 =head2 C<message>
 

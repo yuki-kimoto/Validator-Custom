@@ -1,6 +1,6 @@
 package Validator::Custom;
 
-our $VERSION = '0.1424';
+our $VERSION = '0.1425';
 
 use 5.008001;
 use strict;
@@ -340,7 +340,9 @@ sub validate {
             }
         }
         if ($found_missing_param) {
-            $result->data->{$result_key} = $opts->{default}
+            $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
+                                         ? $opts->{default}->($self)
+                                         : $opts->{default}
               if exists $opts->{default} && $copy;
             next;
         }
@@ -469,7 +471,9 @@ sub validate {
                   unless exists $result->{_error_infos}->{$result_key};
                 
                 # Set default value
-                $result->data->{$result_key} = $opts->{default}
+                $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
+                                             ? $opts->{default}->($self)
+                                             : $opts->{default}
                   if exists $opts->{default} && $copy;
                 
                 # No Error strock
