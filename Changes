@@ -1,5 +1,6 @@
 0.1426
   - improved undefined value validation
+  - removed EXPERIMETAL status from Validator::Custom::Result::loose_data method
 0.1425
   - added EXPERIMENTAL Validator::Custom::Result loose_data method
   - can set code reference to rule default option to get data at read time.
@@ -14,8 +15,6 @@
 
     EXPERIMENTAL functionality will be changed without warnings.
     ------------------------------------------------------------------------
-
-EXPERIMENTAL functionality will be changed without warnings.
     
 0.1424
   - added to_array filter
@@ -26,238 +25,238 @@ EXPERIMENTAL functionality will be changed without warnings.
   - removed EXPERIMENTAL status from js_fill_form_button, 
   - removed EXPERIMENTAL status from datetime_to_timepiece, date_to_timepiece
 0.1420
-updated pod
+  updated pod
 0.1419
-fixed test
+  fixed test
 0.1418
-fixed test
+  fixed test
 0.1417
-fixed test
+  fixed test
 0.1416
-adeed experimental datetime_to_timepiece constraint
+  adeed experimental datetime_to_timepiece constraint
 0.1415
-added experimental Validator::Custom::Result to_hash method
-added experimental date_to_timepiece constraint
+  added experimental Validator::Custom::Result to_hash method
+  added experimental date_to_timepiece constraint
 0.1414
-fixed merge constraint bug
+  fixed merge constraint bug
 0.1413
-added any constraint
-fixed js_fill_form_button bug
+  added any constraint
+  fixed js_fill_form_button bug
 0.1412
-fixed tests
+  fixed tests
 0.1411
-added experimental js_fill_form_button method
+  added experimental js_fill_form_button method
 0.1410
-fixed negativate constraint bug
-fixed "or" condition constraint function
+  fixed negativate constraint bug
+  fixed "or" condition constraint function
 0.1409
-added space constraint function
+  added space constraint function
 0.1408
-updated document
-(experimental) added merge filter
-deprecated shared_rule attribute
-(experimental)improved "or" condition validation syntax
+  updated document
+  (experimental) added merge filter
+  deprecated shared_rule attribute
+  (experimental)improved "or" condition validation syntax
 0.1407
-fixed document
+  fixed document
 0.1406
-updated document
+  updated document
 0.1405
-updated document
+  updated document
 0.1404
-deprecated calling register_constraint method from class.
-removed the document of deprecated methods
+  deprecated calling register_constraint method from class.
+  removed the document of deprecated methods
 0.1403
-moved documents to Validator::Custom::Guides
+  moved documents to Validator::Custom::Guides
 0.1402
-added is_valid('ARG') syntax
+  added is_valid('ARG') syntax
 0.1401
-fixed duprication result value([$value, $value] to $value])
-renamed Validator::Custom::Result::has_missing_param to has_missing
-renamed Validator::Custom::Reuslt::is_valid to is_ok. is_valid is deprecated
-added experimental has_invalid
-removed experimental default_message
-added experimental message option
-adeed experimantal copy option
-added experimental default option
+  fixed duprication result value([$value, $value] to $value])
+  renamed Validator::Custom::Result::has_missing_param to has_missing
+  renamed Validator::Custom::Reuslt::is_valid to is_ok. is_valid is deprecated
+  added experimental has_invalid
+  removed experimental default_message
+  added experimental message option
+  adeed experimantal copy option
+  added experimental default option
 0.1304
-added experimental "Validate::Custom::Result has_missing_param" method
+  added experimental "Validate::Custom::Result has_missing_param" method
 0.1303
-fix missing_params bugs
-added experimental "default_messages" attributes
-depricated "error_infos", "add_error_info", and "remove_error_info"
+  fix missing_params bugs
+  added experimental "default_messages" attributes
+  depricated "error_infos", "add_error_info", and "remove_error_info"
 0.1302
-added experimental "Validator::Custom::Result missing_params" attribute
+  added experimental "Validator::Custom::Result missing_params" attribute
 0.1301
-added experimental negative syntax
+  added experimental negative syntax
 0.1211
-fixed document
+  fixed document
 0.1210
-required Perl 5.008001, enable Carp trust relationship
+  required Perl 5.008001, enable Carp trust relationship
 0.1209
-fixed Carp trust relationship
+  fixed Carp trust relationship
 0.1208
-added the following constraints
-  trim
-  trim_lead
-  trim_trail
-  trim_collapse
+  added the following constraints
+    trim
+    trim_lead
+    trim_trail
+    trim_collapse
 
 0.1207
-added the following constraints
-  not_defined
-  defined
-  not_space
-  not_blank
-  blank
-  int
-  uint
-  ascii
-  shift
-  duplication
-  length
-  regex
-  http_url
-  selected_at_least
-  greater_than
-  less_than
-  equal_to
-  between
-  decimal
-  in_array
+  added the following constraints
+    not_defined
+    defined
+    not_space
+    not_blank
+    blank
+    int
+    uint
+    ascii
+    shift
+    duplication
+    length
+    regex
+    http_url
+    selected_at_least
+    greater_than
+    less_than
+    equal_to
+    between
+    decimal
+    in_array
 
 0.1206
-updated document
+  updated document
 0.1205
-updated document
+  updated document
 0.1204
-updated document
+  updated document
 0.1203
-updated document
+  updated document
 0.1202
-fixed document
-fixed error message
-added EXPERIMENTAL shared_rule attribute
+  fixed document
+  fixed error message
+  added EXPERIMENTAL shared_rule attribute
 0.1201
-added Validator::Custom::Result message()
-added Validator::Custom::Result messages()
-added Validator::Custom::Result messages_to_hash()
-added Validator::Custom::Result invalid_params()
-added Validator::Custom::Result invalid_rule_keys()
-added Validator::Custom::Result raw_data()
-deprecated Validator::Custom::Result errors()
-deprecated Validator::Custom::Result errors_to_hash()
-deprecated Validator::Custom::Result error()
-deprecated Validator::Custom::Result invalid_keys
+  added Validator::Custom::Result message()
+  added Validator::Custom::Result messages()
+  added Validator::Custom::Result messages_to_hash()
+  added Validator::Custom::Result invalid_params()
+  added Validator::Custom::Result invalid_rule_keys()
+  added Validator::Custom::Result raw_data()
+  deprecated Validator::Custom::Result errors()
+  deprecated Validator::Custom::Result errors_to_hash()
+  deprecated Validator::Custom::Result error()
+  deprecated Validator::Custom::Result invalid_keys
 0.1103
-updated document.
-Validator::Custom became stable. Backword compatible of 0.1103 is keeped in. You can use Validator::Custom at ease.
+  updated document.
+  Validator::Custom became stable. Backword compatible of 0.1103 is keeped in. You can use Validator::Custom at ease.
 0.1102
-removed add_constraint() method(not backword compatible)
+  removed add_constraint() method(not backword compatible)
 0.1101
-constraint function must return array reference, not array(not backword compatible)
-removed Validator::Custom validation_rule attribute(not backword compatibe)
-saved all value of data to Validator::Customm::Result data attribute(not backword compatible)
-Validator::Custom::Result products attribute renamed to data(not backword compatible)
+  constraint function must return array reference, not array(not backword compatible)
+  removed Validator::Custom validation_rule attribute(not backword compatibe)
+  saved all value of data to Validator::Customm::Result data attribute(not backword compatible)
+  Validator::Custom::Result products attribute renamed to data(not backword compatible)
 0.1002
-add_constraint is depricated. it is renamed to register_constraint
+  add_constraint is depricated. it is renamed to register_constraint
 0.1001
-added Validator::Custom::data_filter()
-added Validator::Custom::Result::errors_to_hash()
-improved exception logic
+  added Validator::Custom::data_filter()
+  added Validator::Custom::Result::errors_to_hash()
+  improved exception logic
 0.0902
-update document
+  update document
 0.0901
-Validator::Custom error_infos data structure is changed(array ref to hash ref)
-add or validation
+  Validator::Custom error_infos data structure is changed(array ref to hash ref)
+  add or validation
 0.0802
-fix pod-coverage.t
+  fix pod-coverage.t
 0.0801
-"rule" is added in place of "validaton_rule"
-"validation_rule" is deprecated
+  "rule" is added in place of "validaton_rule"
+  "validation_rule" is deprecated
 updata document
-"error_infos" and "add_error_info" is added to Validation::Custom::Result
+  "error_infos" and "add_error_info" is added to Validation::Custom::Result
 0.0708
-catch up with 'Object::Simple' update
+  catch up with 'Object::Simple' update
 0.0706
-fix error message test
+  fix error message test
 0.0705
-catch up with 'Object::Simple' update
+  catch up with 'Object::Simple' update
 0.0704
-cleanup
+  cleanup
 0.0702
-cleanup
+  cleanup
 0.0701
-add 'error' method
-'is_invalid' method can receive a specified key.
+  add 'error' method
+  'is_invalid' method can receive a specified key.
 0.0608
-update document
-fix corelative key bug
+  update document
+  fix corelative key bug
 0.0607
-improve error message
-add syntax method for seeing validation rule syntax
+  improve error message
+  add syntax method for seeing validation rule syntax
 0.0606
-improve error message
-delete Validator::Custom::Result errors_to method (not backword compatible)
-delete Validator::Custom::Result products_to method (not backword compatible)
-delete Validator::Custom::Result invalid_keys_to method (not backword compatible)
+  improve error message
+  delete Validator::Custom::Result errors_to method (not backword compatible)
+  delete Validator::Custom::Result products_to method (not backword compatible)
+  delete Validator::Custom::Result invalid_keys_to method (not backword compatible)
 0.0605
-catch up Object::Simple version up 2.0702
+  catch up Object::Simple version up 2.0702
 0.0604
-catch up Object::Simple version up 2.0701
+  catch up Object::Simple version up 2.0701
 0.0603
-catch up Object::Simple version up 2.0603
+  catch up Object::Simple version up 2.0603
 0.0602
-catch up Object::Simple version up 2.0602
+  catch up Object::Simple version up 2.0602
 0.0601
-add_constraint method can be used as object method and class method
-constraints method can be used as object mehtod and class mehtod
+  add_constraint method can be used as object method and class method
+  constraints method can be used as object mehtod and class mehtod
 0.0501
-add 'is_valid' method to Validator::Custom::Result
+  add 'is_valid' method to Validator::Custom::Result
 0.0401
-validate method return Validator::Custom::Result object, not $self (not backword compatible)
-resutls method is renamed to products (not backword compatible)
+  validate method return Validator::Custom::Result object, not $self (not backword compatible)
+  resutls method is renamed to products (not backword compatible)
 0.0303
-bag fix: second validation is fail when hash specify as constraint
+  bag fix: second validation is fail when hash specify as constraint
 0.0302
-improve error message
+  improve error message
 0.0301
-rename validators to validation_rule to understand easy (not backword compatible). 
+  rename validators to validation_rule to understand easy (not backword compatible). 
 0.0211
-add output accessor. errors_to, invalid_keys_to, results_to.
+  add output accessor. errors_to, invalid_keys_to, results_to.
 0.0210
-bag fix : validator args is passed as empty array ref when args don't exists
+  bag fix : validator args is passed as empty array ref when args don't exists
 0.0209
-add : syntax sugur
-add : invalid_keys accessors
+  add : syntax sugur
+  add : invalid_keys accessors
 0.0208
-delete : some accessors
+  delete : some accessors
 0.0207 
-add : some accessors
+  add : some accessors
 0.0206
-change: options delete
-change: the way to get result is changed
-add   : add some test
+  change: options delete
+  change: the way to get result is changed
+  add   : add some test
 0.0205
-change : Build.PL requires => { Object::Simple => 2.0018 }
-add : can pass option to constraint function
-add : results attribute
-add : can inheritable customize
-add : error_stock attribute
-add : correlation check
+  change : Build.PL requires => { Object::Simple => 2.0018 }
+  add : can pass option to constraint function
+  add : results attribute
+  add : can inheritable customize
+  add : error_stock attribute
+  add : correlation check
 
 0.0204
-catch up Object::Simple update 2.0003
-change: errors methods dereference
+  catch up Object::Simple update 2.0003
+  change: errors methods dereference
 
 0.0203
-rename add_validator to add_constraint
-rename validators to constraints
-rename $VALIDATORS to $CONSTRINTS
-catch up Object::Simple bag fix
+  rename add_validator to add_constraint
+  rename validators to constraints
+  rename $VALIDATORS to $CONSTRINTS
+  catch up Object::Simple bag fix
 
 0.0202
-bag fix: $validator is spliced
+  bag fix: $validator is spliced
 0.0201
-first release
+  first release
 0.01_01
-first develope release
+  first develope release
