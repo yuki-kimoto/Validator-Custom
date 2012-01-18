@@ -8,7 +8,7 @@ use Carp 'croak';
 # Carp trust relationship
 push @Validator::Custom::CARP_NOT, __PACKAGE__;
 
-sub ascii { $_[0] =~ /^[\x21-\x7E]+$/    ? 1 : 0 }
+sub ascii { defined $_[0] && $_[0] =~ /^[\x21-\x7E]+$/ ? 1 : 0 }
 
 sub between {
     my ($value, $args) = @_;
@@ -17,11 +17,11 @@ sub between {
     croak "Constraint 'between' needs two numeric arguments"
       unless defined($start) && $start =~ /^\d+$/ && defined($end) && $end =~ /^\d+$/;
     
-    return 0 unless $value =~ /^\d+$/;
+    return 0 unless defined $value && $value =~ /^\d+$/;
     return $value >= $start && $value <= $end ? 1 : 0;
 }
 
-sub blank { $_[0] eq '' }
+sub blank { defined $_[0] && $_[0] eq '' }
 
 sub date_to_timepiece {
     my $value = shift;
@@ -33,6 +33,9 @@ sub date_to_timepiece {
         my $year = $value->[0];
         my $mon  = $value->[1];
         my $mday = $value->[2];
+        
+        return [0, undef]
+          unless defined $year && defined $mon && defined $mday;
         
         unless ($year =~ /^\d{1,4}$/ && $mon =~ /^\d{1,2}$/
          && $mday =~ /^\d{1,2}$/) 
@@ -53,7 +56,7 @@ sub date_to_timepiece {
         return $@ ? [0, undef] : [1, $tp];
     }
     else {
-        $value ||= '';
+        $value = '' unless defined $value;
         $value =~ s/[^\d]//g;
         
         return [0, undef] unless $value =~ /^\d{8}$/;
@@ -76,12 +79,16 @@ sub datetime_to_timepiece {
     
     # To Time::Piece object
     if (ref $value eq 'ARRAY') {
-        my $year = $value->[0] || '';
-        my $mon  = $value->[1] || '';
-        my $mday = $value->[2] || '';
-        my $hour = $value->[3] || '';
-        my $min  = $value->[4] || '';
-        my $sec  = $value->[5] || '';
+        my $year = $value->[0];
+        my $mon  = $value->[1];
+        my $mday = $value->[2];
+        my $hour = $value->[3];
+        my $min  = $value->[4];
+        my $sec  = $value->[5];
+
+        return [0, undef]
+          unless defined $year && defined $mon && defined $mday
+              && defined $hour && defined $min && defined $sec;
         
         unless ($year =~ /^\d{1,4}$/ && $mon =~ /^\d{1,2}$/
          && $mday =~ /^\d{1,2}$/ && $hour =~ /^\d{1,2}$/
@@ -104,7 +111,7 @@ sub datetime_to_timepiece {
         return $@ ? [0, undef] : [1, $tp];
     }
     else {
-        $value ||= '';
+        $value = '' unless defined $value;
         $value =~ s/[^\d]//g;
         
         return [0, undef] unless $value =~ /^\d{14}$/;
@@ -133,7 +140,7 @@ sub decimal {
     croak "Constraint 'decimal' needs one or two numeric arguments"
       unless $digits->[0] =~ /^\d+$/ && $digits->[1] =~ /^\d+$/;
     
-    return 0 unless $value =~ /^\d+(\.\d+)?$/;
+    return 0 unless defined $value && $value =~ /^\d+(\.\d+)?$/;
     my $reg = qr/^\d{1,$digits->[0]}(\.\d{0,$digits->[1]})?$/;
     return $value =~ /$reg/ ? 1 : 0;
 }
@@ -141,9 +148,7 @@ sub decimal {
 sub duplication {
     my $values = shift;
     
-    croak "Constraint 'duplication' needs two keys of data"
-      unless defined $values->[0] && defined $values->[1];
-    
+    return 0 unless defined $values->[0] && defined $values->[1];
     return $values->[0] eq $values->[1] ? [1, $values->[0]] : 0;
 }
 
@@ -153,7 +158,7 @@ sub equal_to {
     croak "Constraint 'equal_to' needs a numeric argument"
       unless defined $target && $target =~ /^\d+$/;
     
-    return 0 unless $value =~ /^\d+$/;
+    return 0 unless defined $value && $value =~ /^\d+$/;
     return $value == $target ? 1 : 0;
 }
 
@@ -163,12 +168,12 @@ sub greater_than {
     croak "Constraint 'greater_than' needs a numeric argument"
       unless defined $target && $target =~ /^\d+$/;
     
-    return 0 unless $value =~ /^\d+$/;
+    return 0 unless defined $value && $value =~ /^\d+$/;
     return $value > $target ? 1 : 0;
 }
 
 sub http_url {
-    return $_[0] =~ /^s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/ ? 1 : 0;
+    return defined $_[0] && $_[0] =~ /^s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/ ? 1 : 0;
 }
 
 sub int { $_[0] =~ /^\-?[\d]+$/ ? 1 : 0 }

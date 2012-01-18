@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use lib 't/validator-custom';
 
+$SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ /DEPRECATED!/ };
 sub test {print "# $_[0]\n"}
 
 my $value;
@@ -948,32 +949,6 @@ foreach my $info (@infos) {
 # exception
 my @exception_infos = (
     [
-        'duplication value1 undefined',
-        {
-            k1_1 => undef,
-            k1_2 => 'a',
-        },
-        [
-            [qw/k1_1 k1_2/] => [
-                ['duplication']
-            ],
-        ],
-        qr/\QConstraint 'duplication' needs two keys of data/
-    ],
-    [
-        'duplication value2 undefined',
-        {
-            k2_1 => 'a',
-            k2_2 => undef,
-        },
-        [
-            [qw/k2_1 k2_2/] => [
-                ['duplication']
-            ]
-        ],
-        qr/\QConstraint 'duplication' needs two keys of data/
-    ],
-    [
         'length need parameter',
         {
             k1 => 'a',
@@ -1202,11 +1177,11 @@ test 'trim';
 }
 
 test 'Carp trust relationship';
-$data = {a => undef, b => undef};
+$data = {a => undef};
 $vc = Validator::Custom->new;
 $rule = [
-    {pass => [qw/a b/]} => [
-        'duplication'
+    a => [
+        'decimal'
     ]
 ];
 eval{$vc->validate($data, $rule)};
@@ -1798,3 +1773,145 @@ $rule = [
 ];
 $result = $vc->validate($data, $rule);
 is_deeply($result->loose_data->{key1}, 5);
+
+test 'undefined value';
+$vc = Validator::Custom->new;
+$data = {key1 => undef, key2 => '', key3 => 'a'};
+$rule = [
+    key1 => [
+        'ascii'
+    ],
+    key2 => [
+        'ascii'
+    ],
+    key3 => [
+        'ascii'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => '2'};
+$rule = [
+    key1 => [
+        {between => [1, 3]}
+    ],
+    key2 => [
+        {between => [1, 3]}
+    ],
+    key3 => [
+        {between => [1, 3]}
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => ''};
+$rule = [
+    key1 => [
+        'blank'
+    ],
+    key2 => [
+        'blank'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok($result->is_valid('key2'));
+
+$data = {key1 => undef, key2 => '', key3 => '2.1'};
+$rule = [
+    key1 => [
+        {decimal => 1}
+    ],
+    key2 => [
+        {decimal => 1}
+    ],
+    key3 => [
+        {decimal => [1, 1]}
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => 'a', key2 => 'a', key3 => '', key4 => '', key5 => undef, key6 => undef};
+$rule = [
+    {'key1-2' => ['key1', 'key2']} => [
+        'duplication'
+    ],
+    {'key3-4' => ['key3', 'key4']} => [
+        'duplication'
+    ],
+    {'key1-5' => ['key1', 'key5']} => [
+        'duplication'
+    ],
+    {'key5-1' => ['key5', 'key1']} => [
+        'duplication'
+    ],
+    {'key5-6' => ['key5', 'key6']} => [
+        'duplication'
+    ],
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_valid('key1-2'));
+ok($result->is_valid('key3-4'));
+ok(!$result->is_valid('key1-5'));
+ok(!$result->is_valid('key5-1'));
+ok(!$result->is_valid('key5-6'));
+
+$data = {key1 => undef, key2 => '', key3 => '1'};
+$rule = [
+    key1 => [
+        {equal_to => 1}
+    ],
+    key2 => [
+        {equal_to => 1}
+    ],
+    key3 => [
+        {equal_to => 1}
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => '5'};
+$rule = [
+    key1 => [
+        {greater_than => 1}
+    ],
+    key2 => [
+        {greater_than => 1}
+    ],
+    key3 => [
+        {greater_than => 1}
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => 'http://aaa.com'};
+$rule = [
+    key1 => [
+        'http_url'
+    ],
+    key2 => [
+        'http_url'
+    ],
+    key3 => [
+        'http_url'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));

@@ -1,6 +1,22 @@
+0.1426
+    - improved undefined value validation
 0.1425
     - added EXPERIMENTAL Validator::Custom::Result loose_data method
     - can set code reference to rule default option to get data at read time.
+    - changed backword compatible policy
+      ------------------------------------------------------------------------
+      If a functionality is DEPRECATED, you can know it by DEPRECATED warnings
+      except for attribute method.
+      You can check all DEPRECATED functionalities by document.
+      DEPRECATED functionality is removed after five years,
+      but if at least one person use the functionality and tell me that thing
+      I extend one year each time you tell me it.
+
+      EXPERIMENTAL functionality will be changed without warnings.
+      ------------------------------------------------------------------------
+
+EXPERIMENTAL functionality will be changed without warnings.
+      
 0.1424
     - added to_array filter
 0.1422

@@ -269,3 +269,66 @@ $rule = [
 $result = $vc->validate($data, $rule);
 ok(!$result->is_ok);
 
+test 'undefined value validation';
+$data = {key1 => '2011', key2 => '10', key3 => '14', key4 => undef};
+$rule = [
+    {date1 => [qw/key1 key2 key3/]} => [
+        'date_to_timepiece'
+    ],
+    {date2 => [qw/key1 key2 key4/]} => [
+        'date_to_timepiece'
+    ],
+    {date3 => [qw/key1 key4 key3/]} => [
+        'date_to_timepiece'
+    ],
+    {date4 => [qw/key4 key2 key3/]} => [
+        'date_to_timepiece'
+    ],
+    'key4' => [
+        'date_to_timepiece'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_valid('date1'));
+ok(!$result->is_valid('date2'));
+ok(!$result->is_valid('date3'));
+ok(!$result->is_valid('date4'));
+ok(!$result->is_valid('key4'));
+
+$data = {key1 => '2011', key2 => '10', key3 => '14', key4 => '10',
+  key5 => '10', key6 => '10', key7 => undef};
+$rule = [
+    {date1 => [qw/key1 key2 key3 key4 key5 key6/]} => [
+        'datetime_to_timepiece'
+    ],
+    {date2 => [qw/key1 key2 key3 key4 key5 key7/]} => [
+        'datetime_to_timepiece'
+    ],
+    {date3 => [qw/key1 key2 key3 key4 key7 key6/]} => [
+        'datetime_to_timepiece'
+    ],
+    {date4 => [qw/key1 key2 key3 key7 key5 key6/]} => [
+        'datetime_to_timepiece'
+    ],
+    {date5 => [qw/key1 key2 key7 key4 key5 key6/]} => [
+        'datetime_to_timepiece'
+    ],
+    {date6 => [qw/key1 key7 key3 key4 key5 key6/]} => [
+        'datetime_to_timepiece'
+    ],
+    {date7 => [qw/key7 key2 key3 key4 key5 key6/]} => [
+        'datetime_to_timepiece'
+    ],
+    'key7' => [
+        'datetime_to_timepiece'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_valid('date1'));
+ok(!$result->is_valid('date2'));
+ok(!$result->is_valid('date3'));
+ok(!$result->is_valid('date4'));
+ok(!$result->is_valid('date5'));
+ok(!$result->is_valid('date6'));
+ok(!$result->is_valid('date7'));
+ok(!$result->is_valid('key7'));
