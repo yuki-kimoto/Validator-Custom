@@ -1915,3 +1915,156 @@ $result = $vc->validate($data, $rule);
 ok(!$result->is_valid('key1'));
 ok(!$result->is_valid('key2'));
 ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => '1'};
+$rule = [
+    key1 => [
+        'int'
+    ],
+    key2 => [
+        'int'
+    ],
+    key3 => [
+        'int'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => '1'};
+$rule = [
+    key1 => [
+        {'in_array' => [1, 2]}
+    ],
+    key2 => [
+        {'in_array' => [1, 2]}
+    ],
+    key3 => [
+        {'in_array' => [1, 2]}
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => 'aaa'};
+$rule = [
+    key1 => [
+        {'length' => [1, 4]}
+    ],
+    key2 => [
+        {'length' => [1, 4]}
+    ],
+    key3 => [
+        {'length' => [1, 4]}
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => 3};
+$rule = [
+    key1 => [
+        {'less_than' => 4}
+    ],
+    key2 => [
+        {'less_than' => 4}
+    ],
+    key3 => [
+        {'less_than' => 4}
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => 3};
+$rule = [
+    key1 => [
+        'not_blank'
+    ],
+    key2 => [
+        'not_blank'
+    ],
+    key3 => [
+        'not_blank'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => 3};
+$rule = [
+    key1 => [
+        'not_space'
+    ],
+    key2 => [
+        'not_space'
+    ],
+    key3 => [
+        'not_space'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => 3};
+$rule = [
+    key1 => [
+        'uint'
+    ],
+    key2 => [
+        'uint'
+    ],
+    key3 => [
+        'uint'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => 3};
+$rule = [
+    key1 => [
+        {'regex' => qr/3/}
+    ],
+    key2 => [
+        {'regex' => qr/3/}
+    ],
+    key3 => [
+        {'regex' => qr/3/}
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+ok($result->is_valid('key3'));
+
+$data = {key1 => undef, key2 => '', key3 => ' '};
+$rule = [
+    key1 => [
+        'space'
+    ],
+    key2 => [
+        'space'
+    ],
+    key3 => [
+        'space'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok($result->is_valid('key2'));
+ok($result->is_valid('key3'));

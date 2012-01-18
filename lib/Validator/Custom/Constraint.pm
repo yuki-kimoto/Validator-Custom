@@ -176,7 +176,7 @@ sub http_url {
     return defined $_[0] && $_[0] =~ /^s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/ ? 1 : 0;
 }
 
-sub int { $_[0] =~ /^\-?[\d]+$/ ? 1 : 0 }
+sub int { defined $_[0] && $_[0] =~ /^\-?[\d]+$/ ? 1 : 0 }
 
 sub in_array {
     my ($value, $args) = @_;
@@ -188,6 +188,7 @@ sub in_array {
 sub length {
     my ($value, $args) = @_;
     
+    return unless defined $value;
     
     my $min;
     my $max;
@@ -215,7 +216,7 @@ sub less_than {
     croak "Constraint 'less_than' needs a numeric argument"
       unless defined $target && $target =~ /^\d+$/;
     
-    return 0 unless $value =~ /^\d+$/;
+    return 0 unless defined $value && $value =~ /^\d+$/;
     return $value < $target ? 1 : 0;
 }
 
@@ -227,15 +228,15 @@ sub merge {
     return [1, join('', @$values)];
 }
 
-sub not_blank   { $_[0] ne '' }
+sub not_blank   { defined $_[0] && $_[0] ne '' }
 sub not_defined { !defined $_[0] }
-sub not_space   { $_[0] !~ '^\s*$' ? 1 : 0 }
+sub not_space   { defined $_[0] && $_[0] !~ '^\s*$' ? 1 : 0 }
 
-sub uint { $_[0] =~ /^\d+$/ ? 1 : 0 }
+sub uint { defined $_[0] && $_[0] =~ /^\d+$/ ? 1 : 0 }
 
 sub regex {
     my ($value, $regex) = @_;
-    $value =~ /$regex/ ? 1 : 0;
+    defined $value && $value =~ /$regex/ ? 1 : 0;
 }
 
 sub selected_at_least {
@@ -254,7 +255,7 @@ sub shift_array {
     return [1, shift @$values];
 }
 
-sub space { $_[0] =~ '^\s*$' ? 1 : 0 }
+sub space { defined $_[0] && $_[0] =~ '^\s*$' ? 1 : 0 }
 
 sub to_array {
     my $value = shift;

@@ -1250,6 +1250,7 @@ Note that L<Time::Piece> is required.
     ];
 
 Merge the values.
+Note that if one value is not defined, merged value become undefined.
 
 =head2 C<shift>
 
