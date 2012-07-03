@@ -1344,7 +1344,7 @@ $rule = [
 ];
 $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
-ok($result->has_invalid, "has missing");
+ok($result->has_invalid);
 is($result->data->{key1}, 2, "invalid : data value");
 
 $data = {key1 => 'a'};
@@ -1355,7 +1355,7 @@ $rule = [
 ];
 $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
-ok($result->has_invalid, "has missing");
+ok($result->has_invalid);
 ok(!exists $result->data->{key1}, "invalid : data value and no copy");
 
 $data = {key1 => 'a', key3 => 'b'};
@@ -1679,10 +1679,10 @@ $rule = [
     key3 => {message => 'b'} => [
         'int'
     ],
-    key4 => [
+    key4 => {message => 'key4 must be int'} => [
         'int'
     ],
-    key5 => [
+    key5 => {message => 'key5 must be int'} => [
         'int'
     ],
 ];
@@ -1697,7 +1697,7 @@ is_deeply($result->to_hash, {
     ok => 0, invalid => 1,
     missing => 1,
     missing_params => ['key4', 'key5'],
-    messages => {key2 => 'a', key3 => 'b'}
+    messages => {key2 => 'a', key3 => 'b', key4 => 'key4 must be int', key5 => 'key5 must be int'}
 });
 
 test 'not_required';
@@ -1734,7 +1734,6 @@ $rule = [
 $result = $vc->validate($data, $rule);
 ok($result->is_ok);
 ok(!$result->has_invalid);
-
 
 test 'to_array filter';
 $vc = Validator::Custom->new;
@@ -2068,3 +2067,14 @@ $result = $vc->validate($data, $rule);
 ok(!$result->is_valid('key1'));
 ok($result->is_valid('key2'));
 ok($result->is_valid('key3'));
+
+$data = {key2 => 2};
+$rule = [
+    key1 => {message => 'key1 is undefined'} => [
+        'defined'
+    ]
+];
+$result = $vc->validate($data, $rule);
+is_deeply($result->missing_params, ['key1']);
+is_deeply($result->messages, ['key1 is undefined']);
+ok(!$result->is_valid('key1'));

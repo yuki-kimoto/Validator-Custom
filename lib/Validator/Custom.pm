@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '0.1426';
+our $VERSION = '0.1427';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
@@ -329,7 +329,7 @@ sub validate {
       $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
           ? $opts->{default}->($self) : $opts->{default}
         if exists $opts->{default} && $copy;
-      next;
+      next if $opts->{default} || !$require;
     }
     
     # Already valid
