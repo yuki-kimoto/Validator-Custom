@@ -1,3 +1,8 @@
+0.1428
+  - fixed bug that number related constraint match unicode number by \d.
+    From now, only 0-9 is matched.
+  - fixed bug that between constraint can't receive decimal number.
+  
 0.1427
   - fixed bug that missing parameter had not send to constraint function.
 0.1426

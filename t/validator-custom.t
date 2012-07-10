@@ -2078,3 +2078,30 @@ $result = $vc->validate($data, $rule);
 is_deeply($result->missing_params, ['key1']);
 is_deeply($result->messages, ['key1 is undefined']);
 ok(!$result->is_valid('key1'));
+
+# between 0-9
+$data = {key1 => 0, key2 => 9};
+$rule = [
+    key1 => [
+        {between => [0, 9]}
+    ],
+    key2 => [
+        {between => [0, 9]}
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_ok);
+
+# between decimal
+$data = {key1 => '-1.5', key2 => '+1.5'};
+$rule = [
+    key1 => [
+        {between => [-2.5, 1.9]}
+    ],
+    key2 => [
+        {between => ['-2.5', '+1.9']}
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_ok);
+

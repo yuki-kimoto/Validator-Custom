@@ -8,16 +8,19 @@ use Carp 'croak';
 # Carp trust relationship
 push @Validator::Custom::CARP_NOT, __PACKAGE__;
 
+my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
+
 sub ascii { defined $_[0] && $_[0] =~ /^[\x21-\x7E]+$/ ? 1 : 0 }
 
 sub between {
   my ($value, $args) = @_;
   my ($start, $end) = @$args;
-  
+
+    
   croak "Constraint 'between' needs two numeric arguments"
-    unless defined($start) && $start =~ /^\d+$/ && defined($end) && $end =~ /^\d+$/;
+    unless defined($start) && $start =~ /$NUM_RE/ && defined($end) && $end =~ /$NUM_RE/;
   
-  return 0 unless defined $value && $value =~ /^\d+$/;
+  return 0 unless defined $value && $value =~ /$NUM_RE/;
   return $value >= $start && $value <= $end ? 1 : 0;
 }
 
@@ -37,8 +40,8 @@ sub date_to_timepiece {
     return [0, undef]
       unless defined $year && defined $mon && defined $mday;
     
-    unless ($year =~ /^\d{1,4}$/ && $mon =~ /^\d{1,2}$/
-     && $mday =~ /^\d{1,2}$/) 
+    unless ($year =~ /^[0-9]{1,4}$/ && $mon =~ /^[0-9]{1,2}$/
+     && $mday =~ /^[0-9]{1,2}$/) 
     {
       return [0, undef];
     } 
@@ -55,9 +58,9 @@ sub date_to_timepiece {
   }
   else {
     $value = '' unless defined $value;
-    $value =~ s/[^\d]//g;
+    $value =~ s/[^0-9]//g;
     
-    return [0, undef] unless $value =~ /^\d{8}$/;
+    return [0, undef] unless $value =~ /^[0-9]{8}$/;
     
     my $tp;
     eval {
@@ -86,9 +89,9 @@ sub datetime_to_timepiece {
       unless defined $year && defined $mon && defined $mday
         && defined $hour && defined $min && defined $sec;
     
-    unless ($year =~ /^\d{1,4}$/ && $mon =~ /^\d{1,2}$/
-      && $mday =~ /^\d{1,2}$/ && $hour =~ /^\d{1,2}$/
-      && $min =~ /^\d{1,2}$/ && $sec =~ /^\d{1,2}$/) 
+    unless ($year =~ /^[0-9]{1,4}$/ && $mon =~ /^[0-9]{1,2}$/
+      && $mday =~ /^[0-9]{1,2}$/ && $hour =~ /^[0-9]{1,2}$/
+      && $min =~ /^[0-9]{1,2}$/ && $sec =~ /^[0-9]{1,2}$/) 
     {
       return [0, undef];
     } 
@@ -105,9 +108,9 @@ sub datetime_to_timepiece {
   }
   else {
     $value = '' unless defined $value;
-    $value =~ s/[^\d]//g;
+    $value =~ s/[^0-9]//g;
     
-    return [0, undef] unless $value =~ /^\d{14}$/;
+    return [0, undef] unless $value =~ /^[0-9]{14}$/;
     
     my $tp;
     eval {
@@ -129,10 +132,10 @@ sub decimal {
   $digits->[1] ||= 0;
   
   croak "Constraint 'decimal' needs one or two numeric arguments"
-    unless $digits->[0] =~ /^\d+$/ && $digits->[1] =~ /^\d+$/;
+    unless $digits->[0] =~ /^[0-9]+$/ && $digits->[1] =~ /^[0-9]+$/;
   
-  return 0 unless defined $value && $value =~ /^\d+(\.\d+)?$/;
-  my $reg = qr/^\d{1,$digits->[0]}(\.\d{0,$digits->[1]})?$/;
+  return 0 unless defined $value && $value =~ /^[0-9]+(\.[0-9]+)?$/;
+  my $reg = qr/^[0-9]{1,$digits->[0]}(\.[0-9]{0,$digits->[1]})?$/;
   return $value =~ /$reg/ ? 1 : 0;
 }
 
@@ -147,9 +150,9 @@ sub equal_to {
   my ($value, $target) = @_;
   
   croak "Constraint 'equal_to' needs a numeric argument"
-    unless defined $target && $target =~ /^\d+$/;
+    unless defined $target && $target =~ /^[0-9]+$/;
   
-  return 0 unless defined $value && $value =~ /^\d+$/;
+  return 0 unless defined $value && $value =~ /^[0-9]+$/;
   return $value == $target ? 1 : 0;
 }
 
@@ -157,9 +160,9 @@ sub greater_than {
   my ($value, $target) = @_;
   
   croak "Constraint 'greater_than' needs a numeric argument"
-    unless defined $target && $target =~ /^\d+$/;
+    unless defined $target && $target =~ /^[0-9]+$/;
   
-  return 0 unless defined $value && $value =~ /^\d+$/;
+  return 0 unless defined $value && $value =~ /^[0-9]+$/;
   return $value > $target ? 1 : 0;
 }
 
@@ -167,7 +170,7 @@ sub http_url {
   return defined $_[0] && $_[0] =~ /^s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/ ? 1 : 0;
 }
 
-sub int { defined $_[0] && $_[0] =~ /^\-?[\d]+$/ ? 1 : 0 }
+sub int { defined $_[0] && $_[0] =~ /^\-?[0-9]+$/ ? 1 : 0 }
 
 sub in_array {
   my ($value, $args) = @_;
@@ -200,9 +203,9 @@ sub less_than {
   my ($value, $target) = @_;
   
   croak "Constraint 'less_than' needs a numeric argument"
-    unless defined $target && $target =~ /^\d+$/;
+    unless defined $target && $target =~ /^[0-9]+$/;
   
-  return 0 unless defined $value && $value =~ /^\d+$/;
+  return 0 unless defined $value && $value =~ /^[0-9]+$/;
   return $value < $target ? 1 : 0;
 }
 
@@ -218,7 +221,7 @@ sub not_blank   { defined $_[0] && $_[0] ne '' }
 sub not_defined { !defined $_[0] }
 sub not_space   { defined $_[0] && $_[0] !~ '^\s*$' ? 1 : 0 }
 
-sub uint { defined $_[0] && $_[0] =~ /^\d+$/ ? 1 : 0 }
+sub uint { defined $_[0] && $_[0] =~ /^[0-9]+$/ ? 1 : 0 }
 
 sub regex {
   my ($value, $regex) = @_;
