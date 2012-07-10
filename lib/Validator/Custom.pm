@@ -1123,7 +1123,7 @@ White space or empty stirng.
     ]
   ];
 
-Unsigned integer.
+Unsigned integer(contain zero).
   
 =head2 C<regex>
 

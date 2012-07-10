@@ -20,4 +20,4 @@ no_index:
 requires:
   Object::Simple: 3.0621
   Test::More: 0
-version: 0.1426
+version: 0.1427
