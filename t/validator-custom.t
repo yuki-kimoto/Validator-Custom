@@ -3,6 +3,7 @@ use Test::More 'no_plan';
 use strict;
 use warnings;
 use lib 't/validator-custom';
+use utf8;
 
 $SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ /DEPRECATED!/ };
 sub test {print "# $_[0]\n"}
@@ -2093,15 +2094,132 @@ $result = $vc->validate($data, $rule);
 ok($result->is_ok);
 
 # between decimal
-$data = {key1 => '-1.5', key2 => '+1.5'};
+$data = {key1 => '-1.5', key2 => '+1.5', key3 => 3.5};
 $rule = [
     key1 => [
         {between => [-2.5, 1.9]}
     ],
     key2 => [
         {between => ['-2.5', '+1.9']}
+    ],
+    key3 => [
+        {between => ['-2.5', '+1.9']}
     ]
 ];
 $result = $vc->validate($data, $rule);
-ok($result->is_ok);
+ok($result->is_valid('key1'));
+ok($result->is_valid('key2'));
+ok(!$result->is_valid('key3'));
 
+# equal_to decimal
+$data = {key1 => '+0.9'};
+$rule = [
+    key1 => [
+        {equal_to => '0.9'}
+    ]
+];
+$result = $vc->validate($data, $rule);
+
+# greater_than decimal
+$data = {key1 => '+10.9'};
+$rule = [
+    key1 => [
+        {greater_than => '9.1'}
+    ]
+];
+$result = $vc->validate($data, $rule);
+
+# int unicode
+$data = {key1 => 0, key2 => 9, key3 => '２'};
+$rule = [
+    key1 => [
+        'int'
+    ],
+    key2 => [
+        'int'
+    ],
+    key3 => [
+        'int'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_valid('key1'));
+ok($result->is_valid('key2'));
+ok(!$result->is_valid('key3'));
+
+# less_than decimal
+$data = {key1 => '+0.9'};
+$rule = [
+    key1 => [
+        {less_than => '10.1'}
+    ]
+];
+$result = $vc->validate($data, $rule);
+
+# uint unicode
+$data = {key1 => 0, key2 => 9, key3 => '２'};
+$rule = [
+    key1 => [
+        'uint'
+    ],
+    key2 => [
+        'uint'
+    ],
+    key3 => [
+        'uint'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_valid('key1'));
+ok($result->is_valid('key2'));
+ok(!$result->is_valid('key3'));
+
+# space unicode
+$data = {key1 => ' ', key2 => '　'};
+$rule = [
+    key1 => [
+        'space'
+    ],
+    key2 => [
+        'space'
+    ],
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_valid('key1'));
+ok(!$result->is_valid('key2'));
+
+# not_space unicode
+$data = {key1 => ' ', key2 => '　'};
+$rule = [
+  key1 => [
+      'not_space'
+  ],
+  key2 => [
+      'not_space'
+  ],
+];
+$result = $vc->validate($data, $rule);
+ok(!$result->is_valid('key1'));
+ok($result->is_valid('key2'));
+
+# not_space unicode
+$data = {key1 => '　', key2 => '　', key3 => '　', key4 => '　'};
+$rule = [
+  key1 => [
+    'trim'
+  ],
+  key2 => [
+    'trim_lead'
+  ],
+  key3 => [
+    'trim_collapse'
+  ],
+  key4 => [
+    'trim_trail'
+  ]
+];
+$result = $vc->validate($data, $rule);
+is($result->data->{key1}, '　');
+is($result->data->{key2}, '　');
+is($result->data->{key3}, '　');
+is($result->data->{key4}, '　');

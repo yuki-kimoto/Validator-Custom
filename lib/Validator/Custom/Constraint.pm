@@ -150,9 +150,9 @@ sub equal_to {
   my ($value, $target) = @_;
   
   croak "Constraint 'equal_to' needs a numeric argument"
-    unless defined $target && $target =~ /^[0-9]+$/;
+    unless defined $target && $target =~ /$NUM_RE/;
   
-  return 0 unless defined $value && $value =~ /^[0-9]+$/;
+  return 0 unless defined $value && $value =~ /$NUM_RE/;
   return $value == $target ? 1 : 0;
 }
 
@@ -160,9 +160,9 @@ sub greater_than {
   my ($value, $target) = @_;
   
   croak "Constraint 'greater_than' needs a numeric argument"
-    unless defined $target && $target =~ /^[0-9]+$/;
+    unless defined $target && $target =~ /$NUM_RE/;
   
-  return 0 unless defined $value && $value =~ /^[0-9]+$/;
+  return 0 unless defined $value && $value =~ /$NUM_RE/;
   return $value > $target ? 1 : 0;
 }
 
@@ -203,9 +203,9 @@ sub less_than {
   my ($value, $target) = @_;
   
   croak "Constraint 'less_than' needs a numeric argument"
-    unless defined $target && $target =~ /^[0-9]+$/;
+    unless defined $target && $target =~ /$NUM_RE/;
   
-  return 0 unless defined $value && $value =~ /^[0-9]+$/;
+  return 0 unless defined $value && $value =~ /$NUM_RE/;
   return $value < $target ? 1 : 0;
 }
 
@@ -219,7 +219,7 @@ sub merge {
 
 sub not_blank   { defined $_[0] && $_[0] ne '' }
 sub not_defined { !defined $_[0] }
-sub not_space   { defined $_[0] && $_[0] !~ '^\s*$' ? 1 : 0 }
+sub not_space   { defined $_[0] && $_[0] !~ '^[ \t\n\r\f]*$' ? 1 : 0 }
 
 sub uint { defined $_[0] && $_[0] =~ /^[0-9]+$/ ? 1 : 0 }
 
@@ -244,7 +244,7 @@ sub shift_array {
   return [1, shift @$values];
 }
 
-sub space { defined $_[0] && $_[0] =~ '^\s*$' ? 1 : 0 }
+sub space { defined $_[0] && $_[0] =~ '^[ \t\n\r\f]*$' ? 1 : 0 }
 
 sub to_array {
   my $value = shift;
@@ -256,28 +256,28 @@ sub to_array {
 
 sub trim {
   my $value = shift;
-  $value =~ s/^\s*(.*?)\s*$/$1/ms;
+  $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
   return [1, $value];
 }
 
 sub trim_collapse {
   my $value = shift;
   if (defined $value) {
-    $value =~ s/\s+/ /g;
-    $value =~ s/^\s*(.*?)\s*$/$1/ms;
+    $value =~ s/[ \t\n\r\f]+/ /g;
+    $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
   }
   return [1, $value];
 }
 
 sub trim_lead {
   my $value = shift;
-  $value =~ s/^\s+(.*)$/$1/ms;
+  $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms;
   return [1, $value];
 }
 
-sub trim_trail{
+sub trim_trail {
   my $value = shift;
-  $value =~ s/^(.*?)\s+$/$1/ms;
+  $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms;
   return [1, $value];
 }
 

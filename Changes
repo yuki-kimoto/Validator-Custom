@@ -1,8 +1,15 @@
 0.1428
   - fixed bug that number related constraint match unicode number by \d.
     From now, only 0-9 is matched.
+    the following constraint functions is effected.
+      between, date_to_timepiece, datetime_to_timepiece, equal_tom,
+      greater_than, less_than, int, uint
   - fixed bug that between constraint can't receive decimal number.
-  
+  - fixed bug that equal_to constraint can't receive decimal number.
+  - fixed bug that greater_than constraint can't receive decimal number.
+  - fixed bug that less_than constraint can't receive decimal number.
+  - fixed but that not_space, space match unicode space character.
+  - fixed bug that trim, trim_collapse, trim_lead, trim_trail remove unicode space character.
 0.1427
   - fixed bug that missing parameter had not send to constraint function.
 0.1426

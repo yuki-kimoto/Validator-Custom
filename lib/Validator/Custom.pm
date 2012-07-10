@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '0.1427';
+our $VERSION = '0.1428';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
@@ -1058,6 +1058,8 @@ Check if the values is in array.
   ];
 
 Length of the value.
+Not that if value is internal string, length is character length.
+if value is byte string, length is byte length.
 
 =head2 C<less_than>
 
@@ -1102,6 +1104,8 @@ Not defined.
   ];
 
 Not contain only space characters. 
+Not that space is only C<[ \t\n\r\f]>
+which don't contain unicode space character.
 
 =head2 C<space>
 
@@ -1113,6 +1117,8 @@ Not contain only space characters.
   ];
 
 White space or empty stirng.
+Not that space is only C<[ \t\n\r\f]>
+which don't contain unicode space character.
 
 =head2 C<uint>
 
@@ -1256,6 +1262,8 @@ This is useful to check checkbox values or select multiple values.
   ];
 
 Trim leading and trailing white space.
+Not that trim only C<[ \t\n\r\f]>
+which don't contain unicode space character.
 
 =head2 C<trim_collapse>
 
@@ -1268,6 +1276,8 @@ Trim leading and trailing white space.
 
 Trim leading and trailing white space,
 and collapse all whitespace characters into a single space.
+Not that trim only C<[ \t\n\r\f]>
+which don't contain unicode space character.
 
 =head2 C<trim_lead>
 
@@ -1279,6 +1289,8 @@ and collapse all whitespace characters into a single space.
   ];
 
 Trim leading white space.
+Not that trim only C<[ \t\n\r\f]>
+which don't contain unicode space character.
 
 =head2 C<trim_trail>
 
@@ -1290,6 +1302,8 @@ Trim leading white space.
   ];
 
 Trim trailing white space.
+Not that trim only C<[ \t\n\r\f]>
+which don't contain unicode space character.
 
 =head1 DEPRECATED FUNCTIONALITIES
 

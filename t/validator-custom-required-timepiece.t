@@ -332,3 +332,57 @@ ok(!$result->is_valid('date5'));
 ok(!$result->is_valid('date6'));
 ok(!$result->is_valid('date7'));
 ok(!$result->is_valid('key7'));
+
+# date_to_timepiece 0-9
+$data = {key1 => '2019１1212', key2_y => 2010, key2_m => 10, key2_d => 10};
+$rule = [
+    key1 => [
+        'date_to_timepiece'
+    ],
+    {key2 => [qw/key2_y key2_m key2_d/]} => [
+        'date_to_timepiece'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_ok);
+
+# date_to_timepiece 0-9
+$data = {key1 => '2019１1212', key2_y => 2009, key2_m => 9, key2_d => 9};
+$rule = [
+    key1 => [
+        'date_to_timepiece'
+    ],
+    {key2 => [qw/key2_y key2_m key2_d/]} => [
+        'date_to_timepiece'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_ok);
+
+# datetime_to_timepiece 0-9
+$data = {key1 => '2010１1212101019', key2_Y => 2010, key2_m => 10, key2_d => 10,
+  key2_H => 10, key2_M => 10, key2_S => 10};
+$rule = [
+    key1 => [
+        'datetime_to_timepiece'
+    ],
+    {key2 => [qw/key2_Y key2_m key2_d key2_H key2_M key2_S/]} => [
+        'datetime_to_timepiece'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_ok);
+
+# datetime_to_timepiece 0-9
+$data = {key1 => '2010１1212101019', key2_Y => 2010, key2_m => 9, key2_d => 9,
+  key2_H => 9, key2_M => 9, key2_S => 9};
+$rule = [
+    key1 => [
+        'datetime_to_timepiece'
+    ],
+    {key2 => [qw/key2_Y key2_m key2_d key2_H key2_M key2_S/]} => [
+        'datetime_to_timepiece'
+    ]
+];
+$result = $vc->validate($data, $rule);
+ok($result->is_ok);
