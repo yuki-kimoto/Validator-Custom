@@ -187,16 +187,28 @@ sub length {
   my $min;
   my $max;
   if(ref $args eq 'ARRAY') { ($min, $max) = @$args }
-  else { $min = $args }
+  elsif (ref $args eq 'HASH') {
+    $min = $args->{min};
+    $max = $args->{max};
+  }
+  else { $min = $max = $args }
   
   croak "Constraint 'length' needs one or two arguments"
-    unless defined $min;
+    unless defined $min || defined $max;
   
   my $length  = length $value;
-  $max     ||= $min;
-  $min += 0;
-  $max += 0;
-  return $min <= $length && $length <= $max ? 1 : 0;
+  my $is_valid;
+  if (defined $min && defined $max) {
+    $is_valid = $length >= $min && $length <= $max;
+  }
+  elsif (defined $min) {
+    $is_valid = $length >= $min;
+  }
+  elsif (defined $max) {
+    $is_valid =$length <= $max;
+  }
+  
+  return $is_valid;
 }
 
 sub less_than {

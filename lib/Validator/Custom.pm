@@ -1050,14 +1050,29 @@ Check if the values is in array.
   my $data = {value1 => 'aaa', value2 => 'bbbbb'};
   my $rule => [
     value1 => [
-      {'length' => 3}
+      # length is equal to 3
+      {'length' => 3} # 'aaa'
     ],
     value2 => [
+      # length is greater than or equal to 2 and lower than or equeal to 5
       {'length' => [2, 5]} # 'bb' to 'bbbbb'
+    ]
+    value3 => [
+      # length is greater than or equal to 2 and lower than or equeal to 5
+      {'length' => {min => 2, max => 5}} # 'bb' to 'bbbbb'
+    ]
+    value4 => [
+      # greater than or equal to 2
+      {'length' => {min => 2}}
+    ]
+    value5 => [
+      # lower than or equal to 5
+      {'length' => {max => 5}}
     ]
   ];
 
 Length of the value.
+
 Not that if value is internal string, length is character length.
 if value is byte string, length is byte length.
 
