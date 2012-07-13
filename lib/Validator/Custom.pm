@@ -193,7 +193,11 @@ sub new {
     trim              => \&Validator::Custom::Constraint::trim,
     trim_collapse     => \&Validator::Custom::Constraint::trim_collapse,
     trim_lead         => \&Validator::Custom::Constraint::trim_lead,
-    trim_trail        => \&Validator::Custom::Constraint::trim_trail
+    trim_trail        => \&Validator::Custom::Constraint::trim_trail,
+    trim_uni          => \&Validator::Custom::Constraint::trim_uni,
+    trim_uni_collapse => \&Validator::Custom::Constraint::trim_uni_collapse,
+    trim_uni_lead     => \&Validator::Custom::Constraint::trim_uni_lead,
+    trim_uni_trail    => \&Validator::Custom::Constraint::trim_uni_trail
   );
   
   return $self;
@@ -1319,6 +1323,50 @@ which don't contain unicode space character.
 Trim trailing white space.
 Not that trim only C<[ \t\n\r\f]>
 which don't contain unicode space character.
+
+=head2 C<trim_uni>
+
+  my $data = {name => '  Ken  '};
+  my $rule = [
+    name => [
+      'trim_uni' # 'Ken'
+    ]
+  ];
+
+Trim leading and trailing white space, which contain unicode space character.
+
+=head2 C<trim_uni_collapse>
+
+  my $data = {name => '  Ken   Takagi  '};
+  my $rule = [
+    name => [
+      'trim_uni_collapse' # 'Ken Takagi'
+    ]
+  ];
+
+Trim leading and trailing white space, which contain unicode space character.
+
+=head2 C<trim_uni_lead>
+
+  my $data = {name => '  Ken  '};
+  my $rule = [
+    name => [
+      'trim_uni_lead' # 'Ken  '
+    ]
+  ];
+
+Trim leading white space, which contain unicode space character.
+
+=head2 C<trim_uni_trail>
+
+  my $data = {name => '  Ken  '};
+  my $rule = [
+    name => [
+      'trim_uni_trail' # '  Ken'
+    ]
+  ];
+
+Trim trailing white space, which contain unicode space character.
 
 =head1 DEPRECATED FUNCTIONALITIES
 

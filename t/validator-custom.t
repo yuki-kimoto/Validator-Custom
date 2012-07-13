@@ -2202,7 +2202,7 @@ $result = $vc->validate($data, $rule);
 ok(!$result->is_valid('key1'));
 ok($result->is_valid('key2'));
 
-# not_space unicode
+test 'not_space unicode';
 $data = {key1 => '　', key2 => '　', key3 => '　', key4 => '　'};
 $rule = [
   key1 => [
@@ -2224,7 +2224,7 @@ is($result->data->{key2}, '　');
 is($result->data->{key3}, '　');
 is($result->data->{key4}, '　');
 
-# lenght {min => ..., max => ...}
+test 'lenght {min => ..., max => ...}';
 $data = {
   key1_1 => 'a',
   key1_2 => 'aa',
@@ -2286,3 +2286,35 @@ ok($result->is_valid('key3_1'));
 ok($result->is_valid('key3_2'));
 ok(!$result->is_valid('key3_3'));
 
+test 'trim_uni';
+{
+  my $data = {
+    int_param => '　　123　　',
+    collapse  => "　　\n a \r\n b\nc  \t　　",
+    left      => '　　abc　　',
+    right     => '　　def　　'
+  };
+
+  my $validation_rule = [
+    int_param => [
+      ['trim_uni']
+    ],
+    collapse  => [
+      ['trim_uni_collapse']
+    ],
+    left      => [
+      ['trim_uni_lead']
+    ],
+    right     => [
+      ['trim_uni_trail']
+    ]
+  ];
+
+  my $result_data= Validator::Custom->new->validate($data,$validation_rule)->data;
+
+  is_deeply(
+    $result_data, 
+    { int_param => '123', left => "abc　　", right => '　　def', collapse => "a b c"},
+    'trim check'
+  );
+}
