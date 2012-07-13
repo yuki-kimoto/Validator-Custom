@@ -1,6 +1,7 @@
-0.1429
+0.15
   - added length constraint syntax {length => {min => ..., max => ...}}
-  
+  - added trim_uni, trim_uni_collapse, trim_uni_lead, trim_uni_trail
+    to trim unicode space charctor
 0.1428
   - fixed bug that number related constraint match unicode number by \d.
     From now, only 0-9 is matched.
