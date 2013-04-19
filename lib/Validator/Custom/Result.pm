@@ -232,7 +232,7 @@ Validator::Custom::Result - Result of validation
 
 =head1 ATTRIBUTES
 
-=head2 C<data>
+=head2 data
 
   my $data = $result->data;
   $result  = $result->data($data);
@@ -242,7 +242,7 @@ if you need.
 The data passed to C<validate()> is converted to other data by filter.
 You can get filtered data using C<data()>.
 
-=head2 C<missing_params>
+=head2 missing_params
 
   my $missing_params = $result->missing_params;
   $result            = $result->missing_params($missing_params);
@@ -250,7 +250,7 @@ You can get filtered data using C<data()>.
 You can get missing paramter names using C<missing_params()>.
 In this example, return value is the following one.
 
-=head2 C<raw_data>
+=head2 raw_data
 
   my $data  = $result->raw_data;
   $result   = $result->raw_data($data);
@@ -262,20 +262,20 @@ Raw data soon after data_filter is excuted.
 L<Validator::Custom::Result> inherits all methods from L<Object::Simple>
 and implements the following new ones.
 
-=head2 C<error_reason>
+=head2 error_reason
 
   $error_reason = $result->error_reason('title');
 
 Error reason. This is constraint name.
 
-=head2 C<has_invalid>
+=head2 has_invalid
 
   my $has_invalid = $result->has_invalid;
 
 If at least one of parameter value is invalid,
 C<has_invalid()> return true value.
 
-=head2 C<has_missing>
+=head2 has_missing
 
   my $has_missing_param = $result->has_missing;
 
@@ -283,19 +283,19 @@ If at least one of parameter names specified in the rule
 is not found in the data,
 C<has_missing()> return true value.
 
-=head2 C<invalid_params>
+=head2 invalid_params
 
   my $invalid_params = $result->invalid_params;
 
 Invalid raw data parameter names.
 
-=head2 C<invalid_rule_keys>
+=head2 invalid_rule_keys
 
   my $invalid_rule_keys = $result->invalid_rule_keys;
 
 Invalid rule keys
 
-=head2 C<is_ok>
+=head2 is_ok
 
   my $is_ok = $result->is_ok;
 
@@ -304,13 +304,13 @@ C<is_ok()> return true value
 if invalid parameter values is not found and all parameter
 names specified in the rule is found in the data.
 
-=head2 C<is_valid>
+=head2 is_valid
 
   my $title_is_valid = $result->is_valid('title');
 
 Check if one paramter is valid.
 
-=head2 C<loose_data>
+=head2 loose_data
 
   my $loose_data = $result->loose_data;
 
@@ -319,27 +319,27 @@ Loose data, which is data merged C<raw_data> and C<data>
   # Loose data
   {%{$self->raw_data}, %{$self->data}}
 
-=head2 C<message>
+=head2 message
 
   my $message = $result->message('title');
 
 Get a message corresponding to the parameter name which value is invalid.
 
-=head2 C<messages>
+=head2 messages
 
   my $messages = $result->messages;
 
 Get messages corresponding to the parameter names which value is invalid.
 Messages keep the order of parameter names of the rule.
 
-=head2 C<messages_to_hash>
+=head2 messages_to_hash
 
   my $messages = $result->messages_to_hash;
 
 You can get the pairs of invalid parameter name and message
 using C<messages_to_hash()>.
 
-=head2 C<to_hash>
+=head2 to_hash
 
   my $rhash = $result->to_hash;
 
