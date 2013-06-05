@@ -654,40 +654,33 @@ Validator::Custom - Validate user input easily
 
   use Validator::Custom;
   my $vc = Validator::Custom->new;
-
+  
+  # Data
   my $data = {age => 19, name => 'Ken Suzuki'};
   
+  # Rule
   my $rule = [
-    age => {message => 'age must be integer'} => [
-      'not_blank',
-      'int'
+    age => [
+      ['not_blank' => 'age is empty.'],
+      ['int' => 'age must be integer']
     ],
-    name => {message => 'name must be string. the length 1 to 5'} => [
-      'not_blank',
-      {length => [1, 5]}
-    ],
-    price => [
-      'not_blank',
-      'int'
+    name => [
+      ['not_blank' => 'name is emtpy'],
+      [{length => [1, 5]} => 'name is too long']
     ]
   ];
   
+  # Validation
   my $result = $vc->validate($data, $rule);
-
-  unless ($result->is_ok) {
-    if ($result->has_missing) {
-      my $missing_params = $result->missing_params;
-    }
-    
-    if ($result->has_invalid) {
-      my $messages = $result->messages_to_hash;
-    }
+  if ($result->is_ok) {
+    # Safety data
+    my $safe_data = $vresult->data;
   }
-  my $valid_data = $result->data;
-  my $raw_data = $result->raw_data;
-  my $loose_data = $result->loose_data;
+  else {
+    # Error messgaes
+    my $errors = $vresult->messages;
+  }
 
-  
 =head1 DESCRIPTION
 
 L<Validator::Custom> validate user input easily.
@@ -930,7 +923,7 @@ Default to 1.
     ]
   ];
 
-Ascii graphic characters(hex 21Å`7e).
+Ascii graphic characters(hex 21`7e).
 
 =head2 between
 
@@ -1402,8 +1395,6 @@ I extend one year each time you tell me it.
 
 EXPERIMENTAL functionality will be changed without warnings.
 
-This policy is changed at 2011/6/28
-
 =head1 AUTHOR
 
 Yuki Kimoto, C<< <kimoto.yuki at gmail.com> >>
@@ -1412,7 +1403,7 @@ L<http://github.com/yuki-kimoto/Validator-Custom>
 
 =head1 COPYRIGHT & LICENCE
 
-Copyright 2009-2011 Yuki Kimoto, all rights reserved.
+Copyright 2009-2013 Yuki Kimoto, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

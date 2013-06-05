@@ -189,16 +189,16 @@ Validator::Custom::Result - Result of validation
     
   # Result
   my $result = $vc->validate($data, $rule);
-  
-  # Check the existence of missing parameter
-  my $has_missing_param = $result->has_missing;
 
-  # Chack if the data has invalid parameter(except for missing parameter)
-  my $has_invalid = $resutl->has_invalid;
-  
+  # Safety data
+  my $safe_data = $result->data;
+
   # Chacke if the result is valid.
   # (this means result have neither missing nor invalid parameter)
   my $is_ok = $result->is_ok;
+
+  # Check the existence of missing parameter
+  my $has_missing_param = $result->has_missing;
   
   # Check if one parameter is valid
   my $title_is_valid = $result->is_valid('title');
@@ -227,8 +227,6 @@ Validator::Custom::Result - Result of validation
   # Raw data
   my $raw_data = $result->raw_data;
   
-  # Result data
-  my $result_data = $result->data;
 
 =head1 ATTRIBUTES
 
