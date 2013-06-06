@@ -923,7 +923,7 @@ Default to 1.
     ]
   ];
 
-Ascii graphic characters(hex 21`7e).
+Ascii graphic characters(hex 21-7e).
 
 =head2 between
 
