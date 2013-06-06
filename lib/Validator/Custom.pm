@@ -72,23 +72,23 @@ sub js_fill_form_button {
     return value;
   };
   
-	var addEvent = (function(){
-	  if(document.addEventListener) {
-	    return function(node,type,handler){
-	      node.addEventListener(type,handler,false);
-	    };
-	  } else if (document.attachEvent) {
-	    return function(node,type,handler){
-	      node.attachEvent('on' + type, function(evt){
-	        handler.call(node, evt);
-	      });
-	    };
-	  }
-	})();
-	
-	var button = document.createElement("input");
-	button.setAttribute("type","button");
-	button.value = "Fill Form";
+  var addEvent = (function(){
+    if(document.addEventListener) {
+      return function(node,type,handler){
+        node.addEventListener(type,handler,false);
+      };
+    } else if (document.attachEvent) {
+      return function(node,type,handler){
+        node.attachEvent('on' + type, function(evt){
+          handler.call(node, evt);
+        });
+      };
+    }
+  })();
+  
+  var button = document.createElement("input");
+  button.setAttribute("type","button");
+  button.value = "Fill Form";
   document.body.insertBefore(button, document.body.firstChild)
 
   addEvent(
@@ -259,6 +259,8 @@ sub validate {
   
   # Found missing paramteters
   my $found_missing_params = {};
+  
+  my $structured_rule = $self->_parse_rule($rule);
 
   # Process each key
   OUTER_LOOP:
@@ -483,6 +485,57 @@ sub validate {
   }
   
   return $result;
+}
+
+sub _parse_rule {
+  my ($self, $rule) = @_;
+  
+  my $struct_rules = [];
+  
+  for (my $i = 0; $i < @{$rule}; $i += 2) {
+    
+    my $struct_rule = {};
+    
+    # Key, options, and constraints
+    my $key = $rule->[$i];
+    my $option = $rule->[$i + 1];
+    my $constraints;
+    if (ref $option eq 'HASH') {
+      $constraints = $rule->[$i + 2];
+      $i++;
+    }
+    else {
+      $constraints = $option;
+      $option = {};
+    }
+    my $constraints_h = [];
+    if (ref $constraints eq 'ARRAY') {
+      for my $constraint (@$constraints) {
+        my $constraint_h = {};
+        if (ref $constraint eq 'ARRAY') {
+          $constraint_h->{constraint} = $constraint->[0];
+          $constraint_h->{message} = $constraint->[1];
+        }
+        else {
+          $constraint_h->{constraint} = $constraint;
+        }
+        push @$constraints_h, $constraint_h;
+      }
+    } else {
+      $constraints_h = {'wrong' => $constraints};
+    }
+    
+    $struct_rule->{key} = $key;
+    $struct_rule->{constraints} = $constraints_h;
+    $struct_rule->{option} = $option;
+    
+    push @$struct_rules, $struct_rule;
+  }
+  
+  use Data::Dumper;
+  print Dumper $struct_rules;
+  
+  return $struct_rules;
 }
 
 sub _parse_constraint {
