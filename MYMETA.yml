@@ -1,5 +1,5 @@
 ---
-abstract: 'Validate user input easily'
+abstract: 'HTML form Validation, easy and flexibly'
 author:
   - 'Yuki Kimoto <kimoto.yuki@gmail.com>'
 build_requires:
@@ -20,4 +20,4 @@ no_index:
 requires:
   Object::Simple: 3.0621
   Test::More: 0
-version: 0.16
+version: 0.17

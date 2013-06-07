@@ -1,5 +1,5 @@
 {
-   "abstract" : "Validate user input easily",
+   "abstract" : "HTML form Validation, easy and flexibly",
    "author" : [
       "Yuki Kimoto <kimoto.yuki@gmail.com>"
    ],
@@ -38,5 +38,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.16"
+   "version" : "0.17"
 }

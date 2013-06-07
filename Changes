@@ -1,3 +1,5 @@
+0.17
+  - improved description.
 0.16
   - added EXPERIMANTAL parse_rule method
     to know how Validator::Custom parse rule

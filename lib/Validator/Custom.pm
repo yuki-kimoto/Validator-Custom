@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
@@ -699,7 +699,7 @@ __PACKAGE__->dual_attr('constraints',
 
 =head1 NAME
 
-Validator::Custom - Validate user input easily
+Validator::Custom - HTML form Validation, easy and flexibly
 
 =head1 SYNOPSYS
 
@@ -734,7 +734,7 @@ Validator::Custom - Validate user input easily
 
 =head1 DESCRIPTION
 
-L<Validator::Custom> validate user input easily.
+L<Validator::Custom> validate HTML form data easy and flexibly.
 The features are the following ones.
 
 =over 4
@@ -760,7 +760,7 @@ The order of messages is keeped.
 
 =item *
 
-Support C<OR> condtion constraint, Negativate constraint,
+Support C<OR> condtion constraint and negativate constraint,
 
 =back
 
