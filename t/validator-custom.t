@@ -44,7 +44,9 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   my @errors = Validator::Custom->new(rule => $rule)->validate($data)->errors;
   is_deeply([@errors], [qw/k1Error2 k2Error2/], 'rule');
   
-  @errors = Validator::Custom->new->error_stock(0)->validate($data, $rule)->errors;
+  $validator = Validator::Custom->new->error_stock(0);
+  $vresult = $validator->validate($data, $rule);
+  @errors = $vresult->errors;
   is(scalar @errors, 1, 'error_stock is 0');
   is($errors[0], 'k1Error2', 'error_stock is 0');
 }

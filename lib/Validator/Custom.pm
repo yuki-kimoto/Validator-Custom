@@ -224,9 +224,6 @@ sub validate {
   # Validation rule
   $rule ||= $self->rule;
   
-  # Shared rule
-  my $shared_rule = $self->shared_rule;
-  
   # Data filter
   my $filter = $self->data_filter;
   $data = $filter->($data) if $filter;
@@ -260,27 +257,21 @@ sub validate {
   # Found missing paramteters
   my $found_missing_params = {};
   
-  my $structured_rule = $self->_parse_rule($rule);
+  my $struct_rules = $self->_parse_rule($rule);
 
   # Process each key
   OUTER_LOOP:
-  for (my $i = 0; $i < @{$rule}; $i += 2) {
+  for (my $i = 0; $i < @$struct_rules; $i++) {
+    
+    my $r = $struct_rules->[$i];
     
     # Increment position
     $pos++;
     
     # Key, options, and constraints
-    my $key = $rule->[$i];
-    my $opts = $rule->[$i + 1];
-    my $constraints;
-    if (ref $opts eq 'HASH') {
-      $constraints = $rule->[$i + 2];
-      $i++;
-    }
-    else {
-      $constraints = $opts;
-      $opts = {};
-    }
+    my $key = $r->{key};
+    my $opts = $r->{option};
+    my $constraints = $r->{constraints};
     
     # Check constraints
     croak "Constraints of validation rule must be array ref\n" .
@@ -341,19 +332,16 @@ sub validate {
     # Already valid
     next if $valid_keys->{$result_key};
     
-    # Add shared rule
-    push @$constraints, @$shared_rule;
-    
     # Validation
     my $value = @$keys > 1
       ? [map { $data->{$_} } @$keys]
       : $data->{$keys->[0]};
 
-    for my $constraint (@$constraints) {
+    for my $c (@$constraints) {
       
       # Arrange constraint information
-      my ($constraint, $message)
-        = ref $constraint eq 'ARRAY' ? @$constraint : ($constraint);
+      my $constraint = $c->{constraint};
+      my $message = $c->{message};
       
       # Data type
       my $data_type = {};
@@ -398,12 +386,12 @@ sub validate {
         $value = [$value] unless ref $value eq 'ARRAY';
         
         # Validation loop
-        for (my $i = 0; $i < @$value; $i++) {
-          my $data = $value->[$i];
+        for (my $k = 0; $k < @$value; $k++) {
+          my $data = $value->[$k];
           
           # Validation
-          for (my $k = 0; $k < @$cfuncs; $k++) {
-            my $cfunc = $cfuncs->[$k];
+          for (my $j = 0; $j < @$cfuncs; $j++) {
+            my $cfunc = $cfuncs->[$j];
             
             # Validate
             my $cresult = $cfunc->($data, $arg, $self);
@@ -412,7 +400,7 @@ sub validate {
             my $v;
             if (ref $cresult eq 'ARRAY') {
               ($is_valid, $v) = @$cresult;
-              $value->[$i] = $v;
+              $value->[$k] = $v;
             }
             else { $is_valid = $cresult }
             
@@ -462,11 +450,11 @@ sub validate {
         unless ($error_stock) {
           # Check rest constraint
           my $found;
-          for (my $k = $i + 2; $k < @{$rule}; $k += 2) {
-            my $key = $rule->[$k];
-            $k++ if ref $rule->[$k + 1] eq 'HASH';
-            $key = (keys %$key)[0] if ref $key eq 'HASH';
-            $found = 1 if $key eq $result_key;
+          for (my $k = $i + 1; $k < @$struct_rules; $k++) {
+            my $r_next = $struct_rules->[$k];
+            my $key_next = $r_next->{key};
+            $key_next = (keys %$key)[0] if ref $key eq 'HASH';
+            $found = 1 if $key_next eq $result_key;
           }
           last OUTER_LOOP unless $found;
         }
@@ -510,7 +498,7 @@ sub _parse_rule {
     }
     my $constraints_h = [];
     if (ref $constraints eq 'ARRAY') {
-      for my $constraint (@$constraints) {
+      for my $constraint (@$constraints, @{$self->shared_rule}) {
         my $constraint_h = {};
         if (ref $constraint eq 'ARRAY') {
           $constraint_h->{constraint} = $constraint->[0];
@@ -531,9 +519,6 @@ sub _parse_rule {
     
     push @$struct_rules, $struct_rule;
   }
-  
-  use Data::Dumper;
-  print Dumper $struct_rules;
   
   return $struct_rules;
 }
