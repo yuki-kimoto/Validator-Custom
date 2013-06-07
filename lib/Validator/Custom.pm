@@ -858,6 +858,8 @@ use C<parse_rule> method.
   use Data::Dumper;
   print Dumper $vc->parse_rule($rule);
 
+If you see C<ERROR> key, rule syntx is wrong.
+
 =head2 validate
 
   $result = $vc->validate($data, $rule);

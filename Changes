@@ -1,3 +1,6 @@
+0.16
+  - added EXPERIMANTAL parse_rule method
+    to know how Validator::Custom parse rule
 0.15
   - added length constraint syntax {length => {min => ..., max => ...}}
   - added trim_uni, trim_uni_collapse, trim_uni_lead, trim_uni_trail
