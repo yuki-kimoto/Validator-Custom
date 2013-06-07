@@ -2320,3 +2320,21 @@ test 'trim_uni';
     'trim check'
   );
 }
+
+{
+  # parse_rule
+  my $vc = Validator::Custom->new;
+  my $rule = [
+    k1 => [
+      ['int' => 'a']
+    ],
+    k2 => 'int'
+  ];
+  my $r = $vc->parse_rule($rule);
+  
+  is($r->[0]{key}, 'k1');
+  is($r->[0]{constraints}[0]{constraint}, 'int');
+  is($r->[0]{constraints}[0]{message}, 'a');
+  is($r->[1]{constraints}{ERROR}{value}, 'int');
+  like($r->[1]{constraints}{ERROR}{message}, qr/Constrains must be array reference/);
+}

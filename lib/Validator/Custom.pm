@@ -257,7 +257,12 @@ sub validate {
   # Found missing paramteters
   my $found_missing_params = {};
   
-  my $struct_rules = $self->_parse_rule($rule);
+  # Shared rule
+  my $shared_rule = $self->shared_rule;
+  warn "DBIx::Custom::shared_rule is DEPRECATED!"
+    if @$shared_rule;
+
+  my $struct_rules = $self->parse_rule($rule, $shared_rule);
 
   # Process each key
   OUTER_LOOP:
@@ -475,8 +480,10 @@ sub validate {
   return $result;
 }
 
-sub _parse_rule {
-  my ($self, $rule) = @_;
+sub parse_rule {
+  my ($self, $rule, $shared_rule) = @_;
+  
+  $shared_rule ||= [];
   
   my $struct_rules = [];
   
@@ -497,8 +504,9 @@ sub _parse_rule {
       $option = {};
     }
     my $constraints_h = [];
+    
     if (ref $constraints eq 'ARRAY') {
-      for my $constraint (@$constraints, @{$self->shared_rule}) {
+      for my $constraint (@$constraints, @$shared_rule) {
         my $constraint_h = {};
         if (ref $constraint eq 'ARRAY') {
           $constraint_h->{constraint} = $constraint->[0];
@@ -510,7 +518,12 @@ sub _parse_rule {
         push @$constraints_h, $constraint_h;
       }
     } else {
-      $constraints_h = {'wrong' => $constraints};
+      $constraints_h = {
+        'ERROR' => {
+          value => $constraints,
+          message => 'Constrains must be array reference'
+        }
+      };
     }
     
     $struct_rule->{key} = $key;
@@ -832,6 +845,18 @@ specified pattern string,
 and checkbox, radio button, and list box is automatically selected.
 
 Note that this methods require L<JSON> module.
+
+=head2 parse_rule EXPERIMENTAL
+
+  my $parsed_rule = $vc->parse_rule($rule);
+
+Validator::Custom rule is a little complex.
+You maybe make misstakes offten.
+If you want to know that how Validator::Custom parse rule,
+use C<parse_rule> method.
+
+  use Data::Dumper;
+  print Dumper $vc->parse_rule($rule);
 
 =head2 validate
 
