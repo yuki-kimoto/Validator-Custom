@@ -1451,9 +1451,7 @@ L<Validator::Custom::Result>
 
 =head1 BACKWORD COMPATIBLE POLICY
 
-If a functionality is DEPRECATED, you can know it by DEPRECATED warnings
-except for attribute method.
-You can check all DEPRECATED functionalities by document.
+If a functionality is DEPRECATED, you can know it by DEPRECATED warnings.
 DEPRECATED functionality is removed after five years,
 but if at least one person use the functionality and tell me that thing
 I extend one year each time you tell me it.
