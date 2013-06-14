@@ -1,25 +1,26 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
 use Validator::Custom::Result;
 
-has ['data_filter', 'rule'],
-  error_stock => 1;
+has ['data_filter', 'rule', 'normalized_rule'];
+has error_stock => 1;
 
 has syntax => <<'EOS';
 ### Syntax of validation rule
-my $rule = [                              # 1 Rule is array ref
-  key => [                              # 2 Constraints is array ref
-      'constraint',                     # 3 Constraint is string
-      {'constraint' => 'args'}          #     or hash ref (arguments)
-      ['constraint', 'err'],            #     or arrya ref (message)
+my $rule = [                            # 1 Rule: Array reference
+  key => [                              # 2 Constraints: Array reference
+      'constraint',                     # 3 Constraint: String
+      {'constraint' => $args}           #   or Hash reference (with Arguments)
+      ['constraint' => 'Error Message'],#   or Array reference (with Message)
   ],
-  key => [                           
-      [{constraint => 'args'}, 'err']   # 4 With argument and message
+  key => [                              # 4 With Arguments and Message
+      [{constraint => $args}, 'Error Message']
+                                        
   ],
   {key => ['key1', 'key2']} => [        # 5.1 Multi-parameters validation
       'constraint'
@@ -30,14 +31,14 @@ my $rule = [                              # 1 Rule is array ref
   key => [
       '@constraint'                     # 6 Multi-values validation
   ],
-  key => {message => 'err', ... } => [  # 7 With options
+  key => {message => 'err', ... } => [  # 7 with Options
       'constraint'
   ],
   key => [
       '!constraint'                     # 8 Negativate constraint
   ],
   key => [
-      'constraint1 || constraint2'      # 9 "OR" condition
+      'constraint1 || constraint2'      # 9 "OR" Condition
   ],
 ];
 
@@ -262,13 +263,14 @@ sub validate {
   warn "DBIx::Custom::shared_rule is DEPRECATED!"
     if @$shared_rule;
 
-  my $struct_rules = $self->parse_rule($rule, $shared_rule);
+  my $normalized_rule = $self->parse_rule($rule, $shared_rule);
+  $self->normalized_rule($normalized_rule);
 
   # Process each key
   OUTER_LOOP:
-  for (my $i = 0; $i < @$struct_rules; $i++) {
+  for (my $i = 0; $i < @$normalized_rule; $i++) {
     
-    my $r = $struct_rules->[$i];
+    my $r = $normalized_rule->[$i];
     
     # Increment position
     $pos++;
@@ -279,8 +281,8 @@ sub validate {
     my $constraints = $r->{constraints};
     
     # Check constraints
-    croak "Constraints of validation rule must be array ref\n" .
-        "(see syntax of validation rule 2)\n" . $self->_rule_syntax($rule)
+    croak "Constraints of validation rule must be array reference. " .
+        "see syntax 2.\n" . $self->_rule_syntax($rule)
       unless ref $constraints eq 'ARRAY';
     
     # Arrange key
@@ -455,8 +457,8 @@ sub validate {
         unless ($error_stock) {
           # Check rest constraint
           my $found;
-          for (my $k = $i + 1; $k < @$struct_rules; $k++) {
-            my $r_next = $struct_rules->[$k];
+          for (my $k = $i + 1; $k < @$normalized_rule; $k++) {
+            my $r_next = $normalized_rule->[$k];
             my $key_next = $r_next->{key};
             $key_next = (keys %$key)[0] if ref $key eq 'HASH';
             $found = 1 if $key_next eq $result_key;
@@ -485,11 +487,11 @@ sub parse_rule {
   
   $shared_rule ||= [];
   
-  my $struct_rules = [];
+  my $normalized_rule = [];
   
   for (my $i = 0; $i < @{$rule}; $i += 2) {
     
-    my $struct_rule = {};
+    my $r = {};
     
     # Key, options, and constraints
     my $key = $rule->[$i];
@@ -521,19 +523,19 @@ sub parse_rule {
       $constraints_h = {
         'ERROR' => {
           value => $constraints,
-          message => 'Constrains must be array reference'
+          message => 'Constraints must be array reference'
         }
       };
     }
     
-    $struct_rule->{key} = $key;
-    $struct_rule->{constraints} = $constraints_h;
-    $struct_rule->{option} = $option;
+    $r->{key} = $key;
+    $r->{constraints} = $constraints_h;
+    $r->{option} = $option;
     
-    push @$struct_rules, $struct_rule;
+    push @$normalized_rule, $r;
   }
   
-  return $struct_rules;
+  return $normalized_rule;
 }
 
 sub _parse_constraint {
@@ -683,9 +685,10 @@ sub _rule_syntax {
   my $message = $self->syntax;
   
   require Data::Dumper;
-  $message .= "### Your validation rule:\n";
-  $message .= Data::Dumper->Dump([$rule], ['$rule']);
-  $message .= "\n";
+  my $normalized_rule = $self->normalized_rule;
+  $message .= "### Rule is interpreted as the follwoing data structure\n";
+  $message .= Data::Dumper->Dump([$normalized_rule], ['']);
+  
   return $message;
 }
 
@@ -804,6 +807,22 @@ If error_stock is set to 0, C<validate()> return soon after invalid value is fou
 
 Default to 1. 
 
+=head2 normalized_rule EXPERIMENTAL
+
+  my normalized_rule = $vc->normalized_rule($rule);
+
+L<Validator::Custom> rule is a little complex.
+You maybe make misstakes offten.
+If you want to know that how Validator::Custom parse rule,
+call C<normalized_rule> method after calling C<validate> method.
+  
+  my $vresult = $vc->validate($data, $rule);
+
+  use Data::Dumper;
+  print Dumper $vc->normalized_rule;
+
+If you see C<ERROR> key, rule syntx is wrong.
+
 =head2 rule
 
   my $rule = $vc->rule;
@@ -845,20 +864,6 @@ specified pattern string,
 and checkbox, radio button, and list box is automatically selected.
 
 Note that this methods require L<JSON> module.
-
-=head2 parse_rule EXPERIMENTAL
-
-  my $parsed_rule = $vc->parse_rule($rule);
-
-Validator::Custom rule is a little complex.
-You maybe make misstakes offten.
-If you want to know that how Validator::Custom parse rule,
-use C<parse_rule> method.
-
-  use Data::Dumper;
-  print Dumper $vc->parse_rule($rule);
-
-If you see C<ERROR> key, rule syntx is wrong.
 
 =head2 validate
 

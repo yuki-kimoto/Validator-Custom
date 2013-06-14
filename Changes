@@ -1,3 +1,7 @@
+0.18
+  - remove EXPERIMENTAL parse_rule method.
+  - add EXPERIMENTAL normalized_rule attribute.
+  - improved syntax error message.
 0.17
   - improved description.
 0.16
