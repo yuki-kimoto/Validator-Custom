@@ -268,7 +268,7 @@ sub to_array {
 
 sub trim {
   my $value = shift;
-  $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
+  $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms if defined $value;
   return [1, $value];
 }
 
@@ -283,19 +283,19 @@ sub trim_collapse {
 
 sub trim_lead {
   my $value = shift;
-  $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms;
+  $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms if defined $value;
   return [1, $value];
 }
 
 sub trim_trail {
   my $value = shift;
-  $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms;
+  $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms if defined $value;
   return [1, $value];
 }
 
 sub trim_uni {
   my $value = shift;
-  $value =~ s/^\s*(.*?)\s*$/$1/ms;
+  $value =~ s/^\s*(.*?)\s*$/$1/ms if defined $value;
   return [1, $value];
 }
 
@@ -310,13 +310,13 @@ sub trim_uni_collapse {
 
 sub trim_uni_lead {
   my $value = shift;
-  $value =~ s/^\s+(.*)$/$1/ms;
+  $value =~ s/^\s+(.*)$/$1/ms if defined $value;
   return [1, $value];
 }
 
 sub trim_uni_trail {
   my $value = shift;
-  $value =~ s/^(.*?)\s+$/$1/ms;
+  $value =~ s/^(.*?)\s+$/$1/ms if defined $value;
   return [1, $value];
 }
 

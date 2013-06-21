@@ -1,3 +1,5 @@
+0.19
+  - suppress filter function undef warning.
 0.18
   - remove EXPERIMENTAL parse_rule method.
   - add EXPERIMENTAL normalized_rule attribute.
