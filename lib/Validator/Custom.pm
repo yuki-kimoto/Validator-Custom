@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '0.19';
+our $VERSION = '0.20';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
@@ -409,6 +409,10 @@ sub validate {
               ($is_valid, $v) = @$cresult;
               $value->[$k] = $v;
             }
+            elsif (ref $cresult eq 'HASH') {
+              $is_valid = $cresult->{result};
+              $message = $cresult->{message} unless $is_valid;
+            }
             else { $is_valid = $cresult }
             
             last if $is_valid;
@@ -429,6 +433,10 @@ sub validate {
             my $v;
             ($is_valid, $v) = @$cresult;
             $value = $v if $is_valid;
+          }
+          elsif (ref $cresult eq 'HASH') {
+            $is_valid = $cresult->{result};
+            $message = $cresult->{message} unless $is_valid;
           }
           else { $is_valid = $cresult }
           
@@ -687,7 +695,7 @@ sub _rule_syntax {
   require Data::Dumper;
   my $normalized_rule = $self->normalized_rule;
   $message .= "### Rule is interpreted as the follwoing data structure\n";
-  $message .= Data::Dumper->Dump([$normalized_rule], ['']);
+  $message .= Data::Dumper->Dump([$normalized_rule], ['$rule']);
   
   return $message;
 }

@@ -356,6 +356,24 @@ and L<Validator::Custom> object as third argument.
 If you know the implementations of constraint functions,
 see the soruce of L<Validator::Custom::Constraint>.
 
+If you want to return custom message, you can use hash reference as return value.
+
+  $vc->register_constraint(
+    telephone => sub {
+      my ($value, $arg, $vc) = @_;
+      
+      # Process
+      my $is_valid = ...;
+      
+      if ($is_valid) {
+        return 1;
+      }
+      else {
+        return {result => 0, message => 'Custom error message'}
+      }
+    }
+  );
+
 =head3 Register filter function
 
 C<register_constraint()> is also used to register filter function.

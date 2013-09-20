@@ -2339,3 +2339,43 @@ test 'trim_uni';
   is($r->[1]{constraints}{ERROR}{value}, 'int');
   like($r->[1]{constraints}{ERROR}{message}, qr/Constraints must be array reference/);
 }
+
+{
+  # Custom error message
+  my $vc = Validator::Custom->new;
+  $vc->register_constraint(
+    c1 => sub {
+      my $value = shift;
+      
+      if ($value eq 'a') {
+        return 1;
+      }
+      else {
+        return {result => 0, message => 'error1'};
+      }
+    },
+    c2 => sub {
+      my $value = shift;
+      
+      if ($value eq 'a') {
+        return {result => 1};
+      }
+      else {
+        return {result => 0, message => 'error2'};
+      }
+    }
+  );
+  my $rule = [
+    k1 => [
+      'c1'
+    ],
+    k2 => [
+      '@c2'
+    ]
+  ];
+  my $vresult = $vc->validate({k1 => 'a', k2 => 'a'}, $rule);
+  ok($vresult->is_ok);
+  $vresult = $vc->validate({k1 => 'b', k2 => 'b'}, $rule);
+  ok(!$vresult->is_ok);
+  is_deeply($vresult->messages, ['error1', 'error2']);
+}
