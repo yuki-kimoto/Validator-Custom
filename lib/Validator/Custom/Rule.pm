@@ -1,6 +1,8 @@
 package Validator::Custom::Rule;
 use Object::Simple -base;
 
+has 'rule';
+
 sub parse {
   my ($self, $rule, $shared_rule) = @_;
   
@@ -54,7 +56,7 @@ sub parse {
     push @$normalized_rule, $r;
   }
   
-  return $normalized_rule;
+  $self->rule($normalized_rule);
 }
 
 1;

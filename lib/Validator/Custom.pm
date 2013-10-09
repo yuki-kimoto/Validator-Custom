@@ -263,14 +263,15 @@ sub validate {
   my $shared_rule = $self->shared_rule;
   warn "DBIx::Custom::shared_rule is DEPRECATED!"
     if @$shared_rule;
-
-  my $normalized_rule
-    = Validator::Custom::Rule->new->parse($rule, $shared_rule);
+  
+  my $rule_obj = Validator::Custom::Rule->new;
+  $rule_obj->parse($rule, $shared_rule);
+  my $normalized_rule = $rule_obj->rule;
   $self->normalized_rule($normalized_rule);
 
   # Process each key
   OUTER_LOOP:
-  for (my $i = 0; $i < @$normalized_rule; $i++) {
+  for (my $i = 0; $i < @{$rule_obj->rule}; $i++) {
     
     my $r = $normalized_rule->[$i];
     
