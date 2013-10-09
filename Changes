@@ -1,3 +1,6 @@
+0.22
+  - normalized_rule attribute(EXPERIMENTAL) is changed to rule_obj(EXPERIMENTAL)
+    rule become saved as object.
 0.21
   - add EXPERIMENTAL filter representation in filter function
     {result => 1, output => $value} mean [1, $value];

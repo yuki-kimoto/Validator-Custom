@@ -8,7 +8,7 @@ use Validator::Custom::Constraint;
 use Validator::Custom::Result;
 use Validator::Custom::Rule;
 
-has ['data_filter', 'rule', 'normalized_rule'];
+has ['data_filter', 'rule', 'rule_obj'];
 has error_stock => 1;
 
 has syntax => <<'EOS';
@@ -266,14 +266,13 @@ sub validate {
   
   my $rule_obj = Validator::Custom::Rule->new;
   $rule_obj->parse($rule, $shared_rule);
-  my $normalized_rule = $rule_obj->rule;
-  $self->normalized_rule($normalized_rule);
+  $self->rule_obj($rule_obj);
 
   # Process each key
   OUTER_LOOP:
   for (my $i = 0; $i < @{$rule_obj->rule}; $i++) {
     
-    my $r = $normalized_rule->[$i];
+    my $r = $rule_obj->rule->[$i];
     
     # Increment position
     $pos++;
@@ -470,8 +469,8 @@ sub validate {
         unless ($error_stock) {
           # Check rest constraint
           my $found;
-          for (my $k = $i + 1; $k < @$normalized_rule; $k++) {
-            my $r_next = $normalized_rule->[$k];
+          for (my $k = $i + 1; $k < @{$rule_obj->rule}; $k++) {
+            my $r_next = $rule_obj->rule->[$k];
             my $key_next = $r_next->{key};
             $key_next = (keys %$key)[0] if ref $key eq 'HASH';
             $found = 1 if $key_next eq $result_key;
@@ -637,14 +636,15 @@ sub _parse_random_string_rule {
 }
 
 sub _rule_syntax {
-  my ($self, $rule) = @_;
+  my $self = shift;
   
   my $message = $self->syntax;
-  
   require Data::Dumper;
-  my $normalized_rule = $self->normalized_rule;
-  $message .= "### Rule is interpreted as the follwoing data structure\n";
-  $message .= Data::Dumper->Dump([$normalized_rule], ['$rule']);
+  my $rule_obj = $self->rule_obj;
+  if ($rule_obj) {
+    $message .= "### Rule is interpreted as the follwoing data structure\n";
+    $message .= Data::Dumper->Dump([$rule_obj->rule], ['$rule']);
+  }
   
   return $message;
 }
@@ -764,19 +764,20 @@ If error_stock is set to 0, C<validate()> return soon after invalid value is fou
 
 Default to 1. 
 
-=head2 normalized_rule EXPERIMENTAL
+=head2 rule_obj EXPERIMENTAL
 
-  my normalized_rule = $vc->normalized_rule($rule);
+  my $rule_obj = $vc->rule_obj($rule);
 
 L<Validator::Custom> rule is a little complex.
-You maybe make misstakes offten.
+You maybe make mistakes offten.
 If you want to know that how Validator::Custom parse rule,
-call C<normalized_rule> method after calling C<validate> method.
+See C<rule_obj> attribute after calling C<validate> method.
+This is L<Validator::Custom::Rule> object.
   
   my $vresult = $vc->validate($data, $rule);
 
   use Data::Dumper;
-  print Dumper $vc->normalized_rule;
+  print Dumper $vc->rule_obj->rule;
 
 If you see C<ERROR> key, rule syntx is wrong.
 
