@@ -357,6 +357,7 @@ If you know the implementations of constraint functions,
 see the soruce of L<Validator::Custom::Constraint>.
 
 If you want to return custom message, you can use hash reference as return value.
+This feature is yet EXPERIMENTAL.
 
   $vc->register_constraint(
     telephone => sub {
@@ -369,7 +370,7 @@ If you want to return custom message, you can use hash reference as return value
         return 1;
       }
       else {
-        return {result => 0, message => 'Custom error message'}
+        return {result => 0, message => 'Custom error message'};
       }
     }
   );
@@ -379,7 +380,7 @@ If you want to return custom message, you can use hash reference as return value
 C<register_constraint()> is also used to register filter function.
 
 Filter function is same as constraint function except for return value;
-
+  
   $vc->register_constraint(
     to_upper_case => sub {
       my $value = shift;
@@ -395,8 +396,21 @@ First element is boolean value which chekc if the value is valid.
 Second element is filtered value.
 
 In this example, First element of array reference is set to 1
-because this function intend to do only filtering.
+because this function is intended to filter only.
 
+You can also use hash reference representation(This is yet EXPERIMENTAL).
+  
+  # This is same as above
+  $vc->register_constraint(
+    to_upper_case => sub {
+      my $value = shift;
+      
+      $value = uc $value;
+                  
+      return {result => 1, output => $value};
+    }
+  );
+  
 =head2 5. Extending
 
 It is easy to define your class extending L<Validator::Custom>.

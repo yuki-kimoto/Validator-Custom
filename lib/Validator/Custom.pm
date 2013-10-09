@@ -412,6 +412,7 @@ sub validate {
             elsif (ref $cresult eq 'HASH') {
               $is_valid = $cresult->{result};
               $message = $cresult->{message} unless $is_valid;
+              $value->[$k] = $cresult->{output} if exists $cresult->{output};
             }
             else { $is_valid = $cresult }
             
@@ -437,6 +438,7 @@ sub validate {
           elsif (ref $cresult eq 'HASH') {
             $is_valid = $cresult->{result};
             $message = $cresult->{message} unless $is_valid;
+            $value = $cresult->{output} if exists $cresult->{output} && $is_valid;
           }
           else { $is_valid = $cresult }
           

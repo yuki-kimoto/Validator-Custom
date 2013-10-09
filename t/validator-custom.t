@@ -2340,8 +2340,8 @@ test 'trim_uni';
   like($r->[1]{constraints}{ERROR}{message}, qr/Constraints must be array reference/);
 }
 
+# Custom error message
 {
-  # Custom error message
   my $vc = Validator::Custom->new;
   $vc->register_constraint(
     c1 => sub {
@@ -2378,4 +2378,28 @@ test 'trim_uni';
   $vresult = $vc->validate({k1 => 'b', k2 => 'b'}, $rule);
   ok(!$vresult->is_ok);
   is_deeply($vresult->messages, ['error1', 'error2']);
+}
+
+# Filter hash representation
+{
+  my $vc = Validator::Custom->new;
+  $vc->register_constraint(
+    c1 => sub {
+      my $value = shift;
+      
+      return {result => 1, output => $value * 2};
+    }
+  );
+  my $rule = [
+    k1 => [
+      'c1'
+    ],
+    k2 => [
+      '@c1'
+    ]
+  ];
+  my $vresult = $vc->validate({k1 => 1, k2 => [2, 3]}, $rule);
+  ok($vresult->is_ok);
+  is($vresult->data->{k1}, 2);
+  is_deeply($vresult->data->{k2}, [4, 6]);
 }
