@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use lib 't/validator-custom';
 use utf8;
+use Validator::Custom::Rule;
 
 $SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ /DEPRECATED!/ };
 sub test {print "# $_[0]\n"}
@@ -2402,4 +2403,23 @@ test 'trim_uni';
   ok($vresult->is_ok);
   is($vresult->data->{k1}, 2);
   is_deeply($vresult->data->{k2}, [4, 6]);
+}
+
+# Pass rule object to validate method
+{
+  my $vc = Validator::Custom->new;
+  my $rule = [
+    k1 => [
+      'not_blank'
+    ],
+    k2 => [
+      'not_blank'
+    ]
+  ];
+  my $rule_obj = Validator::Custom::Rule->new;
+  $rule_obj->parse($rule);
+  
+  my $vresult = $vc->validate({k1 => 'a', k2 => ''}, $rule_obj);
+  ok($vresult->is_valid('k1'));
+  ok(!$vresult->is_valid('k2'));
 }

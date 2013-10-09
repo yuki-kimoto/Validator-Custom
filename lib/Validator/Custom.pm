@@ -235,10 +235,12 @@ sub validate {
     unless ref $data eq 'HASH';
   
   # Check rule
-  croak "Validation rule must be array ref\n" .
-      "(see syntax of validation rule 1)\n" .
-      $self->_rule_syntax($rule)
-    unless ref $rule eq 'ARRAY';
+  unless (ref $rule eq 'Validator::Custom::Rule') {
+    croak "Validation rule must be array ref\n" .
+        "(see syntax of validation rule 1)\n" .
+        $self->_rule_syntax($rule)
+      unless ref $rule eq 'ARRAY';
+  }
   
   # Result
   my $result = Validator::Custom::Result->new;
@@ -264,9 +266,15 @@ sub validate {
   warn "DBIx::Custom::shared_rule is DEPRECATED!"
     if @$shared_rule;
   
-  my $rule_obj = Validator::Custom::Rule->new;
-  $rule_obj->parse($rule, $shared_rule);
-  $self->rule_obj($rule_obj);
+  if (ref $rule eq 'Validator::Custom::Rule') {
+    $self->rule_obj($rule);
+  }
+  else {
+    my $rule_obj = Validator::Custom::Rule->new;
+    $rule_obj->parse($rule, $shared_rule);
+    $self->rule_obj($rule_obj);
+  }
+  my $rule_obj = $self->rule_obj;
 
   # Process each key
   OUTER_LOOP:
@@ -830,8 +838,9 @@ Note that this methods require L<JSON> module.
 
 Validate the data.
 Return value is L<Validator::Custom::Result> object.
-If second argument is not specified,
-C<rule> attribute is used.
+If second argument isn't passed, C<rule> attribute is used as rule.
+
+$rule is array refernce or L<Validator::Custom::Rule> object.
 
 =head2 register_constraint
 
