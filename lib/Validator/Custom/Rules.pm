@@ -66,7 +66,7 @@ sub get {
 
 =head1 NAME
 
-Validator::Custom::Rules - Rules
+Validator::Custom::Rules - Rules (EXPERIMENTAL)
 
 =head1 SYNOPSYS
   
@@ -88,18 +88,95 @@ Validator::Custom::Rules - Rules
     ]
   ]);
   
-  # Define rule filter
+  # Get rule
+  my $rule_user = $rules->get('user');
+  
+  # Filter
   $rules->filter('user' => {
     insert => ['name', 'age'],
     update => ['id', 'name', 'age'],
     delete => ['id']
   });
   
+  # Get rule with filtering
+  my $rule_user_insert = $rules->get('user', 'insert');
+  my $rule_user_update = $rules->get('user', 'update');
+  my $rule_user_delete = $rules->get('user', 'delete');
+
+=head1 DESCRIPTION
+
+Validation::Custom::Rules is class to store and retreive rule and provide filter.
+
+=head1 ATTRIBUTES
+
+=head2 rules
+
+  my $content = $rules->rules;
+  $rules = $rules->rules($content);
+
+Content of rules object.
+
+=head1 METHODS
+
+=head1 add
+
+  $rules = $rules->add($name => $rule);
+
+Add rule.
+
+You can add rule or rule object.
+  
+  # Rule
+  my $rule = [
+    id => [
+      'not_blank',
+      'ascii'
+    ],
+    name => [
+      'not_blank',
+      {length => [1, 30]}
+    ],
+    age => [
+      'uint'
+    ]
+  ]
+  $rules->add(user => $rule);
+  
+  # Rule object
+  my $rule_obj = Validator::Custom::Rule->new;
+  $rule_obj->parse($rule);
+  $rules->add(user => $rule_obj);
+
+=head1 filter
+
+  $rules = $rules->filter($name => $filtering);
+
+Resister filtering.
+
+  # Filter
+  $rules->filter('user' => {
+    insert => ['name', 'age'],
+    update => ['id', 'name', 'age'],
+    delete => ['id']
+  });
+
+C<get> method use these filtering.
+
+  my $rule_user_insert = $rules->get('user', 'insert');
+
+=head1 get
+
+  $rules = $rules->get($name);
+  $rules = $rules->get($name, $filter_name);
+
+Get rule.
+
   # Get rule
-  my $rule_insert_user = $rules->get('user', 'insert');
-  my $rule_update_user = $rules->get('user', 'update');
-  my $rule_delete_user = $rules->get('user', 'delete');
+  my $rule_user = $rules->get('user');
 
-=head2 DESCRIPTION
+You can specify filtering.
 
-Validation::Custom::Rules is class to store and retreive rule set.
+  # Get rule with filtering
+  my $rule_user_insert = $rules->get('user', 'insert');
+  my $rule_user_update = $rules->get('user', 'update');
+  my $rule_user_delete = $rules->get('user', 'delete');

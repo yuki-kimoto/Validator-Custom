@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '0.20';
+our $VERSION = '0.21';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
@@ -949,6 +949,10 @@ even if the value is not found
 Default to 1.
 
 =back
+
+=head1 Manipulate multiple rules
+
+If you want to manipulate multiple rules, use L<Validator::Custom::Rules>.
 
 =head1 CONSTRAINTS
 

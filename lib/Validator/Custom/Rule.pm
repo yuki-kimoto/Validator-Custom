@@ -65,7 +65,7 @@ sub parse {
 
 =head1 NAME
 
-Validator::Custom::Rule - Rule object
+Validator::Custom::Rule - Rule object (EXPERIMENTAL)
 
 =head1 SYNOPSYS
   

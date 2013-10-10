@@ -1,8 +1,8 @@
-0.22
+0.21
   - normalized_rule attribute(EXPERIMENTAL) is changed to rule_obj(EXPERIMENTAL)
     rule become saved as object.
   - validate method can receive Validator::Custom::Rule object(EXPERIMENTAL)
-0.21
+  - add Validator::Custom::Rule and Validator::Custom::Rules to manipulate multiple rules easily
   - add EXPERIMENTAL filter representation in filter function
     {result => 1, output => $value} mean [1, $value];
 0.20
