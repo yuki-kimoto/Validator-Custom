@@ -840,7 +840,8 @@ Validate the data.
 Return value is L<Validator::Custom::Result> object.
 If second argument isn't passed, C<rule> attribute is used as rule.
 
-$rule is array refernce or L<Validator::Custom::Rule> object.
+$rule is array refernce
+(or L<Validator::Custom::Rule> object, this is EXPERIMENTAL).
 
 =head2 register_constraint
 
