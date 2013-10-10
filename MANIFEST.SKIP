@@ -14,3 +14,5 @@
 ^\.git
 ^cover_db/
 \.html$
+^MYMETA.yml
+^MYMETA.json
