@@ -950,10 +950,6 @@ Default to 1.
 
 =back
 
-=head1 Manipulate multiple rules
-
-If you want to manipulate multiple rules, use L<Validator::Custom::Rules>.
-
 =head1 CONSTRAINTS
 
 =head2 ascii
