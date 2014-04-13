@@ -14,7 +14,7 @@ our $DEFAULT_MESSAGE = 'Error message not specified';
 sub error_reason {
   my ($self, $name) = @_;
   
-  # Parameter name not specifed
+  # Parameter name not specified
   croak 'Parameter name must be specified'
     unless $name;
   
@@ -84,7 +84,7 @@ sub loose_data {
 sub message {
   my ($self, $name) = @_;
   
-  # Parameter name not specifed
+  # Parameter name not specified
   croak 'Parameter name must be specified'
     unless $name;
   
@@ -245,7 +245,7 @@ You can get filtered data using C<data()>.
   my $missing_params = $result->missing_params;
   $result            = $result->missing_params($missing_params);
 
-You can get missing paramter names using C<missing_params()>.
+You can get missing parameter names using C<missing_params()>.
 In this example, return value is the following one.
 
 =head2 raw_data
@@ -253,7 +253,7 @@ In this example, return value is the following one.
   my $data  = $result->raw_data;
   $result   = $result->raw_data($data);
 
-Raw data soon after data_filter is excuted.
+Raw data soon after data_filter is executed.
 
 =head1 METHODS
 
@@ -306,7 +306,7 @@ names specified in the rule is found in the data.
 
   my $title_is_valid = $result->is_valid('title');
 
-Check if one paramter is valid.
+Check if one parameter is valid.
 
 =head2 loose_data
 
