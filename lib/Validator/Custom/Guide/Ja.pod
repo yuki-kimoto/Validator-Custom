@@ -116,7 +116,7 @@ L<Validator::Custom::Result>のPODの中で解説されています。
 ルールはパラメータ名と(ひとつあるいは複数の)制約関数のペアを持ちます。
 
   my $rule = [
-    age =>  [            # paramter name1        
+    age =>  [            # parameter name1        
       'not_blank',       #   constraint function1
       'int'              #   constraint function2
     ],                                                   
@@ -154,7 +154,7 @@ L<Validator::Custom::Result>のPODの中で解説されています。
     ]
   ];
 
-You can set options for each paramter name.
+You can set options for each parameter name.
 
   my $rule = [
            # Option
@@ -163,7 +163,7 @@ You can set options for each paramter name.
     ]
   ];
 
-Option is located after the paramter name,
+Option is located after the parameter name,
 and option must be hash reference.
 
 The following options is available.
@@ -361,7 +361,7 @@ L<Validator::Custom>を継承してユーザクラスを定義するのは簡単
 コンストラクタの中でC<register_constraint>を使って、
 制約関数を登録してください。
 
-use C<register_constraint> in constructor to register constarint.
+use C<register_constraint> in constructor to register constraint.
 
   package Validator::Custom::Your;
   use base 'Validator::Custom';

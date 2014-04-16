@@ -50,7 +50,7 @@ You can use many constraint function,
 such as C<int>, C<not_blank>, C<length>  by default.
 See L<Validator::Custom/"CONSTRAINTS"> to know all constraint functions.
 
-Rule details is explanined in L</"3. Rule syntax"> section.
+Rule details is explained in L</"3. Rule syntax"> section.
 
 B<4. Validate data>
   
@@ -102,12 +102,12 @@ in L</"2. Validation result">.
 =head2 2. Validation result
 
 C<validate()> return L<Validator::Custom::Result> object.
-You can manipulate the result by variouse methods.
+You can manipulate the result by various methods.
 
 C<is_ok()>, C<has_missing()>, C<has_invalid()>, C<missing_params()>,
 C<messages_to_hash()> is already explained in L</"1. Basic">
 
-The following ones is offten used methods.
+The following ones is often used methods.
 
 B<data()>
 
@@ -152,7 +152,7 @@ parameter names.
 Rule has pairs of parameter name and constraint functions.
 
   my $rule = [
-    age =>  [            # paramter name1
+    age =>  [            # parameter name1
       'not_blank',       #   constraint function1
       'int'              #   constraint function2
     ],                                                   
@@ -182,7 +182,7 @@ You can set message for each constraint function
 
 =head3 C<Option>
 
-You can set options for each paramter name.
+You can set options for each parameter name.
 
   my $rule = [
            # Option
@@ -191,7 +191,7 @@ You can set options for each paramter name.
     ]
   ];
 
-Option is located after the paramter name,
+Option is located after the parameter name,
 and option must be hash reference.
 
 The following options is available.
@@ -209,7 +209,7 @@ Message corresponding to the parameter name which value is invalid.
   {default => 5}
 
 Default value. This value is automatically set to result data
-if the paramter value is invalid or the paramter name specified in rule is missing in the data.
+if the parameter value is invalid or the parameter name specified in rule is missing in the data.
 
 =item 3. copy
 
@@ -222,7 +222,7 @@ Default to 1. Parameter value is copied to the data.
 =item 4. require
 
 If this value is 0 and parameter value is not found,
-the parameter is not added to missing paramter list.
+the parameter is not added to missing parameter list.
 
 Default to 1.
 
@@ -272,7 +272,7 @@ You can negative a constraint function
   ];
 
 "!" is added to the head of the constraint name
-if you negative a constrint function.
+if you negative a constraint function.
 '!int' means not 'int'.
 
 In this example, 
@@ -354,7 +354,7 @@ and L<Validator::Custom> object as third argument.
   );
 
 If you know the implementations of constraint functions,
-see the soruce of L<Validator::Custom::Constraint>.
+see the source of L<Validator::Custom::Constraint>.
 
 If you want to return custom message, you can use hash reference as return value.
 This feature is yet EXPERIMENTAL.
@@ -392,7 +392,7 @@ Filter function is same as constraint function except for return value;
   );
 
 Return value of filter function must be array reference.
-First element is boolean value which chekc if the value is valid.
+First element is boolean value which check if the value is valid.
 Second element is filtered value.
 
 In this example, First element of array reference is set to 1

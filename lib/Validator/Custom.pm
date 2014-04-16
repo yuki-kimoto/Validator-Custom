@@ -258,7 +258,7 @@ sub validate {
   # Error position
   my $pos = 0;
   
-  # Found missing paramteters
+  # Found missing parameters
   my $found_missing_params = {};
   
   # Shared rule
@@ -385,7 +385,7 @@ sub validate {
       
       # Constraint key
       else {
-        # Constirnt infomation
+        # Constraint information
         my $cinfo = $self->_parse_constraint($constraint);
         $data_type->{array} = 1 if $cinfo->{array};
                                         
@@ -473,7 +473,7 @@ sub validate {
                                      : $opts->{default}
           if exists $opts->{default} && $copy;
         
-        # No Error strock
+        # No Error stock
         unless ($error_stock) {
           # Check rest constraint
           my $found;
@@ -505,7 +505,7 @@ sub validate {
 sub _parse_constraint {
   my ($self, $constraint) = @_;
   
-  # Constraint infomation
+  # Constraint information
   my $cinfo = {};
   
   # Simple constraint name
@@ -522,7 +522,7 @@ sub _parse_constraint {
   $constraint =~ s/^\s+//;
   $constraint =~ s/\s+$//;
   
-  # Target is array elemetns
+  # Target is array elements
   $cinfo->{array} = 1 if $constraint =~ s/^@//;
   croak qq{"\@" must be one at the top of constrinat name}
     if index($constraint, '@') > -1;
@@ -533,7 +533,7 @@ sub _parse_constraint {
   # Constraint names
   my @cnames = split(/\|\|/, $constraint);
   
-  # Convert constarint names to constraint funcions
+  # Convert constraint names to constraint functions
   for my $cname (@cnames) {
     $cname ||= '';
     
@@ -724,11 +724,11 @@ You can register your constraint function.
 =item *
 
 You can set error messages for invalid parameter value.
-The order of messages is keeped.
+The order of messages is kept.
 
 =item *
 
-Support C<OR> condtion constraint and negativate constraint,
+Support C<OR> condition constraint and negative constraint,
 
 =back
 
@@ -777,7 +777,7 @@ Default to 1.
   my $rule_obj = $vc->rule_obj($rule);
 
 L<Validator::Custom> rule is a little complex.
-You maybe make mistakes offten.
+You maybe make mistakes often.
 If you want to know that how Validator::Custom parse rule,
 See C<rule_obj> attribute after calling C<validate> method.
 This is L<Validator::Custom::Rule> object.
@@ -787,7 +787,7 @@ This is L<Validator::Custom::Rule> object.
   use Data::Dumper;
   print Dumper $vc->rule_obj->rule;
 
-If you see C<ERROR> key, rule syntx is wrong.
+If you see C<ERROR> key, rule syntax is wrong.
 
 =head2 rule
 
@@ -840,7 +840,7 @@ Validate the data.
 Return value is L<Validator::Custom::Result> object.
 If second argument isn't passed, C<rule> attribute is used as rule.
 
-$rule is array refernce
+$rule is array reference
 (or L<Validator::Custom::Rule> object, this is EXPERIMENTAL).
 
 =head2 register_constraint
@@ -997,7 +997,7 @@ Blank.
     ]
   ];
 
-Decimal. You can specify maximus digits number at before
+Decimal. You can specify maximum digits number at before
 and after '.'.
 
 =head2 defined
@@ -1166,7 +1166,7 @@ which don't contain unicode space character.
     ]
   ];
 
-White space or empty stirng.
+White space or empty string.
 Not that space is only C<[ \t\n\r\f]>
 which don't contain unicode space character.
 
