@@ -1,10 +1,12 @@
-0.23
+1.01
   - use constraints function from $_ in constraint function;
     my $rule = [
       title => [
         sub { $_->blank($_[0]) || $_->regex($_[0], qr/[0-9]+/) }
       ]
     ];
+  - add create_rule method and new rule syntax
+  - remove syntax attribute
 0.22
   - remove Validator::Custom::Rules(EXPERIMANTAL) because this rule set can't manipulate
     multiple rules well

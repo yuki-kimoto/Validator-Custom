@@ -293,13 +293,13 @@ use T1;
 
 {
   eval{Validator::Custom->new->rule({})->validate({})};
-  like($@, qr/Validation rule must be array ref.+rule 1/sm,
+  like($@, qr/Invalid rule structure/sm,
            'Validation rule not array ref');
 }
 
 {
   eval{Validator::Custom->new->rule([key => 'Int'])->validate({})};
-  like($@, qr/Constraints of validation rule must be array ref.+syntax 2/sm, 
+  like($@, qr/Invalid rule structure/sm, 
            'Constraints of key not array ref');
 }
 
@@ -2495,5 +2495,16 @@ test 'trim_uni';
     my $vresult = $vc->validate({k1 => 'aaa'}, $rule);
     ok($vresult->is_valid('k1'));
     ok(!defined $vresult->data->{'k1'});
+  }
+  
+  # filter
+  {
+    my $rule = $vc->create_rule;
+    $rule->require('k1')->filter(
+      'trim'
+    );
+
+    my $vresult = $vc->validate({k1 => ' aaa '}, $rule);
+    is($vresult->data->{'k1'}, 'aaa');
   }
 }

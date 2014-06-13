@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '0.23';
+our $VERSION = '1.01';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
@@ -12,45 +12,7 @@ use Validator::Custom::Constraints;
 has ['data_filter', 'rule', 'rule_obj'];
 has error_stock => 1;
 
-has syntax => <<'EOS';
-### Syntax of validation rule
-my $rule = [                            # 1 Rule: Array reference
-  key => [                              # 2 Constraints: Array reference
-      'constraint',                     # 3 Constraint: String
-      {'constraint' => $args}           #   or Hash reference (with Arguments)
-      ['constraint' => 'Error Message'],#   or Array reference (with Message)
-  ],
-  key => [                              # 4 With Arguments and Message
-      [{constraint => $args}, 'Error Message']
-                                        
-  ],
-  {key => ['key1', 'key2']} => [        # 5.1 Multi-parameters validation
-      'constraint'
-  ],
-  {key => qr/^key/} => [                # 5.2 Multi-parameters validation
-      'constraint'                              using regular expression
-  ],
-  key => [
-      '@constraint'                     # 6 Multi-values validation
-  ],
-  key => {message => 'err', ... } => [  # 7 with Options
-      'constraint'
-  ],
-  key => [
-      '!constraint'                     # 8 Negativate constraint
-  ],
-  key => [
-      'constraint1 || constraint2'      # 9 "OR" Condition
-  ],
-];
-
-EOS
-
-sub create_rule {
-  my $self = shift;
-  
-  return Validator::Custom::Rule->new;
-}
+sub create_rule { Validator::Custom::Rule->new }
 
 sub js_fill_form_button {
   my ($self, $rule) = @_;
@@ -243,10 +205,7 @@ sub validate {
   
   # Check rule
   unless (ref $rule eq 'Validator::Custom::Rule') {
-    croak "Validation rule must be array ref\n" .
-        "(see syntax of validation rule 1)\n" .
-        $self->_rule_syntax($rule)
-      unless ref $rule eq 'ARRAY';
+    croak "Invalid rule structure" unless ref $rule eq 'ARRAY';
   }
   
   # Result
@@ -298,8 +257,7 @@ sub validate {
     my $constraints = $r->{constraints};
     
     # Check constraints
-    croak "Constraints of validation rule must be array reference. " .
-        "see syntax 2.\n" . $self->_rule_syntax($rule)
+    croak "Invalid rule structure"
       unless ref $constraints eq 'ARRAY';
     
     # Arrange key
@@ -663,20 +621,6 @@ sub _parse_random_string_rule {
   return $result;
 }
 
-sub _rule_syntax {
-  my $self = shift;
-  
-  my $message = $self->syntax;
-  require Data::Dumper;
-  my $rule_obj = $self->rule_obj;
-  if ($rule_obj) {
-    $message .= "### Rule is interpreted as the follwoing data structure\n";
-    $message .= Data::Dumper->Dump([$rule_obj->rule], ['$rule']);
-  }
-  
-  return $message;
-}
-
 # DEPRECATED!
 has shared_rule => sub { [] };
 # DEPRECATED!
@@ -696,19 +640,18 @@ Validator::Custom - HTML form Validation, easy and flexibly
   
   # Data
   my $data = {age => 19, name => 'Ken Suzuki'};
-  
-  # Rule
-  my $rule = [
-    age => [
-      ['not_blank' => 'age is empty.'],
-      ['int' => 'age must be integer']
-    ],
-    name => [
-      ['not_blank' => 'name is emtpy'],
-      [{length => [1, 5]} => 'name is too long']
-    ]
-  ];
-  
+
+  # Rule syntax
+  my $rule = $vc->create_rule;
+  $rule->require('age')->check(
+    ['not_blank' => 'age is empty.'],
+    ['int' => 'age must be integer']
+  );
+  $rule->require('name')->check(
+    ['not_blank' => 'name is emtpy'],
+    [{length => [1, 5]} => 'name is too long']
+  );
+    
   # Validation
   my $result = $vc->validate($data, $rule);
   if ($result->is_ok) {
@@ -725,22 +668,21 @@ Validator::Custom - HTML form Validation, easy and flexibly
     my $value = shift;
     return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
   };
+  $rule->require('age')->check(
+    [$blank_or_number => 'age must be blank or number']
+  );
+  
+  # Rule old syntax
   my $rule = [
+    age => [
+      ['not_blank' => 'age is empty.'],
+      ['int' => 'age must be integer']
+    ],
     name => [
-      [$blank_or_number => 'age must be blank or number']
+      ['not_blank' => 'name is emtpy'],
+      [{length => [1, 5]} => 'name is too long']
     ]
   ];
-  
-  # Rule new syntax
-  my $rule = $vc->create_rule;
-  $rule->require('age')->check(
-    ['not_blank' => 'age is empty.'],
-    ['int' => 'age must be integer']
-  );
-  $rule->require('name')->check(
-    ['not_blank' => 'name is emtpy'],
-    [{length => [1, 5]} => 'name is too long']
-  );
 
 =head1 DESCRIPTION
 
@@ -791,36 +733,22 @@ Data must be hash reference.
 
 B<3. Prepare a rule for validation>
 
-  my $rule = [
-    age => {message => 'age must be integer'} => [
-      'not_blank',
-      'int'
-    ],
-    name => {message => 'name must be string. the length 1 to 5'} => [
-      'not_blank',
-      {length => [1, 5]}
-    ],
-    price => [
-      'not_blank',
-      'int'
-    ]
-  ];
+  my $ruel = $vc->create_rule;
+  $rule->require('age')->message('age must be integer')->check(
+    'not_blank',
+    'int'
+  );
+  $rule->require('name')->check(
+    ['not_blank' => 'name is empty']
+    [{length => [1, 5]} => 'name must be length 1 to 5']
+  );
 
-Rule has specific structure.
-which consists of several parts, such as 
-C<parameter name>, C<option>, C<constraint function>, C<constraint argument>
-
-  my $rule = [
-    PARAMETER_NAME => \%OPTION => [
-      CONSTRAINT_NAME1
-      {CONSTRAINT_NAME2 => CONSTAINT_ARGUMENT}
-    ],
-    ...
-  ]
+Please see L<Validator::Custom/"RULE"> about rule syntax.
 
 You can use many constraint function,
-such as C<int>, C<not_blank>, C<length>  by default.
-See L<Validator::Custom/"CONSTRAINTS"> to know all constraint functions.
+such as C<int>, C<not_blank>, C<length>.
+See L<Validator::Custom/"CONSTRAINTS">
+to know all constraint functions.
 
 Rule details is explained in L</"3. Rule syntax"> section.
 
@@ -906,7 +834,7 @@ Get a message corresponding to the parameter name which value is invalid.
 All L<Validator::Custom::Result>'s APIs is explained
 in the POD of L<Validator::Custom::Result>
 
-=head2 3. Rule syntax
+=head2 RULE
 
   my $rule = $vc->create_rule;
   $rule->require('name')->check(
@@ -992,125 +920,13 @@ you can call constraints from $_ in subroutine.
     ]
   ];
 
-=head2 3-2. Rule old syntax
-
-This is rule old syntax. Plese use new rule syntax.
-
-=head3 C<Basic>
-
-Rule has specified structure.
-
-Rule must be array reference. 
-
-  my $rule = [
-  
-  ];
-
-This is for keeping the order of
-parameter names.
-
-Rule has pairs of parameter name and constraint functions.
-
-  my $rule = [
-    age =>  [            # parameter name1
-      'not_blank',       #   constraint function1
-      'int'              #   constraint function2
-    ],                                                   
-                                                         
-    name => [              # parameter name2       
-      'not_blank',         #   constraint function1
-      {'length' => [1, 5]} #   constraint function2
-    ]
-  ];
-
-Constraint function can receive arguments using hash reference.
-
-  my $rule = [
-    name => [
-        {'length' => [1, 5]}
-    ]
-  ];
-
-You can set message for each constraint function
-
-  my $rule = [
-    name => [
-        ['not_blank', 'name must be not blank'],
-        [{length => [1, 5]}, 'name must be 1 to 5 length']
-    ]
-  ];
-
-You can pass subroutine reference as constraint.
-
-  # You original constraint(you can call constraint from $_)
-  my $blank_or_number = sub {
-    my $value = shift;
-    return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
-  };
-  my $rule = [
-    name => [
-      [$blank_or_number => 'name must be blank or number']
-    ]
-  ];
-
-=head3 C<Option>
-
-You can set options for each parameter name.
-
-  my $rule = [
-           # Option
-    age => {message => 'age must be integer'} => [
-        'not_blank',
-    ]
-  ];
-
-Option is located after the parameter name,
-and option must be hash reference.
-
-The following options is available.
-
-=over 4
-
-=item 1. message
-
- {message => "This is invalid"}
-
-Message corresponding to the parameter name which value is invalid. 
-
-=item 2. default
-
-  {default => 5}
-
-Default value. This value is automatically set to result data
-if the parameter value is invalid or the parameter name specified in rule is missing in the data.
-
-=item 3. copy
-
-  {copy => 0}
-
-If this value is 0, The parameter value is not copied to result data. 
-
-Default to 1. Parameter value is copied to the data.
-
-=item 4. require
-
-If this value is 0 and parameter value is not found,
-the parameter is not added to missing parameter list.
-
-Default to 1.
-
-=back
-
-=head3 C<Multiple parameters validation>
+=head3 Multiple parameters validation
 
 Multiple parameters validation is available.
 
-  my $data = {password1 => 'xxx', password2 => 'xxx'};
-  my $rule = [
-    {password_check => [qw/password1 password2/]} => [
-        'duplication'
-    ]
-  ];
+  Data: {password1 => 'xxx', password2 => 'xxx'}
+  Rule: require([qw/password1 password2/])->name('password_check)
+          ->check('duplication')
 
 In this example, We check if 'password1' and 'password2' is same.
 The following value is passed to constraint function C<duplication>.
@@ -1122,27 +938,20 @@ This is used by L<Validator::Result> object.
 
 You can also use the reference of regular expression if you need.
 
-  my $data = {person1 => 'Taro', person2 => 'Rika', person3 => 'Ken'};
-  my $rule = [
-    {merged_person => qr/^person;/} => [
-      'merge', # TaroRikaKen
-    ]
-  ];
+  Data: {person1 => 'Taro', person2 => 'Rika', person3 => 'Ken'}
+  Rule: require(qr/^person/)->name('merged_person')
+          ->filter('merge') # TaroRikaKen
 
 All matched value is passed to constraint function as array reference.
 In this example, the following value is passed.
 
   ['Taro', 'Rika', 'Ken']
 
-=head3 C<Negative constraint function> 
+=head3 Negative constraint function
 
 You can negative a constraint function
 
-  my $rule = [
-    age => [
-      '!int'
-    ]
-  ];
+  Rule: require('age')->check('!int')
 
 "!" is added to the head of the constraint name
 if you negative a constraint function.
@@ -1150,40 +959,25 @@ if you negative a constraint function.
 
 In this example, 
 
-=head3 C<"OR" of constraint functions>
+=head3 "OR" of constraint functions
 
 You can create "OR" of constraint functions
 
-  my $rule = [
-    email => [
-      'blank || email'
-    ]
-  ];
+  Rule: require('email')->check('blank || email')
 
 Use "||" to create "OR" of constraint functions.
 'blank || email' means 'blank' or 'email'.
 
 You can combine "||" and "!".
 
-  my $rule = [
-    email => [
-      'blank || !int'
-    ]
-  ];
+  Rule: require('email')->check('blank || !int')
 
-=head3 C<Array validation>
+=head3 Array validation
 
 You can check if all the elements of array is valid.
 
-  my $data = {
-    nums => [1, 2, 3]
-  };
-  
-  my $rule = [
-    'nums' => [
-      '@int'
-    ]
-  ];
+  Data: {nums => [1, 2, 3]}
+  Rule: require('nums')->check('@int')
 
 "@" is added to the head of constraint function name
 to validate all the elements of array.
@@ -1252,14 +1046,14 @@ If you want to return custom message, you can use hash reference as return value
 C<register_constraint()> is also used to register filter function.
 
 Filter function is same as constraint function except for return value;
-  
+
   $vc->register_constraint(
     to_upper_case => sub {
       my $value = shift;
       
       $value = uc $value;
                   
-      return [1, $value];
+      return {result => 1, output => $value};
     }
   );
 
@@ -1270,44 +1064,448 @@ Second element is filtered value.
 In this example, First element of array reference is set to 1
 because this function is intended to filter only.
 
-You can also use hash reference representation.
+You can also use array reference representation.
+This is old syntax. I recommend hash reference.
   
-  # This is same as above
+  # This is old syntax
   $vc->register_constraint(
     to_upper_case => sub {
       my $value = shift;
       
       $value = uc $value;
                   
-      return {result => 1, output => $value};
+      return [1, $value];
     }
   );
-  
-=head2 5. Extending
 
-It is easy to define your class extending L<Validator::Custom>.
-Register constraint function using C<register_constraint>
-in the constructor.
+=head2 Old rule syntax
 
-  package Validator::Custom::Your;
-  use base 'Validator::Custom';
-  
-  sub new {
-    my $self = shift->SUPER::new(@_);
-    $self->register_constraint(
-      telephone => sub { ... }
-    );
-    return $self;
-  }
-  
-  1;
-  
-L<Validator::Custom::HTMLForm> is good extending examples.
+This is rule old syntax. Plese use new rule syntax.
 
-=head1 EXAMPLES
+=head3 Basic
 
-See L<Validator::Custom Wiki|https://github.com/yuki-kimoto/Validator-Custom/wiki>.
-There are many examples.
+Rule has specified structure.
+
+Rule must be array reference. 
+
+  my $rule = [
+  
+  ];
+
+This is for keeping the order of
+parameter names.
+
+Rule has pairs of parameter name and constraint functions.
+
+  my $rule = [
+    age =>  [            # parameter name1
+      'not_blank',       #   constraint function1
+      'int'              #   constraint function2
+    ],                                                   
+                                                         
+    name => [              # parameter name2       
+      'not_blank',         #   constraint function1
+      {'length' => [1, 5]} #   constraint function2
+    ]
+  ];
+
+Constraint function can receive arguments using hash reference.
+
+  my $rule = [
+    name => [
+        {'length' => [1, 5]}
+    ]
+  ];
+
+You can set message for each constraint function
+
+  my $rule = [
+    name => [
+        ['not_blank', 'name must be not blank'],
+        [{length => [1, 5]}, 'name must be 1 to 5 length']
+    ]
+  ];
+
+You can pass subroutine reference as constraint.
+
+  # You original constraint(you can call constraint from $_)
+  my $blank_or_number = sub {
+    my $value = shift;
+    return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
+  };
+  my $rule = [
+    name => [
+      [$blank_or_number => 'name must be blank or number']
+    ]
+  ];
+
+=head3 Option
+
+You can set options for each parameter name.
+
+  my $rule = [
+           # Option
+    age => {message => 'age must be integer'} => [
+        'not_blank',
+    ]
+  ];
+
+Option is located after the parameter name,
+and option must be hash reference.
+
+The following options is available.
+
+=over 4
+
+=item 1. message
+
+ {message => "This is invalid"}
+
+Message corresponding to the parameter name which value is invalid. 
+
+=item 2. default
+
+  {default => 5}
+
+Default value. This value is automatically set to result data
+if the parameter value is invalid or the parameter name specified in rule is missing in the data.
+
+=item 3. copy
+
+  {copy => 0}
+
+If this value is 0, The parameter value is not copied to result data. 
+
+Default to 1. Parameter value is copied to the data.
+
+=item 4. require
+
+If this value is 0 and parameter value is not found,
+the parameter is not added to missing parameter list.
+
+Default to 1.
+
+=back
+
+=head1 CONSTRAINTS
+
+=head2 ascii
+
+  Data: {name => 'Ken'}
+  Rule: require('name')->check('ascii')
+
+Ascii graphic characters(hex 21-7e).
+
+=head2 between
+
+  # Check (1, 2, .. 19, 20)
+  Data: {age => 19}
+  Rule: require('age')->check({between => [1, 20]})
+
+Between A and B.
+
+=head2 blank
+
+  Data: {name => ''}
+  Rule: require('name')->check('blank')
+
+Blank.
+
+=head2 decimal
+  
+  Data: {num1 => '123', num2 => '1.45'}
+  Rule: require('num1')->check({'decimal' => 3})
+        require('num2')->check({'decimal' => [1, 2]})
+
+Decimal. You can specify maximum digits number at before
+and after '.'.
+
+=head2 defined
+
+  Data: {name => 'Ken'}
+  Rule: require('name')->check('defined')
+
+Defined.
+
+=head2 duplication
+
+  Data: {mail1 => 'a@somehost.com', mail2 => 'a@somehost.com'};
+  Rule: require(['mail1', 'mail2'])->name('mail')->check('duplication)
+
+Check if the two data are same or not.
+
+You can get result value
+
+  my $mail = $vresult->data->{mail};
+
+Note that if one value is not defined or both values are not defined,
+result of validation is false.
+
+=head2 equal_to
+
+  Data: {price => 1000}
+  Rule: require('price')->check({'equal_to' => 1000})
+
+Numeric equal comparison.
+
+=head2 greater_than
+
+  Data: {price => 1000}
+  Rule: require('price')->check({'greater_than' => 900})
+
+Numeric "greater than" comparison
+
+=head2 http_url
+
+  Data: {url => 'http://somehost.com'};
+  Rule: require('url')->check('http_url')
+
+HTTP(or HTTPS) URL.
+
+=head2 int
+
+  Data: {age => 19};
+  Rule: require('age')->check('int')
+
+Integer.
+
+=head2 in_array
+
+  Data: {food => 'sushi'};
+  Rule: require('food')->check({'in_array' => [qw/sushi bread apple/]})
+
+Check if the values is in array.
+
+=head2 length
+
+  Data: {value1 => 'aaa', value2 => 'bbbbb'};
+  Rule: # length is equal to 3
+        require('value1')->check({'length' => 3}) 
+        # length is greater than or equal to 2 and lower than or equeal to 5
+        require('value2')->check({'length' => [2, 5]}) 
+        # length is greater than or equal to 2 and lower than or equeal to 5
+        require('value3')->check({'length' => {min => 2, max => 5}}) 
+        # greater than or equal to 2
+        require('value4')->check({'length' => {min => 2}}) 
+        # lower than or equal to 5
+        require('value5')->check({'length' => {max => 5}}) 
+
+Length of the value.
+
+Not that if value is internal string, length is character length.
+if value is byte string, length is byte length.
+
+=head2 less_than
+
+  Data: {num => 20}
+  Rule: require('num')->check({'less_than' => 25});
+
+Numeric "less than" comparison.
+
+=head2 not_blank
+
+  Data: {name => 'Ken'}
+  Rule: require('name')->check('not_blank') # Except for ''
+
+Not blank.
+
+=head2 not_defined
+
+  Data: {name => 'Ken'}
+  Rule: require('name')->check('not_defined')
+
+Not defined.
+
+=head2 not_space
+
+  Data: {name => 'Ken'}
+  Rule: require('name')->check('not_space') # Except for '', ' ', '   '
+
+Not contain only space characters. 
+Not that space is only C<[ \t\n\r\f]>
+which don't contain unicode space character.
+
+=head2 space
+
+  Data: {name => '   '}
+  Rule: require('name')->check('space') # '', ' ', '   '
+
+White space or empty string.
+Not that space is only C<[ \t\n\r\f]>
+which don't contain unicode space character.
+
+=head2 uint
+
+  Data: {age => 19}
+  Rule: require('age')->check('uint')
+
+Unsigned integer(contain zero).
+  
+=head2 regex
+
+  Data: {num => '123'}
+  Rule: require('num')->check({'regex' => qr/\d{0,3}/})
+
+Match a regular expression.
+
+=head2 selected_at_least
+
+  Data: {hobby => ['music', 'movie' ]}
+  Rule: require('hobby')->check({selected_at_least => 1})
+
+Selected at least specified count item.
+In other word, the array contains at least specified count element.
+
+=head1 FILTERS
+
+=head2 date_to_timepiece
+
+  Data: {date => '2010/11/12'}
+  Rule: require('date')->filter('date_to_timepiece')
+
+The value which looks like date is converted
+to L<Time::Piece> object.
+If the value contains 8 digits, the value is assumed date.
+
+  2010/11/12 # ok
+  2010-11-12 # ok
+  20101112   # ok
+  2010       # NG
+  2010111106 # NG
+
+And year and month and mday combination is ok.
+
+  Data: {year => 2011, month => 3, mday => 9}
+  Rule: require(['year', 'month', 'mday'])->name('date')
+                                          ->filter('date_to_timepiece')
+
+You can get result value.
+
+  my $date = $vresult->data->{date};
+
+Note that L<Time::Piece> is required.
+
+=head2 datetime_to_timepiece
+
+  Data: {datetime => '2010/11/12 12:14:45'}
+  Rule: require('datetime')->filter('datetime_to_timepiece');
+
+The value which looks like date and time is converted
+to L<Time::Piece> object.
+If the value contains 14 digits, the value is assumed date and time.
+
+  2010/11/12 12:14:45 # ok
+  2010-11-12 12:14:45 # ok
+  20101112 121445     # ok
+  2010                # NG
+  2010111106 12       # NG
+
+And year and month and mday combination is ok.
+
+  Data: {year => 2011, month => 3, mday => 9
+         hour => 10, min => 30, sec => 30}
+  Rule: require(['year', 'month', 'mday', 'hour', 'min', 'sec'])
+          ->name('datetime')->filter('datetime_to_timepiece')
+
+You can get result value.
+
+  my $date = $vresult->data->{datetime};
+
+Note that L<Time::Piece> is required.
+
+=head2 merge
+
+  Data: {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'}
+  Rule: require(['name1', 'name2', 'name3'])->name('mergd_name')
+          ->filter('merge') # KenRikaTaro
+
+Merge the values.
+
+You can get result value.
+
+  my $merged_name = $vresult->data->{merged_name};
+
+Note that if one value is not defined, merged value become undefined.
+
+=head2 shift
+
+  Data: {names => ['Ken', 'Taro']}
+  Rule: require('names')->filter('shift') # 'Ken'
+
+Shift the head element of array.
+
+=head2 to_array
+
+  Data: {languages => 'Japanese'}
+  Rule: require('languages')->filter('to_array') # ['Japanese']
+  
+Convert non array reference data to array reference.
+This is useful to check checkbox values or select multiple values.
+
+=head2 trim
+
+  Data: {name => '  Ken  '}
+  Rule: require('name')->filter('trim') # 'Ken'
+
+Trim leading and trailing white space.
+Not that trim only C<[ \t\n\r\f]>
+which don't contain unicode space character.
+
+=head2 trim_collapse
+
+  Data: {name => '  Ken   Takagi  '}
+  Rule: require('name')->filter('trim_collapse') # 'Ken Takagi'
+
+Trim leading and trailing white space,
+and collapse all whitespace characters into a single space.
+Not that trim only C<[ \t\n\r\f]>
+which don't contain unicode space character.
+
+=head2 trim_lead
+
+  Data: {name => '  Ken  '}
+  Rule: require('name')->filter('trim_lead') # 'Ken  '
+
+Trim leading white space.
+Not that trim only C<[ \t\n\r\f]>
+which don't contain unicode space character.
+
+=head2 trim_trail
+
+  Data: {name => '  Ken  '}
+  Rule: require('name')->filter('trim_trail') # '  Ken'
+
+Trim trailing white space.
+Not that trim only C<[ \t\n\r\f]>
+which don't contain unicode space character.
+
+=head2 trim_uni
+
+  Data: {name => '  Ken  '}
+  Rule: require('name')->filter('trim_uni') # 'Ken'
+
+Trim leading and trailing white space, which contain unicode space character.
+
+=head2 trim_uni_collapse
+
+  Data: {name => '  Ken   Takagi  '};
+  Rule: require('name')->filter('trim_uni_collapse') # 'Ken Takagi'
+
+Trim leading and trailing white space, which contain unicode space character.
+
+=head2 trim_uni_lead
+
+  Data: {name => '  Ken  '};
+  Rule: require('name')->filter('trim_uni_lead') # 'Ken  '
+
+Trim leading white space, which contain unicode space character.
+
+=head2 trim_uni_trail
+  
+  Data: {name => '  Ken  '};
+  Rule: require('name')->filter('trim_uni_trail') # '  Ken'
+
+Trim trailing white space, which contain unicode space character.
 
 =head1 ATTRIBUTES
 
@@ -1369,13 +1567,6 @@ If you see C<ERROR> key, rule syntax is wrong.
 
 Validation rule. If second argument of C<validate()> is not specified.
 this rule is used.
-
-=head2 syntax
-
-  my $syntax = $vc->syntax;
-  $vc        = $vc->syntax($syntax);
-
-Syntax of rule.
 
 =head1 METHODS
 
@@ -1452,525 +1643,10 @@ Filter function return array reference,
 first element is the value if the value is valid or not,
 second element is the converted value by filter function.
 
-=head1 RULE SYNTAX
+=head1 EXAMPLES
 
-Validation rule has the following syntax.
-
-  # Rule syntax
-  my $rule = [                          # 1 Rule is array ref
-    key => [                            # 2 Constraints is array ref
-      'constraint',                     # 3 Constraint is string
-      {'constraint' => 'args'}          #     or hash ref (arguments)
-      ['constraint', 'err'],            #     or arrya ref (message)
-    ],
-    key => [                           
-      [{constraint => 'args'}, 'err']   # 4 With argument and message
-    ],
-    {key => ['key1', 'key2']} => [      # 5.1 Multi-parameters validation
-      'constraint'
-    ],
-    {key => qr/^key/} => [              # 5.2 Multi-parameters validation
-      'constraint'                            using regular expression
-    ],
-    key => [
-      '@constraint'                     # 6 Multi-values validation
-    ],
-    key => {message => 'err', ... } => [# 7 With option
-      'constraint'
-    ],
-    key => [
-      '!constraint'                     # 8 Negativate constraint
-    ],
-    key => [
-      'constraint1 || constraint2'      # 9 "OR" condition constraint
-    ],
-  ];
-
-Rule can have option, following options is available.
-
-=over 4
-
-=item 1. message
-
-  {message => "Input right value"}
-
-Message for invalid value.
-
-=item 2. default
-
-  {default => 5}
-
-Default value, set to C<data> of C<Validator::Custom::Result>
-when invalid value or missing value is found
-
-=item 3. copy
-
-  {copy => 0}
-
-If C<copy> is 0, the value is not copied to C<data> of C<Validator::Custom::Result>. 
-
-Default to 1. 
-
-=item 4. require
-
-  {require => 0}
-
-If C<require> is 0,
-The value is not appended to missing parameter list
-even if the value is not found
-
-Default to 1.
-
-=back
-
-=head1 CONSTRAINTS
-
-=head2 ascii
-
-  my $data => {name => 'Ken'};
-  my $rule = [
-    name => [
-      'ascii'
-    ]
-  ];
-
-Ascii graphic characters(hex 21-7e).
-
-=head2 between
-
-  my $data = {age => 19};
-  my $rule = [
-    age => [
-      {between => [1, 20]} # (1, 2, .. 19, 20)
-    ]
-  ];
-
-Between A and B.
-
-=head2 blank
-
-  my $data = {name => ''};
-  my $rule = [
-    name => [
-      'blank'
-    ]
-  ];
-
-Blank.
-
-=head2 decimal
-  
-  my $data = {num1 => '123', num2 => '1.45'};
-  my $rule => [
-    num1 => [
-      {'decimal' => 3}
-    ],
-    num2 => [
-      {'decimal' => [1, 2]}
-    ]
-  ];
-
-Decimal. You can specify maximum digits number at before
-and after '.'.
-
-=head2 defined
-
-  my $data => {name => 'Ken'};
-  my $rule = [
-    name => [
-      'defined'
-    ]
-  ];
-
-Defined.
-
-=head2 duplication
-
-  my $data = {mail1 => 'a@somehost.com', mail2 => 'a@somehost.com'};
-  my $rule => [
-    {mail => ['mail1', 'mail2']} => [
-      'duplication'
-    ]
-  ];
-
-Check if the two data are same or not.
-
-Note that if one value is not defined or both values are not defined,
-result of validation is false.
-
-=head2 equal_to
-
-  my $data = {price => 1000};
-  my $rule = [
-    price => [
-      {'equal_to' => 1000}
-    ]
-  ];
-
-Numeric equal comparison.
-
-=head2 greater_than
-
-  my $data = {price => 1000};
-  my $rule = [
-    price => [
-      {'greater_than' => 900}
-    ]
-  ];
-
-Numeric "greater than" comparison
-
-=head2 http_url
-
-  my $data = {url => 'http://somehost.com'};
-  my $rule => [
-    url => [
-      'http_url'
-    ]
-  ];
-
-HTTP(or HTTPS) URL.
-
-=head2 int
-
-  my $data = {age => 19};
-  my $rule = [
-    age => [
-      'int'
-    ]
-  ];
-
-Integer.
-
-=head2 in_array
-
-  my $data = {food => 'sushi'};
-  my $rule = [
-    food => [
-      {'in_array' => [qw/sushi bread apple/]}
-    ]
-  ];
-
-Check if the values is in array.
-
-=head2 length
-
-  my $data = {value1 => 'aaa', value2 => 'bbbbb'};
-  my $rule => [
-    value1 => [
-      # length is equal to 3
-      {'length' => 3} # 'aaa'
-    ],
-    value2 => [
-      # length is greater than or equal to 2 and lower than or equeal to 5
-      {'length' => [2, 5]} # 'bb' to 'bbbbb'
-    ]
-    value3 => [
-      # length is greater than or equal to 2 and lower than or equeal to 5
-      {'length' => {min => 2, max => 5}} # 'bb' to 'bbbbb'
-    ]
-    value4 => [
-      # greater than or equal to 2
-      {'length' => {min => 2}}
-    ]
-    value5 => [
-      # lower than or equal to 5
-      {'length' => {max => 5}}
-    ]
-  ];
-
-Length of the value.
-
-Not that if value is internal string, length is character length.
-if value is byte string, length is byte length.
-
-=head2 less_than
-
-  my $data = {num => 20};
-  my $rule = [
-    num => [
-      {'less_than' => 25}
-    ]
-  ];
-
-Numeric "less than" comparison.
-
-=head2 not_blank
-
-  my $data = {name => 'Ken'};
-  my $rule = [
-    name => [
-      'not_blank' # Except for ''
-    ]
-  ];
-
-Not blank.
-
-=head2 not_defined
-
-  my $data = {name => 'Ken'};
-  my $rule = [
-    name => [
-      'not_defined'
-    ]
-  ];
-
-Not defined.
-
-=head2 not_space
-
-  my $data = {name => 'Ken'};
-  my $rule = [
-    name => [
-      'not_space' # Except for '', ' ', '   '
-    ]
-  ];
-
-Not contain only space characters. 
-Not that space is only C<[ \t\n\r\f]>
-which don't contain unicode space character.
-
-=head2 space
-
-  my $data = {name => '   '};
-  my $rule = [
-    name => [
-      'space' # '', ' ', '   '
-    ]
-  ];
-
-White space or empty string.
-Not that space is only C<[ \t\n\r\f]>
-which don't contain unicode space character.
-
-=head2 uint
-
-  my $data = {age => 19};
-  my $rule = [
-    age => [
-      'uint'
-    ]
-  ];
-
-Unsigned integer(contain zero).
-  
-=head2 regex
-
-  my $data = {num => '123'};
-  my $rule => [
-    num => [
-      {'regex' => qr/\d{0,3}/}
-    ]
-  ];
-
-Match a regular expression.
-
-=head2 selected_at_least
-
-  my $data = {hobby => ['music', 'movie' ]};
-  my $rule => [
-    hobby => [
-      {selected_at_least => 1}
-    ]
-  ];
-
-Selected at least specified count item.
-In other word, the array contains at least specified count element.
-
-=head1 FILTERS
-
-=head2 date_to_timepiece
-
-  my $data = {date => '2010/11/12'};
-  my $rule = [
-    date => [
-      'date_to_timepiece'
-    ]
-  ];
-
-The value which looks like date is converted
-to L<Time::Piece> object.
-If the value contains 8 digits, the value is assumed date.
-
-  2010/11/12 # ok
-  2010-11-12 # ok
-  20101112   # ok
-  2010       # NG
-  2010111106 # NG
-
-And year and month and mday combination is ok.
-
-  my $data = {year => 2011, month => 3, mday => 9};
-  my $rule = [
-    {date => ['year', 'month', 'mday']} => [
-      'date_to_timepiece'
-    ]
-  ];
-
-Note that L<Time::Piece> is required.
-
-=head2 datetime_to_timepiece
-
-  my $data = {datetime => '2010/11/12 12:14:45'};
-  my $rule = [
-    datetime => [
-      'datetime_to_timepiece'
-    ]
-  ];
-
-The value which looks like date and time is converted
-to L<Time::Piece> object.
-If the value contains 14 digits, the value is assumed date and time.
-
-  2010/11/12 12:14:45 # ok
-  2010-11-12 12:14:45 # ok
-  20101112 121445     # ok
-  2010                # NG
-  2010111106 12       # NG
-
-And year and month and mday combination is ok.
-
-  my $data = {year => 2011, month => 3, mday => 9
-              hour => 10, min => 30, sec => 30};
-  my $rule = [
-    {datetime => ['year', 'month', 'mday', 'hour', 'min', 'sec']} => [
-      'datetime_to_timepiece'
-    ]
-  ];
-
-Note that L<Time::Piece> is required.
-
-=head2 merge
-
-  my $data = {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'};
-  my $rule = [
-    {merged_name => ['name1', 'name2', 'name3']} => [
-      'merge' # KenRikaTaro
-    ]
-  ];
-
-Merge the values.
-Note that if one value is not defined, merged value become undefined.
-
-=head2 shift
-
-  my $data = {names => ['Ken', 'Taro']};
-  my $rule => [
-    names => [
-      'shift' # 'Ken'
-    ]
-  ];
-
-Shift the head element of array.
-
-=head2 to_array
-
-  my $data = {languages => 'Japanese'};
-  my $rule = [
-    languages => [
-      'to_array' # ['Japanese']
-    ],
-  ];
-  
-Convert non array reference data to array reference.
-This is useful to check checkbox values or select multiple values.
-
-=head2 trim
-
-  my $data = {name => '  Ken  '};
-  my $rule = [
-    name => [
-      'trim' # 'Ken'
-    ]
-  ];
-
-Trim leading and trailing white space.
-Not that trim only C<[ \t\n\r\f]>
-which don't contain unicode space character.
-
-=head2 trim_collapse
-
-  my $data = {name => '  Ken   Takagi  '};
-  my $rule = [
-    name => [
-      'trim_collapse' # 'Ken Takagi'
-    ]
-  ];
-
-Trim leading and trailing white space,
-and collapse all whitespace characters into a single space.
-Not that trim only C<[ \t\n\r\f]>
-which don't contain unicode space character.
-
-=head2 trim_lead
-
-  my $data = {name => '  Ken  '};
-  my $rule = [
-    name => [
-      'trim_lead' # 'Ken  '
-    ]
-  ];
-
-Trim leading white space.
-Not that trim only C<[ \t\n\r\f]>
-which don't contain unicode space character.
-
-=head2 trim_trail
-
-  my $data = {name => '  Ken  '};
-  my $rule = [
-    name => [
-      'trim_trail' # '  Ken'
-    ]
-  ];
-
-Trim trailing white space.
-Not that trim only C<[ \t\n\r\f]>
-which don't contain unicode space character.
-
-=head2 trim_uni
-
-  my $data = {name => '  Ken  '};
-  my $rule = [
-    name => [
-      'trim_uni' # 'Ken'
-    ]
-  ];
-
-Trim leading and trailing white space, which contain unicode space character.
-
-=head2 trim_uni_collapse
-
-  my $data = {name => '  Ken   Takagi  '};
-  my $rule = [
-    name => [
-      'trim_uni_collapse' # 'Ken Takagi'
-    ]
-  ];
-
-Trim leading and trailing white space, which contain unicode space character.
-
-=head2 trim_uni_lead
-
-  my $data = {name => '  Ken  '};
-  my $rule = [
-    name => [
-      'trim_uni_lead' # 'Ken  '
-    ]
-  ];
-
-Trim leading white space, which contain unicode space character.
-
-=head2 trim_uni_trail
-
-  my $data = {name => '  Ken  '};
-  my $rule = [
-    name => [
-      'trim_uni_trail' # '  Ken'
-    ]
-  ];
-
-Trim trailing white space, which contain unicode space character.
+See L<Validator::Custom Wiki|https://github.com/yuki-kimoto/Validator-Custom/wiki>.
+There are many examples.
 
 =head1 DEPRECATED FUNCTIONALITIES
 
