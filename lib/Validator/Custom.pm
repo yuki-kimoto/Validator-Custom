@@ -940,7 +940,7 @@ You can also use the reference of regular expression if you need.
 
   Data: {person1 => 'Taro', person2 => 'Rika', person3 => 'Ken'}
   Rule: require(qr/^person/)->name('merged_person')
-          ->filter('merge') # TaroRikaKen
+          ->check('merge') # TaroRikaKen
 
 All matched value is passed to constraint function as array reference.
 In this example, the following value is passed.
@@ -1361,7 +1361,7 @@ In other word, the array contains at least specified count element.
 =head2 date_to_timepiece
 
   Data: {date => '2010/11/12'}
-  Rule: require('date')->filter('date_to_timepiece')
+  Rule: require('date')->check('date_to_timepiece')
 
 The value which looks like date is converted
 to L<Time::Piece> object.
@@ -1377,7 +1377,7 @@ And year and month and mday combination is ok.
 
   Data: {year => 2011, month => 3, mday => 9}
   Rule: require(['year', 'month', 'mday'])->name('date')
-                                          ->filter('date_to_timepiece')
+                                          ->check('date_to_timepiece')
 
 You can get result value.
 
@@ -1388,7 +1388,7 @@ Note that L<Time::Piece> is required.
 =head2 datetime_to_timepiece
 
   Data: {datetime => '2010/11/12 12:14:45'}
-  Rule: require('datetime')->filter('datetime_to_timepiece');
+  Rule: require('datetime')->check('datetime_to_timepiece');
 
 The value which looks like date and time is converted
 to L<Time::Piece> object.
@@ -1405,7 +1405,7 @@ And year and month and mday combination is ok.
   Data: {year => 2011, month => 3, mday => 9
          hour => 10, min => 30, sec => 30}
   Rule: require(['year', 'month', 'mday', 'hour', 'min', 'sec'])
-          ->name('datetime')->filter('datetime_to_timepiece')
+          ->name('datetime')->check('datetime_to_timepiece')
 
 You can get result value.
 
@@ -1417,7 +1417,7 @@ Note that L<Time::Piece> is required.
 
   Data: {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'}
   Rule: require(['name1', 'name2', 'name3'])->name('mergd_name')
-          ->filter('merge') # KenRikaTaro
+          ->check('merge') # KenRikaTaro
 
 Merge the values.
 
@@ -1430,14 +1430,14 @@ Note that if one value is not defined, merged value become undefined.
 =head2 shift
 
   Data: {names => ['Ken', 'Taro']}
-  Rule: require('names')->filter('shift') # 'Ken'
+  Rule: require('names')->check('shift') # 'Ken'
 
 Shift the head element of array.
 
 =head2 to_array
 
   Data: {languages => 'Japanese'}
-  Rule: require('languages')->filter('to_array') # ['Japanese']
+  Rule: require('languages')->check('to_array') # ['Japanese']
   
 Convert non array reference data to array reference.
 This is useful to check checkbox values or select multiple values.
@@ -1445,7 +1445,7 @@ This is useful to check checkbox values or select multiple values.
 =head2 trim
 
   Data: {name => '  Ken  '}
-  Rule: require('name')->filter('trim') # 'Ken'
+  Rule: require('name')->check('trim') # 'Ken'
 
 Trim leading and trailing white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1454,7 +1454,7 @@ which don't contain unicode space character.
 =head2 trim_collapse
 
   Data: {name => '  Ken   Takagi  '}
-  Rule: require('name')->filter('trim_collapse') # 'Ken Takagi'
+  Rule: require('name')->check('trim_collapse') # 'Ken Takagi'
 
 Trim leading and trailing white space,
 and collapse all whitespace characters into a single space.
@@ -1464,7 +1464,7 @@ which don't contain unicode space character.
 =head2 trim_lead
 
   Data: {name => '  Ken  '}
-  Rule: require('name')->filter('trim_lead') # 'Ken  '
+  Rule: require('name')->check('trim_lead') # 'Ken  '
 
 Trim leading white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1473,7 +1473,7 @@ which don't contain unicode space character.
 =head2 trim_trail
 
   Data: {name => '  Ken  '}
-  Rule: require('name')->filter('trim_trail') # '  Ken'
+  Rule: require('name')->check('trim_trail') # '  Ken'
 
 Trim trailing white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1482,28 +1482,28 @@ which don't contain unicode space character.
 =head2 trim_uni
 
   Data: {name => '  Ken  '}
-  Rule: require('name')->filter('trim_uni') # 'Ken'
+  Rule: require('name')->check('trim_uni') # 'Ken'
 
 Trim leading and trailing white space, which contain unicode space character.
 
 =head2 trim_uni_collapse
 
   Data: {name => '  Ken   Takagi  '};
-  Rule: require('name')->filter('trim_uni_collapse') # 'Ken Takagi'
+  Rule: require('name')->check('trim_uni_collapse') # 'Ken Takagi'
 
 Trim leading and trailing white space, which contain unicode space character.
 
 =head2 trim_uni_lead
 
   Data: {name => '  Ken  '};
-  Rule: require('name')->filter('trim_uni_lead') # 'Ken  '
+  Rule: require('name')->check('trim_uni_lead') # 'Ken  '
 
 Trim leading white space, which contain unicode space character.
 
 =head2 trim_uni_trail
   
   Data: {name => '  Ken  '};
-  Rule: require('name')->filter('trim_uni_trail') # '  Ken'
+  Rule: require('name')->check('trim_uni_trail') # '  Ken'
 
 Trim trailing white space, which contain unicode space character.
 

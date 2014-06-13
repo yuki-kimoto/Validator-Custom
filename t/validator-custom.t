@@ -2496,15 +2496,4 @@ test 'trim_uni';
     ok($vresult->is_valid('k1'));
     ok(!defined $vresult->data->{'k1'});
   }
-  
-  # filter
-  {
-    my $rule = $vc->create_rule;
-    $rule->require('k1')->filter(
-      'trim'
-    );
-
-    my $vresult = $vc->validate({k1 => ' aaa '}, $rule);
-    is($vresult->data->{'k1'}, 'aaa');
-  }
 }

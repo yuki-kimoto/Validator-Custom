@@ -30,8 +30,6 @@ sub check {
   return $self;
 }
 
-sub filter { shift->check(@_) }
-
 sub copy {
   my ($self, $copy) = @_;
   
@@ -209,12 +207,6 @@ Set copy option
   $rule->default(0);
 
 Set default option
-
-=head2 filter
-
-  $rule->fiter('trim');
-  
-Set filter. This is alias of C<check>.
 
 =head2 message
 
