@@ -7,6 +7,7 @@ use Carp 'croak';
 use Validator::Custom::Constraint;
 use Validator::Custom::Result;
 use Validator::Custom::Rule;
+use Validator::Custom::Constraints;
 
 has ['data_filter', 'rule', 'rule_obj'];
 has error_stock => 1;
@@ -411,7 +412,13 @@ sub validate {
             my $cfunc = $cfuncs->[$j];
             
             # Validate
-            my $cresult = $cfunc->($data, $arg, $self);
+            my $cresult;
+            {
+              local $_ = Validator::Custom::Constraints->new(
+                constraints => $self->constraints
+              );
+              $cresult= $cfunc->($data, $arg, $self);
+            }
             
             # Constrint result
             my $v;
@@ -438,7 +445,14 @@ sub validate {
       else {
         # Validation
         for my $cfunc (@$cfuncs) {
-          my $cresult = $cfunc->($value, $arg, $self);
+        
+          my $cresult;
+          {
+            local $_ = Validator::Custom::Constraints->new(
+              constraints => $self->constraints
+            );
+            $cresult = $cfunc->($value, $arg, $self);
+          }
           
           if (ref $cresult eq 'ARRAY') {
             my $v;
@@ -699,6 +713,17 @@ Validator::Custom - HTML form Validation, easy and flexibly
     # Error messgaes
     my $errors = $vresult->messages;
   }
+  
+  # You original constraint(you can call constraint from $_)
+  my $blank_or_number = sub {
+    my $value = shift;
+    return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
+  };
+  my $rule = [
+    name => [
+      [$blank_or_number => 'age must be blank or number']
+    ]
+  ];
 
 =head1 DESCRIPTION
 
@@ -907,6 +932,19 @@ You can set message for each constraint function
     name => [
         ['not_blank', 'name must be not blank'],
         [{length => [1, 5]}, 'name must be 1 to 5 length']
+    ]
+  ];
+
+You can pass subroutine reference as constraint.
+
+  # You original constraint(you can call constraint from $_)
+  my $blank_or_number = sub {
+    my $value = shift;
+    return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
+  };
+  my $rule = [
+    name => [
+      [$blank_or_number => 'name must be blank or number']
     ]
   ];
 

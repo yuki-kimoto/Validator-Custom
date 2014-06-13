@@ -2423,3 +2423,24 @@ test 'trim_uni';
   ok($vresult->is_valid('k1'));
   ok(!$vresult->is_valid('k2'));
 }
+
+# Use constraints function from $_
+{
+  my $vc = Validator::Custom->new;
+  my $rule = [
+    k1 => [
+      sub { $_->blank(@_) || $_->regex($_[0], qr/[0-9]+/) }
+    ],
+    k2 => [
+      sub { $_->blank(@_) || $_->regex($_[0], qr/[0-9]+/) }
+    ],
+    k3 => [
+      sub { $_->blank(@_) || $_->regex($_[0], qr/[0-9]+/) }
+    ],
+  ];
+  
+  my $vresult = $vc->validate({k1 => '', k2 => '123', k3 => 'abc'}, $rule);
+  ok($vresult->is_valid('k1'));
+  ok($vresult->is_valid('k2'));
+  ok(!$vresult->is_valid('k3'));
+}
