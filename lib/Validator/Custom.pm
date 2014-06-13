@@ -1635,7 +1635,7 @@ You can register filter function.
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
       
-      return [1, $value];
+      return {result => 1, output => $value];
     }
   );
 
@@ -1688,7 +1688,7 @@ L<http://github.com/yuki-kimoto/Validator-Custom>
 
 =head1 COPYRIGHT & LICENCE
 
-Copyright 2009-2013 Yuki Kimoto, all rights reserved.
+Copyright 2009-2014 Yuki Kimoto, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
