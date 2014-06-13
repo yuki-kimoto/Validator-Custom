@@ -1125,7 +1125,6 @@ If you know the implementations of constraint functions,
 see the source of L<Validator::Custom::Constraint>.
 
 If you want to return custom message, you can use hash reference as return value.
-This feature is yet EXPERIMENTAL.
 
   $vc->register_constraint(
     telephone => sub {
@@ -1166,7 +1165,7 @@ Second element is filtered value.
 In this example, First element of array reference is set to 1
 because this function is intended to filter only.
 
-You can also use hash reference representation(This is yet EXPERIMENTAL).
+You can also use hash reference representation.
   
   # This is same as above
   $vc->register_constraint(
