@@ -2362,7 +2362,7 @@ test 'trim_uni';
         return {result => 1};
       }
       else {
-        return {result => 0, message => 'error2'};
+        return {message => 'error2'};
       }
     }
   );
