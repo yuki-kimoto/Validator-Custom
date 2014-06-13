@@ -46,6 +46,12 @@ my $rule = [                            # 1 Rule: Array reference
 
 EOS
 
+sub create_rule {
+  my $self = shift;
+  
+  return Validator::Custom::Rule->new;
+}
+
 sub js_fill_form_button {
   my ($self, $rule) = @_;
   
@@ -724,6 +730,17 @@ Validator::Custom - HTML form Validation, easy and flexibly
       [$blank_or_number => 'age must be blank or number']
     ]
   ];
+  
+  # Rule new syntax
+  my $rule = $vc->create_rule;
+  $rule->require('age')->check(
+    ['not_blank' => 'age is empty.'],
+    ['int' => 'age must be integer']
+  );
+  $rule->require('name')->check(
+    ['not_blank' => 'name is emtpy'],
+    [{length => [1, 5]} => 'name is too long']
+  );
 
 =head1 DESCRIPTION
 
@@ -890,6 +907,94 @@ All L<Validator::Custom::Result>'s APIs is explained
 in the POD of L<Validator::Custom::Result>
 
 =head2 3. Rule syntax
+
+  my $rule = $vc->create_rule;
+  $rule->require('name')->check(
+    'not_blank',
+    [{length => {1, 5] => 'name length should be 1 to 5']
+  );
+  
+  $rule->optional('name')->default('kimoto')->check(
+    'not_blank'
+  );
+
+Rule is L<Validator::Custom::Rule> ojbect.
+You can create C<create_rule> method of L<Validator::Custom>.
+
+  my $rule = $vc->create_rule
+
+At first you set topic, C<require> method or C<optional> method.
+If the value is required, you use C<require> method.
+If the value is not always required, you use C<optional> method.
+  
+  # Required
+  $rule->require('age');
+  
+  # Optional
+  $rule->optional('age');
+
+If you set topic to multiple keys, you should set key name by C<name> method.
+
+  # Key name
+  $rule->require(['mail1', 'mail2'])->name('mail');
+
+You can set options, C<message>, C<default>, and C<copy>.
+
+=over 4
+
+=item 1. message
+
+ $rule->require('age')->message('age is invalid');
+
+Message corresponding to the parameter name which value is invalid. 
+
+=item 2. default
+
+  $rule->require('age')->default(5)
+
+Default value. This value is automatically set to result data
+if the parameter value is invalid or the parameter name specified in rule is missing in the data.
+
+=item 3. copy
+
+  $rule->require('age')->copy(0)
+
+If this value is 0, The parameter value is not copied to result data. 
+Default to 1. Parameter value is copied to the data.
+
+=back
+
+You set constraints by C<check> method.
+
+  $rule->require('age')->check(
+    {'length' => [1, 5]}
+  );
+
+You can set message for each constraint function
+
+  $rule->require('name')->check(
+    ['not_blank' => 'name must be not blank'],
+    [{length => [1, 5]} => 'name must be 1 to 5 length']
+  );
+
+You can create original constraint function using
+original constraints.
+you can call constraints from $_ in subroutine.
+
+  # You original constraint(you can call constraint from $_)
+  my $blank_or_number = sub {
+    my $value = shift;
+    return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
+  };
+  my $rule = [
+    name => [
+      [$blank_or_number => 'name must be blank or number']
+    ]
+  ];
+
+=head2 3-2. Rule old syntax
+
+This is rule old syntax. Plese use new rule syntax.
 
 =head3 C<Basic>
 

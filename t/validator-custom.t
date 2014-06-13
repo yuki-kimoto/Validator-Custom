@@ -2444,3 +2444,56 @@ test 'trim_uni';
   ok($vresult->is_valid('k2'));
   ok(!$vresult->is_valid('k3'));
 }
+
+# New rule syntax
+{
+  my $vc = Validator::Custom->new;
+
+  # Basic
+  {
+    my $rule = $vc->create_rule;
+    $rule->require('k1')->check(
+      'not_blank'
+    );
+    $rule->require('k2')->check(
+      'not_blank'
+    );
+    $rule->require('k3')->check(
+      ['not_blank' => 'k3 is empty']
+    );
+    $rule->optional('k4')->default(5)->check(
+      'not_blank'
+    );
+    my $vresult = $vc->validate({k1 => 'aaa', k2 => '', k3 => '', k4 => ''}, $rule);
+    ok($vresult->is_valid('k1'));
+    is($vresult->data->{k1}, 'aaa');
+    ok(!$vresult->is_valid('k2'));
+    ok(!$vresult->is_valid('k3'));
+    is($vresult->messages_to_hash->{k3}, 'k3 is empty');
+    is($vresult->data->{k4}, 5);
+  }
+  
+  # message option
+  {
+    my $rule = $vc->create_rule;
+    $rule->require('k1')->message('k1 is invalid')->check(
+      'not_blank'
+    );
+
+    my $vresult = $vc->validate({k1 => ''}, $rule);
+    ok(!$vresult->is_valid('k1'));
+    is($vresult->message('k1'), 'k1 is invalid');
+  }
+  
+  # copy option
+  {
+    my $rule = $vc->create_rule;
+    $rule->require('k1')->copy(0)->check(
+      'not_blank'
+    );
+
+    my $vresult = $vc->validate({k1 => 'aaa'}, $rule);
+    ok($vresult->is_valid('k1'));
+    ok(!defined $vresult->data->{'k1'});
+  }
+}
