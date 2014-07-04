@@ -2445,11 +2445,11 @@ test 'trim_uni';
   ok(!$vresult->is_valid('k3'));
 }
 
-# New rule syntax
+# new rule syntax
 {
   my $vc = Validator::Custom->new;
 
-  # Basic
+  # new rule syntax - basic
   {
     my $rule = $vc->create_rule;
     $rule->require('k1')->check(
@@ -2473,7 +2473,7 @@ test 'trim_uni';
     is($vresult->data->{k4}, 5);
   }
   
-  # message option
+  # new rule syntax - message option
   {
     my $rule = $vc->create_rule;
     $rule->require('k1')->message('k1 is invalid')->check(
@@ -2485,7 +2485,7 @@ test 'trim_uni';
     is($vresult->message('k1'), 'k1 is invalid');
   }
   
-  # copy option
+  # new rule syntax - copy option
   {
     my $rule = $vc->create_rule;
     $rule->require('k1')->copy(0)->check(

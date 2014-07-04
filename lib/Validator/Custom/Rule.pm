@@ -2,7 +2,7 @@ package Validator::Custom::Rule;
 use Object::Simple -base;
 
 has 'topic';
-has 'rule';
+has 'rule' => sub { [] };
 
 sub check {
   my ($self, @constraints) = @_;
@@ -21,11 +21,6 @@ sub check {
   }
   
   $self->topic->{constraints} = $constraints_h;
-  
-  $self->rule([]) unless $self->rule;
-  push @{$self->rule}, $self->topic;
-  
-  $self->topic(undef);
   
   return $self;
 }
@@ -65,12 +60,17 @@ sub name {
 
 sub optional {
   my ($self, $key) = @_;
-  
+
+  # Create topic
   my $topic = {};
   $topic->{key} = $key;
+  $self->topic($topic);
+  
+  # Value is optional
   $topic->{option}{require} = 0;
   
-  $self->topic($topic);
+  # Add topic to rule
+  push @{$self->rule}, $topic;
   
   return $self;
 }
@@ -78,10 +78,14 @@ sub optional {
 sub require {
   my ($self, $key) = @_;
   
+  # Create topic
   my $topic = {};
   $topic->{key} = $key;
   $self->topic($topic);
   
+  # Add topic to rule
+  push @{$self->rule}, $topic;
+
   return $self;
 }
 
@@ -147,14 +151,14 @@ sub parse {
 
 =head1 NAME
 
-Validator::Custom::Rule - Rule object (EXPERIMENTAL)
+Validator::Custom::Rule - Rule object
 
 =head1 SYNOPSYS
   
   use Validator::Custom;
   my $vc = Validator::Custom->new;
   
-  # Create rule object and parse rule
+  # Create rule object
   my $rule = $vc->create_rule;
   $rule->require('id')->check(
     'ascii'

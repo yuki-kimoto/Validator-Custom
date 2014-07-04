@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '1.01';
+our $VERSION = '0.23';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
@@ -639,19 +639,27 @@ Validator::Custom - HTML form Validation, easy and flexibly
   my $vc = Validator::Custom->new;
   
   # Data
-  my $data = {age => 19, name => 'Ken Suzuki'};
+  my $data = {id => 1, name => 'Ken Suzuki', age => 19};
 
-  # Rule syntax
+  # Create Rule
   my $rule = $vc->create_rule;
-  $rule->require('age')->check(
-    ['not_blank' => 'age is empty.'],
-    ['int' => 'age must be integer']
-  );
+  
+  # Rule syntax - integer, have error message
+  $rule->require('id')->check(
+    'int'
+  )->message('id should be integer');
+  
+  # Rule syntax - not blank, length is 1 to 5, have error messages
   $rule->require('name')->check(
     ['not_blank' => 'name is emtpy'],
     [{length => [1, 5]} => 'name is too long']
   );
-    
+  
+  # Rule syntax - value is optional, default is 20
+  $rule->optional('age')->check(
+    'int'
+  )->default(20);
+  
   # Validation
   my $result = $vc->validate($data, $rule);
   if ($result->is_ok) {
@@ -674,16 +682,19 @@ Validator::Custom - HTML form Validation, easy and flexibly
   
   # Rule old syntax
   my $rule = [
-    age => [
-      ['not_blank' => 'age is empty.'],
-      ['int' => 'age must be integer']
+    id => {message => 'id should be integer'} => [
+      'int'
     ],
     name => [
       ['not_blank' => 'name is emtpy'],
       [{length => [1, 5]} => 'name is too long']
+    ],
+    age => {require => 0, default => 20} => [
+      ['not_blank' => 'age is empty.'],
+      ['int' => 'age must be integer']
     ]
   ];
-
+  
 =head1 DESCRIPTION
 
 L<Validator::Custom> validate HTML form data easy and flexibly.
@@ -836,15 +847,24 @@ in the POD of L<Validator::Custom::Result>
 
 =head2 RULE
 
+  # Create Rule
   my $rule = $vc->create_rule;
+  
+  # Rule syntax - integer, have error message
+  $rule->require('id')->check(
+    'int'
+  )->message('id should be integer');
+  
+  # Rule syntax - not blank, length is 1 to 5, have error messages
   $rule->require('name')->check(
-    'not_blank',
-    [{length => {1, 5] => 'name length should be 1 to 5']
+    ['not_blank' => 'name is emtpy'],
+    [{length => [1, 5]} => 'name is too long']
   );
   
-  $rule->optional('name')->default('kimoto')->check(
-    'not_blank'
-  );
+  # Rule syntax - value is optional, default is 20
+  $rule->optional('age')->check(
+    'int'
+  )->default(20);
 
 Rule is L<Validator::Custom::Rule> ojbect.
 You can create C<create_rule> method of L<Validator::Custom>.
