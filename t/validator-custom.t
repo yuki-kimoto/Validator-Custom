@@ -2461,9 +2461,9 @@ test 'trim_uni';
     $rule->require('k3')->check(
       ['not_blank' => 'k3 is empty']
     );
-    $rule->optional('k4')->default(5)->check(
+    $rule->optional('k4')->check(
       'not_blank'
-    );
+    )->default(5);
     my $vresult = $vc->validate({k1 => 'aaa', k2 => '', k3 => '', k4 => ''}, $rule);
     ok($vresult->is_valid('k1'));
     is($vresult->data->{k1}, 'aaa');
@@ -2476,9 +2476,9 @@ test 'trim_uni';
   # new rule syntax - message option
   {
     my $rule = $vc->create_rule;
-    $rule->require('k1')->message('k1 is invalid')->check(
+    $rule->require('k1')->check(
       'not_blank'
-    );
+    )->message('k1 is invalid');
 
     my $vresult = $vc->validate({k1 => ''}, $rule);
     ok(!$vresult->is_valid('k1'));
@@ -2488,9 +2488,9 @@ test 'trim_uni';
   # new rule syntax - copy option
   {
     my $rule = $vc->create_rule;
-    $rule->require('k1')->copy(0)->check(
+    $rule->require('k1')->check(
       'not_blank'
-    );
+    )->copy(0);
 
     my $vresult = $vc->validate({k1 => 'aaa'}, $rule);
     ok($vresult->is_valid('k1'));
