@@ -1,3 +1,7 @@
+0.24
+  - when default option is specified, result data become valid
+    (This is backword imcompatible, but old behavior is a little
+     wrong and new behavior is better)
 0.23
   - remove syntax attribute
   - use constraints function from $_ in constraint function;

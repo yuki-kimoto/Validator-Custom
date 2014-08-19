@@ -296,7 +296,7 @@ sub validate {
     my $missing_params = $result->missing_params;
     for my $key (@$keys) {
       unless (exists $data->{$key}) {
-        if ($require) {
+        if ($require && !exists $opts->{default}) {
           push @$missing_params, $key
             unless $found_missing_params->{$key};
           $found_missing_params->{$key}++;
@@ -436,32 +436,36 @@ sub validate {
       
       # Add error if it is invalid
       unless ($is_valid) {
-        # Resist error info
-        $message = $opts->{message} unless defined $message;
-        $result->{_error_infos}->{$result_key} = {
-          message      => $message,
-          position     => $pos,
-          reason       => $constraint,
-          original_key => $key
-        } unless exists $result->{_error_infos}->{$result_key};
-        
-        # Set default value
-        $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
-                                     ? $opts->{default}->($self)
-                                     : $opts->{default}
-          if exists $opts->{default} && $copy;
-        
-        # No Error stock
-        unless ($error_stock) {
-          # Check rest constraint
-          my $found;
-          for (my $k = $i + 1; $k < @{$rule_obj->rule}; $k++) {
-            my $r_next = $rule_obj->rule->[$k];
-            my $key_next = $r_next->{key};
-            $key_next = (keys %$key)[0] if ref $key eq 'HASH';
-            $found = 1 if $key_next eq $result_key;
+        if (exists $opts->{default}) {
+          # Set default value
+          $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
+                                       ? $opts->{default}->($self)
+                                       : $opts->{default}
+            if exists $opts->{default} && $copy;
+          $valid_keys->{$result_key} = 1
+        }
+        else {
+          # Resist error info
+          $message = $opts->{message} unless defined $message;
+          $result->{_error_infos}->{$result_key} = {
+            message      => $message,
+            position     => $pos,
+            reason       => $constraint,
+            original_key => $key
+          } unless exists $result->{_error_infos}->{$result_key};
+          
+          # No Error stock
+          unless ($error_stock) {
+            # Check rest constraint
+            my $found;
+            for (my $k = $i + 1; $k < @{$rule_obj->rule}; $k++) {
+              my $r_next = $rule_obj->rule->[$k];
+              my $key_next = $r_next->{key};
+              $key_next = (keys %$key)[0] if ref $key eq 'HASH';
+              $found = 1 if $key_next eq $result_key;
+            }
+            last OUTER_LOOP unless $found;
           }
-          last OUTER_LOOP unless $found;
         }
         next OUTER_LOOP;
       }

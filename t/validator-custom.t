@@ -1325,7 +1325,7 @@ $rule = [
 ];
 $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
-ok($result->has_missing, "has missing");
+ok($result->is_ok);
 is($result->data->{key1}, 2, "data value");
 
 $data = {};
@@ -1336,7 +1336,7 @@ $rule = [
 ];
 $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
-ok($result->has_missing, "has missing ");
+ok($result->is_ok, "has missing ");
 ok(!exists $result->data->{key1}, "missing : data value and no copy");
 
 $data = {key1 => 'a'};
@@ -1347,7 +1347,7 @@ $rule = [
 ];
 $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
-ok($result->has_invalid);
+ok($result->is_ok);
 is($result->data->{key1}, 2, "invalid : data value");
 
 $data = {key1 => 'a'};
@@ -1358,7 +1358,7 @@ $rule = [
 ];
 $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
-ok($result->has_invalid);
+ok($result->is_ok);
 ok(!exists $result->data->{key1}, "invalid : data value and no copy");
 
 $data = {key1 => 'a', key3 => 'b'};
