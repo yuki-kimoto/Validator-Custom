@@ -10,15 +10,12 @@ plan tests => 2;
 
 use Validator::Custom;
 
-my $test;
-sub test {$test = shift}
-
 my $rule;
 my $vc;
 my $js;
 
 
-test 'js_fill_form_button';
+# js_fill_form_button;
 $rule = {
     name1 => 'ab',
     name2 => 'c{3}'

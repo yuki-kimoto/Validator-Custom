@@ -7,7 +7,6 @@ use utf8;
 use Validator::Custom::Rule;
 
 $SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ /DEPRECATED!/ };
-sub test {print "# $_[0]\n"}
 
 my $value;
 my $r;
@@ -379,7 +378,7 @@ my @errors;
 my $data;
 
 
-test 'or expression';
+# or expression
 $vc = T1->new;
 $rule = [
   key0 => [
@@ -436,7 +435,7 @@ is_deeply([$vresult->errors], ['Error-key1-0'], "errors");
 is($vresult->error_reason('key1'), 'Int', "error reason");
 
 
-test 'data_filter';
+# data_filter
 $vc = T1->new;
 $params = {key1 => 1};
 $vc->data_filter(sub {
@@ -456,7 +455,7 @@ is_deeply([$vresult->invalid_keys], ['key1'], "basic");
 is_deeply($vresult->raw_data, {key1 => 'a'}, "raw_data");
 
 
-test 'Validator::Custom::Result raw_invalid_rule_keys';
+# Validator::Custom::Result raw_invalid_rule_keys'
 $vc = Validator::Custom->new;
 $vc->register_constraint(p => sub {
   my $values = shift;
@@ -486,7 +485,7 @@ is_deeply($vresult->invalid_rule_keys, ['k12', 'k3'], 'invalid_rule_keys');
 is_deeply($vresult->invalid_params, ['k1', 'k2', 'k3'],
         'invalid_params');
 
-test 'shared_rule';
+# shared_rule;
 $vc = Validator::Custom->new;
 $vc->register_constraint(
   defined   => sub { defined $_[0] },
@@ -517,7 +516,7 @@ $vresult = $vc->validate($data, $rule);
 is_deeply($vresult->messages_to_hash, {k1 => 'Must be defined'},
         'shared rule');
 
-test 'constraints default';
+# constraints default;
 
 my @infos = (
   [
@@ -1147,7 +1146,7 @@ sub validate_exception {
   like($@, $error, "$test_name exception");
 }
 
-test 'trim';
+# trim;
 {
   my $data = {
     int_param => ' 123 ',
@@ -1180,7 +1179,7 @@ test 'trim';
   );
 }
 
-test 'Carp trust relationship';
+# Carp trust relationship
 $data = {a => undef};
 $vc = Validator::Custom->new;
 $rule = [
@@ -1192,7 +1191,7 @@ eval{$vc->validate($data, $rule)};
 like($@, qr/\.t /);
 
 
-test 'Negative validation';
+# Negative validation
 $data = {key1 => 'a', key2 => 1};
 $vc = Validator::Custom->new;
 $rule = [
@@ -1253,7 +1252,7 @@ $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_params, ['key2'], "filter value");
 
 
-test 'missing_params';
+# missing_params
 $data = {key1 => 1};
 $vc = Validator::Custom->new;
 $rule = [
@@ -1271,7 +1270,7 @@ $result = $vc->validate($data, $rule);
 ok(!$result->is_ok, "invalid");
 is_deeply($result->missing_params, ['key2', 'key3'], "names");
 
-test 'has_missing';
+# has_missing
 $data = {};
 $vc = Validator::Custom->new;
 $rule = [
@@ -1293,7 +1292,7 @@ $result = $vc->validate($data, $rule);
 ok(!$result->has_missing, "missing");
 
 
-test 'duplication result value';
+# duplication result value
 $data = {key1 => 'a', key2 => 'a'};
 $rule = [
   {key3 => ['key1', 'key2']} => [
@@ -1305,7 +1304,7 @@ $result = $vc->validate($data, $rule);
 is($result->data->{key3}, 'a');
 
 
-test 'message option';
+# message option
 $data = {key1 => 'a'};
 $rule = [
   key1 => {message => 'error'} => [
@@ -1317,7 +1316,7 @@ $result = $vc->validate($data, $rule);
 is($result->message('key1'), 'error');
 
 
-test 'default option';
+# default option
 $data = {};
 $rule = [
   key1 => {default => 2} => [
@@ -1380,7 +1379,7 @@ is($result->data->{key1}, $vc, "data value");
 is($result->data->{key2}, 5, "data value");
 ok(exists $result->data->{key3} && !defined $result->data->{key3});
 
-test 'copy';
+# copy
 $data = {key1 => 'a', 'key2' => 'a'};
 $rule = [
   {key3 => ['key1', 'key2']} => {copy => 0} => [
@@ -1393,7 +1392,7 @@ ok($result->is_ok, "ok");
 is_deeply($result->data, {}, "not copy");
 
 
-test 'error_stock plus';
+# error_stock plus
 $data = {key1 => 'a', 'key2' => 'b', key4 => 'a'};
 $rule = [
   key4  => {message => 'e1'} => [
@@ -1409,7 +1408,7 @@ $result = $vc->validate($data, $rule);
 is_deeply($result->messages, ['e1']);
 
 
-test 'is_valid';
+# is_valid
 $data = {key1 => 'a', key2 => 'b', key3 => 2};
 $rule = [
   key1 => [
@@ -1429,7 +1428,7 @@ ok(!$result->is_valid('key2'));
 ok($result->is_valid('key3'));
 
 
-test 'merge';
+# merge
 $data = {key1 => 'a', key2 => 'b', key3 => 'c'};
 $rule = [
   {key => ['key1', 'key2', 'key3']} => [
@@ -1440,7 +1439,7 @@ $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
 is($result->data->{key}, 'abc');
 
-test 'Multi-Paramater validation using regex';
+# Multi-Paramater validation using regex
 $data = {key1 => 'a', key2 => 'b', key3 => 'c', p => 'd'};
 $rule = [
   {key => qr/^key/} => [
@@ -1467,7 +1466,7 @@ $value = $result->data->{key};
 ok(index($value, 'a') > -1);
 
 
-test 'or condtioon new syntax';
+# or condtioon new syntax
 $data = {key1 => '3', key2 => '', key3 => 'a'};
 $rule = [
   key1 => [
@@ -1485,7 +1484,7 @@ $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_rule_keys, ['key3']);
 
 
-test 'or condition new syntax';
+# or condition new syntax
 $data = {key1 => '3', key2 => '', key3 => 'a'};
 $rule = [
   key1 => [
@@ -1503,7 +1502,7 @@ $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_rule_keys, ['key1']);
 
 
-test 'space';
+# space
 $data = {key1 => '', key2 => ' ', key3 => 'a'};
 $rule = [
   key1 => [
@@ -1521,7 +1520,7 @@ $result = $vc->validate($data, $rule);
 is_deeply($result->invalid_rule_keys, ['key3']);
 
 
-test 'or condition filter';
+# or condition filter
 $data = {key1 => '2010/11/04', key2 => '2010-11-04', key3 => '2010 11 04'};
 $rule = [
   key1 => [
@@ -1582,7 +1581,7 @@ $rule = [
 $result = $vc->validate($data, $rule);
 ok($result->is_ok);
 
-test 'or condition filter array';
+# or condition filter array
 $data = {
   key1 => ['2010/11/04', '2010-11-04', '2010 11 04'],
   key2 => ['2010/11/04', '2010-11-04', 'xxx']
@@ -1632,7 +1631,7 @@ is_deeply($result->data, {key1 => ['20101104', '20101104', '20101104'],
                         });
 
 
-test '_parse_random_string_rule';
+# _parse_random_string_rule
 $rule = {
   name1 => '[ab]{3}@[de]{2}.com',
   name2 => '[ab]{2}c{2}p{1}',
@@ -1653,7 +1652,7 @@ is_deeply(
   });
 
 
-test 'any';
+# any
 $data = {
   key1 => undef, key2 => 1
 };
@@ -1670,7 +1669,7 @@ $result = $vc->validate($data, $rule);
 ok($result->is_ok);
 
 
-test 'to_hash';
+# to_hash
 $vc = Validator::Custom->new;
 $data = {key1 => 1, key2 => 'a', key3 => 'a'};
 $rule = [
@@ -1704,7 +1703,7 @@ is_deeply($result->to_hash, {
   messages => {key2 => 'a', key3 => 'b', key4 => 'key4 must be int', key5 => 'key5 must be int'}
 });
 
-test 'not_required';
+# not_required
 $vc = Validator::Custom->new;
 $data = {key1 => 1};
 $rule = [
@@ -1739,7 +1738,7 @@ $result = $vc->validate($data, $rule);
 ok($result->is_ok);
 ok(!$result->has_invalid);
 
-test 'to_array filter';
+# to_array filter
 $vc = Validator::Custom->new;
 $data = {key1 => 1, key2 => [1, 2]};
 $rule = [
@@ -1755,7 +1754,7 @@ is_deeply($result->data->{key1}, [1]);
 is_deeply($result->data->{key2}, [1, 2]);
 
 
-test 'loose_data';
+# loose_data
 $vc = Validator::Custom->new;
 $data = {key1 => 1, key2 => 2};
 $rule = [
@@ -1777,7 +1776,7 @@ $rule = [
 $result = $vc->validate($data, $rule);
 is_deeply($result->loose_data->{key1}, 5);
 
-test 'undefined value';
+# undefined value
 $vc = Validator::Custom->new;
 $data = {key1 => undef, key2 => '', key3 => 'a'};
 $rule = [
@@ -2205,7 +2204,7 @@ $result = $vc->validate($data, $rule);
 ok(!$result->is_valid('key1'));
 ok($result->is_valid('key2'));
 
-test 'not_space unicode';
+# not_space unicode
 $data = {key1 => '　', key2 => '　', key3 => '　', key4 => '　'};
 $rule = [
   key1 => [
@@ -2227,7 +2226,7 @@ is($result->data->{key2}, '　');
 is($result->data->{key3}, '　');
 is($result->data->{key4}, '　');
 
-test 'lenght {min => ..., max => ...}';
+# lenght {min => ..., max => ...}
 $data = {
   key1_1 => 'a',
   key1_2 => 'aa',
@@ -2289,7 +2288,7 @@ ok($result->is_valid('key3_1'));
 ok($result->is_valid('key3_2'));
 ok(!$result->is_valid('key3_3'));
 
-test 'trim_uni';
+# trim_uni
 {
   my $data = {
     int_param => '　　123　　',

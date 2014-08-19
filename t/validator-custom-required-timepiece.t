@@ -8,8 +8,6 @@ plan skip_all => 'Time::Piece required for this test!' if $@;
 
 plan 'no_plan';
 
-sub test { print "# $_[0]\n" }
-
 use Validator::Custom;
 
 my $vc;
@@ -17,7 +15,7 @@ my $rule;
 my $data;
 my $result;
 
-test 'date_to_timepiece';
+# date_to_timepiece
 $vc = Validator::Custom->new;
 $data = {date1 => '2010/11/12', date2 => '2010111106'};
 $rule = [
@@ -118,7 +116,7 @@ $rule = [
 $result = $vc->validate($data, $rule);
 ok($result->has_invalid);
 
-test 'datetime_to_timepiece';
+# datetime_to_timepiece
 
 $data = {datetime => '2010/11/12 12:14:45'};
 $rule = [
@@ -269,7 +267,7 @@ $rule = [
 $result = $vc->validate($data, $rule);
 ok(!$result->is_ok);
 
-test 'undefined value validation';
+# undefined value validation
 $data = {key1 => '2011', key2 => '10', key3 => '14', key4 => undef};
 $rule = [
     {date1 => [qw/key1 key2 key3/]} => [
