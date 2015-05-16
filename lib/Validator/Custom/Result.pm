@@ -12,6 +12,9 @@ has data => sub { {} },
 our $DEFAULT_MESSAGE = 'Error message not specified';
 
 sub error_reason {
+
+  warn "Validator::Custom::Result error_reason is DEPRECATED!.";
+
   my ($self, $name) = @_;
   
   # Parameter name not specified
@@ -259,12 +262,6 @@ Raw data soon after data_filter is executed.
 
 L<Validator::Custom::Result> inherits all methods from L<Object::Simple>
 and implements the following new ones.
-
-=head2 error_reason
-
-  $error_reason = $result->error_reason('title');
-
-Error reason. This is constraint name.
 
 =head2 has_invalid
 

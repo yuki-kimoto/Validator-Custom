@@ -322,9 +322,6 @@ sub validate {
 
     for my $c (@$constraints) {
       
-      # Arrange constraint information
-      my $constraint = $c->{constraint};
-      
       # Constraint information
       my $cinfo = $self->_parse_constraint($c);
       my $arg = $cinfo->{arg};
@@ -425,7 +422,7 @@ sub validate {
           $result->{_error_infos}->{$result_key} = {
             message      => $message,
             position     => $pos,
-            reason       => $constraint,
+            reason       => $c->{constraint},
             original_key => $key
           } unless exists $result->{_error_infos}->{$result_key};
           
@@ -1676,12 +1673,13 @@ L<Validator::Custom::Result>
   error_infos # Removed at 2017/1/1 
 
   # Methods
+  error_reason # Removed at 2017/1/1
   add_error_info # Removed at 2017/1/1
   error # Removed at 2017/1/1
   errors # Removed at 2017/1/1
   errors_to_hash # Removed at 2017/1/1
   invalid_keys # Removed at 2017/1/1
-  remove_error_info# Removed at 2017/1/1
+  remove_error_info # Removed at 2017/1/1
 
 =head1 BACKWORD COMPATIBLE POLICY
 

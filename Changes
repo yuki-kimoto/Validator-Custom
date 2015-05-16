@@ -1,5 +1,6 @@
 0.25
   - add string constraint. This is used to check the value is string.
+    $rule->require('k1')->check('string')
     If value is not defined or reference, this check return false.
   - You can call multiple check calls.
     $rule->check('string')->check('not_blank');
@@ -14,6 +15,10 @@
     by using after message.
     $rule->require('k1')
       ->check('string')->check('not_blank')->message('k1 should be string having length')
+  - add check_or method to Validator::Custom::Result
+    $rule->check_or('blank', 'int');
+    This is improvemet of "or" validation, for exmpale 'blank || int'
+  - Validator::Custom::Result error_reason is DEPRECATED! This method don't work correct from now.
 0.24
   - when default option is specified, result data become valid
     (This is backword imcompatible, but old behavior is a little
