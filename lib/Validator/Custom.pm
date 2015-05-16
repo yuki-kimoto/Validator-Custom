@@ -323,7 +323,7 @@ sub validate {
     for my $cinfo (@$cinfos) {
       
       # Constraint information
-      my $arg = $cinfo->{arg};
+      my $args = $cinfo->{args};
       my $message = $cinfo->{message};
                                       
       # Constraint function
@@ -345,6 +345,7 @@ sub validate {
           # Validation
           for (my $j = 0; $j < @$cfuncs; $j++) {
             my $cfunc = $cfuncs->[$j];
+            my $arg = $args->[$j];
             
             # Validate
             my $cresult;
@@ -379,7 +380,9 @@ sub validate {
       # Data is scalar
       else {
         # Validation
-        for my $cfunc (@$cfuncs) {
+        for (my $k = 0; $k < @$cfuncs; $k++) {
+          my $cfunc = $cfuncs->[$k];
+          my $arg = $args->[$k];
         
           my $cresult;
           {
@@ -487,11 +490,12 @@ sub _parse_constraint {
     
     # Constraint functions
     my @cfuncs;
+    my @cargs;
     for my $cname (@$constraints) {
       # Arrange constraint
       if (ref $cname eq 'HASH') {
         my $first_key = (keys %$cname)[0];
-        $cinfo->{arg} = $cname->{$first_key};
+        push @cargs, $cname->{$first_key};
         $cname = $first_key;
       }
 
@@ -535,6 +539,7 @@ sub _parse_constraint {
       push @cfuncs, $f;
     }
     $cinfo->{funcs} = \@cfuncs;
+    $cinfo->{args} = \@cargs;
   }
   
   return $cinfo;
