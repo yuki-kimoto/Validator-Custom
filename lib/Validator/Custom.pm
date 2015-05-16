@@ -319,11 +319,15 @@ sub validate {
     my $value = @$keys > 1
       ? [map { $data->{$_} } @$keys]
       : $data->{$keys->[0]};
-
+    
+    my $cinfos = [];
     for my $c (@$constraints) {
+      push @$cinfos, $self->_parse_constraint($c);
+    }
+    
+    for my $cinfo (@$cinfos) {
       
       # Constraint information
-      my $cinfo = $self->_parse_constraint($c);
       my $arg = $cinfo->{arg};
       my $message = $cinfo->{message};
                                       
