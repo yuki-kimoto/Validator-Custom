@@ -255,17 +255,12 @@ sub validate {
     # Key, options, and constraints
     my $key = $r->{key};
     my $opts = $r->{option};
-    my $constraints = $r->{constraints} || [];
+    my $cinfos = $r->{constraints} || [];
     
     # Check constraints
     croak "Invalid rule structure"
-      unless ref $constraints eq 'ARRAY';
+      unless ref $cinfos eq 'ARRAY';
 
-    my $cinfos = [];
-    for my $c (@$constraints) {
-      push @$cinfos, $self->_parse_constraint($c);
-    }
-    
     # Arrange key
     my $result_key = $key;
     if (ref $key eq 'HASH') {

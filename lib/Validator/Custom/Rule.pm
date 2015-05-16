@@ -28,7 +28,7 @@ sub check {
     else {
       $constraint_h->{constraint} = $constraint;
     }
-    push @$constraints_h, $constraint_h;
+    push @$constraints_h, $self->validator->_parse_constraint($constraint_h);
   }
 
   $self->topic->{constraints} ||= [];
