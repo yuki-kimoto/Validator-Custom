@@ -2548,3 +2548,28 @@ ok(!$result->is_valid('key3_3'));
     is($messages_h->{k2}, 'k2_greater_than_error');
   }
 }
+
+# No constraint
+{
+  my $vc = Validator::Custom->new;
+  
+  # No constraint - valid
+  {
+    my $rule = $vc->create_rule;
+    my $data = {k1 => 1, k2 => undef};
+    $rule->require('k1');
+    $rule->require('k2');
+    my $vresult = $vc->validate($data, $rule);
+    ok($vresult->is_ok);
+  }
+  
+  # No constraint - invalid
+  {
+    my $rule = $vc->create_rule;
+    my $data = {k1 => 1};
+    $rule->require('k1');
+    $rule->require('k2');
+    my $vresult = $vc->validate($data, $rule);
+    ok(!$vresult->is_ok);
+  }
+}

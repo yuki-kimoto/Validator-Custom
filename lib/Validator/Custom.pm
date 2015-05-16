@@ -255,7 +255,7 @@ sub validate {
     # Key, options, and constraints
     my $key = $r->{key};
     my $opts = $r->{option};
-    my $constraints = $r->{constraints};
+    my $constraints = $r->{constraints} || [];
     
     # Check constraints
     croak "Invalid rule structure"

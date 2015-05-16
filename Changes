@@ -3,6 +3,8 @@
     If value is not defined or reference, this check return false.
   - You can call multiple check calls.
     $rule->check('string')->check('not_blank');
+  - You can write only $rule->require('k1')
+    from now, $rule->require('k1') take syntax error.
 0.24
   - when default option is specified, result data become valid
     (This is backword imcompatible, but old behavior is a little
