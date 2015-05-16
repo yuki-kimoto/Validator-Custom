@@ -958,18 +958,17 @@ if you negative a constraint function.
 
 In this example, 
 
-=head3 "OR" of constraint functions
+=head3 "OR" condition
 
-You can create "OR" of constraint functions
+You can create "OR" condition by using C<check_or> method.
+
+  Rule: $rule->require('email')->check_or('blank', 'email');
+
+Check is ok if email value is blank or email.
+
+The folloing way is old syntax. Please use above syntax.
 
   Rule: $rule->require('email')->check('blank || email')
-
-Use "||" to create "OR" of constraint functions.
-'blank || email' means 'blank' or 'email'.
-
-You can combine "||" and "!".
-
-  Rule: $rule->require('email')->check('blank || !int')
 
 =head3 Array validation
 
