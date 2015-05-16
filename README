@@ -6,10 +6,10 @@ INSTALLATION
 
 To install this module, run the following commands:
 
-	perl Build.PL
-	./Build
-	./Build test
-	./Build install
+  perl Makefile.PL
+  make
+  make test
+  make install
 
 SUPPORT AND DOCUMENTATION
 
@@ -35,7 +35,7 @@ You can also look for information at:
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2009 Yuki Kimoto
+Copyright (C) 2009-2015 Yuki Kimoto
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

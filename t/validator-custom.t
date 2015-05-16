@@ -2524,3 +2524,27 @@ ok(!$result->is_valid('key3_3'));
     ok(!$vresult->is_valid('k5'));
   }
 }
+
+# call multiple check
+{
+  my $vc = Validator::Custom->new;
+  
+  {
+    my $rule = $vc->create_rule;
+    $rule->require('k1')
+      ->check(['string' => 'k1_string_error'])
+      ->check(['not_blank' => 'k1_not_blank_error'])
+      ->check([{'length' => {max => 3}} => 'k1_length_error']);
+;
+    $rule->require('k2')
+      ->check(['int' => 'k2_int_error'])
+      ->check([{'greater_than' => 3} => 'k2_greater_than_error']);
+    
+    my $vresult = $vc->validate({k1 => 'aaaa', k2 => 2}, $rule);
+    ok(!$vresult->is_valid('k1'));
+    ok(!$vresult->is_valid('k2'));
+    my $messages_h = $vresult->messages_to_hash;
+    is($messages_h->{k1}, 'k1_length_error');
+    is($messages_h->{k2}, 'k2_greater_than_error');
+  }
+}

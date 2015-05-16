@@ -19,8 +19,9 @@ sub check {
     }
     push @$constraints_h, $constraint_h;
   }
-  
-  $self->topic->{constraints} = $constraints_h;
+
+  $self->topic->{constraints} ||= [];
+  $self->topic->{constraints} = [@{$self->topic->{constraints}}, @{$constraints_h}];
   
   return $self;
 }
