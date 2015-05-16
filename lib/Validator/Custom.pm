@@ -640,9 +640,9 @@ Validator::Custom - HTML form Validation, easy and flexibly
   
   # Rule syntax - string, not blank, length is 1 to 5, have error messages
   $rule->require('name')
-    ->check(['string' => 'name should be string'])
-    ->check(['not_blank' => 'name is emtpy'])
-    ->check([{length => [1, 5]} => 'name is too long']);
+    ->check('string')->message('name should be string')
+    ->check('not_blank')->message('name is emtpy')
+    ->check({length => [1, 5]})->message('name is too long');
   
   # Rule syntax - value is optional, default is 20
   $rule->optional('age')->check('int')->default(20);
@@ -663,9 +663,8 @@ Validator::Custom - HTML form Validation, easy and flexibly
     my $value = shift;
     return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
   };
-  $rule->require('age')->check(
-    [$blank_or_number => 'age must be blank or number']
-  );
+  $rule->require('age')
+    ->check($blank_or_number)->message('age must be blank or number')
   
   # Rule old syntax, please use above new syntax.
   # Old syntax take many miss-typing.
@@ -733,13 +732,13 @@ Data must be hash reference.
 B<3. Prepare a rule for validation>
 
   my $ruel = $vc->create_rule;
-  $rule->require('age')->message('age must be integer')
+  $rule->require('age')
     ->check('not_blank')
-    ->check('int');
+    ->check('int')->message('age must be integer');
   
   $rule->require('name')
-    ->check(['not_blank' => 'name is empty'])
-    ->check([{length => [1, 5]} => 'name must be length 1 to 5']);
+    ->check('not_blank')->message('name is empty')
+    ->check({length => [1, 5]})->message('name must be length 1 to 5');
 
 Please see L<Validator::Custom/"RULE"> about rule syntax.
 
@@ -842,8 +841,8 @@ in the POD of L<Validator::Custom::Result>
   
   # Rule syntax - not blank, length is 1 to 5, have error messages
   $rule->require('name')
-    ->check(['not_blank' => 'name is emtpy'])
-    ->check([{length => [1, 5]} => 'name is too long']);
+    ->check('not_blank')->message('name is emtpy')
+    ->check({length => [1, 5]})->message('name is too long');
   
   # Rule syntax - value is optional, default is 20
   $rule->optional('age')->check('int')->default(20);
@@ -901,8 +900,8 @@ You set constraints by C<check> method.
 You can set message for each constraint function
 
   $rule->require('name')
-    ->check(['not_blank' => 'name must be not blank'])
-    ->check([{length => [1, 5]} => 'name must be 1 to 5 length']);
+    ->check('not_blank')->message('name must be not blank')
+    ->check({length => [1, 5]})->message('name must be 1 to 5 length');
 
 You can create original constraint function using
 original constraints.

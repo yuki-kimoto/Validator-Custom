@@ -213,12 +213,15 @@ Content of rule object.
 
 =head2 check
 
-  $rule->check(
-    'not_blank',
-    'ascii'
-  );
+  $rule->check('not_blank')->check('ascii');
 
-Set constraints.
+Add constraints to current topic.
+
+=head2 check_or
+
+  $rule->check_or('not_blank', 'ascii');
+
+Add "or" condition constraints to current topic.
 
 =head2 copy
 
