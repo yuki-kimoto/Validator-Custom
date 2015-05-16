@@ -1,8 +1,10 @@
 package Validator::Custom::Rule;
 use Object::Simple -base;
+use Carp 'croak';
 
 has 'topic';
 has 'rule' => sub { [] };
+has 'validator';
 
 sub check_or {
   my ($self, @constraints) = @_;
@@ -137,7 +139,7 @@ sub parse {
         else {
           $constraint_h->{constraint} = $constraint;
         }
-        push @$constraints_h, $constraint_h;
+        push @$constraints_h, $self->validator->_parse_constraint($constraint_h);
       }
     } else {
       $constraints_h = {

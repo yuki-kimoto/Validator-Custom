@@ -12,7 +12,7 @@ use Validator::Custom::Constraints;
 has ['data_filter', 'rule', 'rule_obj'];
 has error_stock => 1;
 
-sub create_rule { Validator::Custom::Rule->new }
+sub create_rule { Validator::Custom::Rule->new(validator => shift) }
 
 sub js_fill_form_button {
   my ($self, $rule) = @_;
@@ -237,7 +237,7 @@ sub validate {
     $self->rule_obj($rule);
   }
   else {
-    my $rule_obj = Validator::Custom::Rule->new;
+    my $rule_obj = $self->create_rule;
     $rule_obj->parse($rule, $shared_rule);
     $self->rule_obj($rule_obj);
   }
@@ -462,6 +462,8 @@ sub validate {
 
 sub _parse_constraint {
   my ($self, $c) = @_;
+  
+  return $c if ref $c eq 'Validator::Custom::ConstraintInfo';
 
   # Constraint information
   my $cinfo = {};

@@ -2334,7 +2334,7 @@ ok(!$result->is_valid('key3_3'));
   my $rule_obj = $vc->rule_obj;
   
   is($rule_obj->rule->[0]{key}, 'k1');
-  is($rule_obj->rule->[0]{constraints}[0]{constraint}, 'int');
+  is($rule_obj->rule->[0]{constraints}[0]{original_constraint}, 'int');
   is($rule_obj->rule->[0]{constraints}[0]{message}, 'a');
   is($rule_obj->rule->[1]{constraints}{ERROR}{value}, 'int');
   like($rule_obj->rule->[1]{constraints}{ERROR}{message}, qr/Constraints must be array reference/);
@@ -2415,7 +2415,7 @@ ok(!$result->is_valid('key3_3'));
       'not_blank'
     ]
   ];
-  my $rule_obj = Validator::Custom::Rule->new;
+  my $rule_obj = $vc->create_rule;
   $rule_obj->parse($rule);
   
   my $vresult = $vc->validate({k1 => 'a', k2 => ''}, $rule_obj);
