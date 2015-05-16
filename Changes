@@ -5,6 +5,15 @@
     $rule->check('string')->check('not_blank');
   - You can write only $rule->require('k1')
     from now, $rule->require('k1') take syntax error.
+  - message can write each check
+    $rule->require('k1')
+      ->check('string')->message('k1 should be string')
+      ->check('not_blank)->message('k1 should be not blank')
+  - add message fallback system.
+    If message is not set to some constraint, the message is automatically set
+    by using after message.
+    $rule->require('k1')
+      ->check('string')->check('not_blank')->message('k1 should be string having length')
 0.24
   - when default option is specified, result data become valid
     (This is backword imcompatible, but old behavior is a little

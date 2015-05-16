@@ -2573,3 +2573,54 @@ ok(!$result->is_valid('key3_3'));
     ok(!$vresult->is_ok);
   }
 }
+
+# call message by each constraint
+{
+  my $vc = Validator::Custom->new;
+  
+  # No constraint - valid
+  {
+    my $rule = $vc->create_rule;
+    $rule->require('k1')
+      ->check('not_blank')->message('k1_not_blank_error')
+      ->check('int')->message('k1_int_error');
+    $rule->require('k2')
+      ->check('int')->message('k2_int_error');
+    my $vresult1 = $vc->validate({k1 => '', k2 => 4}, $rule);
+    is_deeply(
+      $vresult1->messages_to_hash,
+      {k1 => 'k1_not_blank_error'}
+    );
+    my $vresult2 = $vc->validate({k1 => 'aaa', k2 => 'aaa'}, $rule);
+    is_deeply(
+      $vresult2->messages_to_hash,
+      {
+        k1 => 'k1_int_error',
+        k2 => 'k2_int_error'
+      }
+    );
+  }
+}
+
+# message fallback
+{
+  my $vc = Validator::Custom->new;
+  
+  # No constraint - valid
+  {
+    my $rule = $vc->create_rule;
+    $rule->require('k1')
+      ->check('not_blank')
+      ->check('int')->message('k1_int_not_blank_error');
+    my $vresult1 = $vc->validate({k1 => ''}, $rule);
+    is_deeply(
+      $vresult1->messages_to_hash,
+      {k1 => 'k1_int_not_blank_error'}
+    );
+    my $vresult2 = $vc->validate({k1 => 'aaa'}, $rule);
+    is_deeply(
+      $vresult2->messages_to_hash,
+      {k1 => 'k1_int_not_blank_error'}
+    );
+  }
+}

@@ -45,7 +45,10 @@ sub default {
 sub message {
   my ($self, $message) = @_;
   
-  $self->topic->{option}{message} = $message;
+  my $constraints = $self->topic->{constraints} || [];
+  for my $constraint (@$constraints) {
+    $constraint->{message} ||= $message;
+  }
   
   return $self;
 }
@@ -215,9 +218,18 @@ Set default option
 
 =head2 message
 
-  $rule->message('Error');
+  $rule->require('name')
+    ->check('not_blank')->message('should be not blank')
+    ->check('int')->message('should be int');
 
-Set message option
+Set message for each check.
+
+Message is fallback to before check
+so you can write the following way.
+
+  $rule->require('name')
+    ->check('not_blank')
+    ->check('int')->message('should be not blank and int');
 
 =head2 name
 
