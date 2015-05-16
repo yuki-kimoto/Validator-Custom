@@ -15,10 +15,14 @@
     by using after message.
     $rule->require('k1')
       ->check('string')->check('not_blank')->message('k1 should be string having length')
-  - add check_or method to Validator::Custom::Result
-    $rule->check_or('blank', 'int');
+  - add check_or method to Validator::Custom::Rule
+    $rule->require('k1')->check_or('blank', 'int');
     This is improvemet of "or" validation, for exmpale 'blank || int'
   - Validator::Custom::Result error_reason is DEPRECATED! This method don't work correct from now.
+  - add array method to Validator::Custom::Rule
+    $rule->require('nums')->array(1)->check('int');
+    This is improvement of array validation using "@"
+    $rule->require('nums')->check('@int');
 0.24
   - when default option is specified, result data become valid
     (This is backword imcompatible, but old behavior is a little

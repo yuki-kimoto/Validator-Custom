@@ -6,6 +6,20 @@ has 'topic';
 has 'rule' => sub { [] };
 has 'validator';
 
+sub array {
+  my $self = shift;
+  
+  if (@_) {
+    $self->topic->{array} = $_[0];
+    return $self;
+  }
+  else {
+    return $self->topic->{array};
+  }
+  
+  return $self;
+}
+
 sub check_or {
   my ($self, @constraints) = @_;
   
@@ -13,6 +27,7 @@ sub check_or {
   $constraint_h->{constraint} = \@constraints;
   
   my $cinfo = $self->validator->_parse_constraint($constraint_h);
+  $cinfo->{array} = $self->topic->{array};
   
   $self->topic->{constraints} ||= [];
   push @{$self->topic->{constraints}}, $cinfo;
@@ -33,7 +48,9 @@ sub check {
     else {
       $constraint_h->{constraint} = $constraint;
     }
-    push @$constraints_h, $self->validator->_parse_constraint($constraint_h);
+    my $cinfo = $self->validator->_parse_constraint($constraint_h);
+    $cinfo->{array} = $self->topic->{array};
+    push @$constraints_h, $cinfo;
   }
 
   $self->topic->{constraints} ||= [];
@@ -210,6 +227,12 @@ Validator::Custom::Rule is the class to parse rule and store it as object.
 Content of rule object.
 
 =head1 METHODS
+
+=head2 array
+
+  $rule->array(1);
+
+Tell current topic data structure is array.
 
 =head2 check
 

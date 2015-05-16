@@ -974,6 +974,13 @@ The folloing way is old syntax. Please use above syntax.
 You can check if all the elements of array is valid.
 
   Data: {nums => [1, 2, 3]}
+  Rule: $rule->require('nums')->array(1)->check('int')
+
+If nums is one value, this is automatically convert to array.
+
+The following is old syntax. Please use above syntax.
+
+  Data: {nums => [1, 2, 3]}
   Rule: $rule->require('nums')->check('@int')
 
 "@" is added to the head of constraint function name
