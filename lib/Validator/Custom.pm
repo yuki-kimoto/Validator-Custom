@@ -492,69 +492,71 @@ sub _parse_constraint {
   my $cinfo = {};
   
   # Simple constraint name
-  unless ($constraint =~ /\W/) {
+  if ($constraint =~ /\W/) {
+    # Trim space
+    $constraint ||= '';
+    $constraint =~ s/^\s+//;
+    $constraint =~ s/\s+$//;
+    
+    # Target is array elements
+    $cinfo->{array} = 1 if $constraint =~ s/^@//;
+    croak qq{"\@" must be one at the top of constrinat name}
+      if index($constraint, '@') > -1;
+    
+    # Constraint functions
+    my @cfuncs;
+    
+    # Constraint names
+    my @cnames = split(/\|\|/, $constraint);
+    
+    # Convert constraint names to constraint functions
+    for my $cname (@cnames) {
+      $cname ||= '';
+      
+      # Trim space
+      $cname =~ s/^\s+//;
+      $cname =~ s/\s+$//;
+      
+      # Negative
+      my $negative = $cname =~ s/^!// ? 1 : 0;
+      croak qq{"!" must be one at the top of constraint name}
+        if index($cname, '!') > -1;
+      
+      # Trim space
+      $cname =~ s/^\s+//;
+      $cname =~ s/\s+$//;
+      
+      # Constraint function
+      croak "Constraint name '$cname' must be [A-Za-z0-9_]"
+        if $cname =~ /\W/;
+      my $cfunc = $self->constraints->{$cname} || '';
+      croak qq{"$cname" is not registered}
+        unless ref $cfunc eq 'CODE';
+      
+      # Negativate
+      my $f = $negative ? sub {
+        my $ret = $cfunc->(@_);
+        if (ref $ret eq 'ARRAY') {
+          $ret->[0] = ! $ret->[0];
+          return $ret;
+        }
+        else { return !$ret }
+      } : $cfunc;
+      
+      # Add
+      push @cfuncs, $f;
+    }
+    
+    $cinfo->{funcs} = \@cfuncs;
+  }
+  else {
     my $cfunc = $self->constraints->{$constraint} || '';
     croak qq{"$constraint" is not registered}
       unless ref $cfunc eq 'CODE';
     $cinfo->{funcs} = [$cfunc];
-    return $cinfo;
-  }
-
-  # Trim space
-  $constraint ||= '';
-  $constraint =~ s/^\s+//;
-  $constraint =~ s/\s+$//;
-  
-  # Target is array elements
-  $cinfo->{array} = 1 if $constraint =~ s/^@//;
-  croak qq{"\@" must be one at the top of constrinat name}
-    if index($constraint, '@') > -1;
-  
-  # Constraint functions
-  my @cfuncs;
-  
-  # Constraint names
-  my @cnames = split(/\|\|/, $constraint);
-  
-  # Convert constraint names to constraint functions
-  for my $cname (@cnames) {
-    $cname ||= '';
-    
-    # Trim space
-    $cname =~ s/^\s+//;
-    $cname =~ s/\s+$//;
-    
-    # Negative
-    my $negative = $cname =~ s/^!// ? 1 : 0;
-    croak qq{"!" must be one at the top of constraint name}
-      if index($cname, '!') > -1;
-    
-    # Trim space
-    $cname =~ s/^\s+//;
-    $cname =~ s/\s+$//;
-    
-    # Constraint function
-    croak "Constraint name '$cname' must be [A-Za-z0-9_]"
-      if $cname =~ /\W/;
-    my $cfunc = $self->constraints->{$cname} || '';
-    croak qq{"$cname" is not registered}
-      unless ref $cfunc eq 'CODE';
-    
-    # Negativate
-    my $f = $negative ? sub {
-      my $ret = $cfunc->(@_);
-      if (ref $ret eq 'ARRAY') {
-        $ret->[0] = ! $ret->[0];
-        return $ret;
-      }
-      else { return !$ret }
-    } : $cfunc;
-    
-    # Add
-    push @cfuncs, $f;
   }
   
-  $cinfo->{funcs} = \@cfuncs;
+  bless $cinfo, 'Validator::Custom::ConstraintInfo';
   
   return $cinfo;
 }
