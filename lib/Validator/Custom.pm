@@ -326,9 +326,6 @@ sub validate {
       my $constraint = $c->{constraint};
       my $message = $c->{message};
       
-      # Data type
-      my $data_type = {};
-      
       # Arguments
       my $arg;
       
@@ -339,22 +336,17 @@ sub validate {
         $constraint = $first_key;
       }
       
-      # Constraint function
-      my $cfuncs;
-      my $negative;
-      
       # Constraint information
       my $cinfo = $self->_parse_constraint($constraint);
-      $data_type->{array} = 1 if $cinfo->{array};
                                       
       # Constraint function
-      $cfuncs = $cinfo->{funcs};
+      my $cfuncs = $cinfo->{funcs};
       
       # Is valid?
       my $is_valid;
       
       # Data is array
-      if($data_type->{array}) {
+      if($cinfo->{array}) {
           
         # To array
         $value = [$value] unless ref $value eq 'ARRAY';
