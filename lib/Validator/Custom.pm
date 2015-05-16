@@ -323,7 +323,7 @@ sub validate {
     for my $c (@$constraints) {
       
       # Constraint information
-      my $cinfo = $self->_parse_constraint($c);
+      my $cinfo = ref $c eq 'Validator::Custom::ConstraintInfo' ? $c : $self->_parse_constraint($c);
       my $arg = $cinfo->{arg};
       my $message = $cinfo->{message};
                                       
