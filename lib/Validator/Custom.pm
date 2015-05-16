@@ -472,38 +472,34 @@ sub _parse_constraint {
   }
   # Simple constraint name
   else {
-    # Arrange constraint
-    if (ref $constraint eq 'HASH') {
-      my $first_key = (keys %$constraint)[0];
-      $cinfo->{arg} = $constraint->{$first_key};
-      $constraint = $first_key;
+    my $constraints;
+    if ($constraint eq 'ARRAY') {
+      $constraints = $constraint;
     }
-
-    # Trim space
-    $constraint ||= '';
-    $constraint =~ s/^\s+//;
-    $constraint =~ s/\s+$//;
-    
-    # Target is array elements
-    $cinfo->{array} = 1 if $constraint =~ s/^@//;
-    croak qq{"\@" must be one at the top of constrinat name}
-      if index($constraint, '@') > -1;
+    else {
+      if ($constraint =~ /\|\|/) {
+        $constraints = [split(/\|\|/, $constraint)];
+      }
+      else {
+        $constraints = [$constraint];
+      }
+    }
     
     # Constraint functions
     my @cfuncs;
-    
-    # Constraint names
-    my @cnames;
-    if (ref $constraint eq 'ARRAY') {
-      @cnames = @$constraint;
-    }
-    else {
-      @cnames = split(/\|\|/, $constraint);
-    }
-    
-    # Convert constraint names to constraint functions
-    for my $cname (@cnames) {
-      $cname ||= '';
+    for my $cname (@$constraints) {
+      # Arrange constraint
+      if (ref $cname eq 'HASH') {
+        my $first_key = (keys %$cname)[0];
+        $cinfo->{arg} = $cname->{$first_key};
+        $cname = $first_key;
+      }
+
+      # Target is array elements
+      $cinfo->{array} = 1 if $cname =~ s/^@//;
+      croak qq{"\@" must be one at the top of constrinat name}
+        if index($cname, '@') > -1;
+      
       
       # Trim space
       $cname =~ s/^\s+//;
@@ -538,7 +534,6 @@ sub _parse_constraint {
       # Add
       push @cfuncs, $f;
     }
-    
     $cinfo->{funcs} = \@cfuncs;
   }
   
