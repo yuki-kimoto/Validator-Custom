@@ -323,7 +323,7 @@ sub validate {
     for my $c (@$constraints) {
       
       # Constraint information
-      my $cinfo = ref $c eq 'Validator::Custom::ConstraintInfo' ? $c : $self->_parse_constraint($c);
+      my $cinfo = $self->_parse_constraint($c);
       my $arg = $cinfo->{arg};
       my $message = $cinfo->{message};
                                       
@@ -422,7 +422,7 @@ sub validate {
           $result->{_error_infos}->{$result_key} = {
             message      => $message,
             position     => $pos,
-            reason       => $c->{constraint},
+            reason       => $cinfo->{original_constraint},
             original_key => $key
           } unless exists $result->{_error_infos}->{$result_key};
           
@@ -465,6 +465,7 @@ sub _parse_constraint {
   # Arrange constraint information
   my $constraint = $c->{constraint};
   $cinfo->{message} = $c->{message};
+  $cinfo->{original_constraint} = $c->{constraint};
 
   # Arrange constraint
   if (ref $constraint eq 'HASH') {
