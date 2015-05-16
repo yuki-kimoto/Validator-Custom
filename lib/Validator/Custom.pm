@@ -457,8 +457,6 @@ sub validate {
 
 sub _parse_constraint {
   my ($self, $c) = @_;
-  
-  return $c if ref $c eq 'Validator::Custom::ConstraintInfo';
 
   # Constraint information
   my $cinfo = {};
@@ -543,8 +541,6 @@ sub _parse_constraint {
       unless ref $cfunc eq 'CODE';
     $cinfo->{funcs} = [$cfunc];
   }
-  
-  bless $cinfo, 'Validator::Custom::ConstraintInfo';
   
   return $cinfo;
 }

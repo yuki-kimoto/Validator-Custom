@@ -6,15 +6,6 @@ has 'topic';
 has 'rule' => sub { [] };
 has 'validator';
 
-sub check_or {
-  my ($self, @constraints) = @_;
-  
-  $self->topic->{constraints} ||= [];
-  $self->topic->{constraints} = [@{$self->topic->{constraints}}, [@constraints]];
-  
-  return $self;
-}
-
 sub check {
   my ($self, @constraints) = @_;
 
