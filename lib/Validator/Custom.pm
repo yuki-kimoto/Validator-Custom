@@ -260,6 +260,11 @@ sub validate {
     # Check constraints
     croak "Invalid rule structure"
       unless ref $constraints eq 'ARRAY';
+
+    my $cinfos = [];
+    for my $c (@$constraints) {
+      push @$cinfos, $self->_parse_constraint($c);
+    }
     
     # Arrange key
     my $result_key = $key;
@@ -319,11 +324,6 @@ sub validate {
     my $value = @$keys > 1
       ? [map { $data->{$_} } @$keys]
       : $data->{$keys->[0]};
-    
-    my $cinfos = [];
-    for my $c (@$constraints) {
-      push @$cinfos, $self->_parse_constraint($c);
-    }
     
     for my $cinfo (@$cinfos) {
       
