@@ -343,21 +343,12 @@ sub validate {
       my $cfuncs;
       my $negative;
       
-      # Sub reference
-      if( ref $constraint eq 'CODE') {
-        # Constraint function
-        $cfuncs = [$constraint];
-      }
-      
-      # Constraint key
-      else {
-        # Constraint information
-        my $cinfo = $self->_parse_constraint($constraint);
-        $data_type->{array} = 1 if $cinfo->{array};
-                                        
-        # Constraint function
-        $cfuncs = $cinfo->{funcs};
-      }
+      # Constraint information
+      my $cinfo = $self->_parse_constraint($constraint);
+      $data_type->{array} = 1 if $cinfo->{array};
+                                      
+      # Constraint function
+      $cfuncs = $cinfo->{funcs};
       
       # Is valid?
       my $is_valid;
@@ -491,8 +482,12 @@ sub _parse_constraint {
   # Constraint information
   my $cinfo = {};
   
+  # Code reference
+  if (ref $constraint eq 'CODE') {
+    $cinfo->{funcs} = [$constraint];
+  }
   # Simple constraint name
-  if ($constraint =~ /\W/) {
+  elsif ($constraint =~ /\W/) {
     # Trim space
     $constraint ||= '';
     $constraint =~ s/^\s+//;
