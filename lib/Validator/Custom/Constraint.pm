@@ -229,6 +229,7 @@ sub merge {
   return [1, join('', @$values)];
 }
 
+sub string { defined $_[0] && !ref $_[0] }
 sub not_blank   { defined $_[0] && $_[0] ne '' }
 sub not_defined { !defined $_[0] }
 sub not_space   { defined $_[0] && $_[0] !~ '^[ \t\n\r\f]*$' ? 1 : 0 }

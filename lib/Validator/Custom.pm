@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
@@ -160,6 +160,7 @@ sub new {
     selected_at_least => \&Validator::Custom::Constraint::selected_at_least,
     shift             => \&Validator::Custom::Constraint::shift_array,
     space             => \&Validator::Custom::Constraint::space,
+    string            => \&Validator::Custom::Constraint::string,
     to_array          => \&Validator::Custom::Constraint::to_array,
     trim              => \&Validator::Custom::Constraint::trim,
     trim_collapse     => \&Validator::Custom::Constraint::trim_collapse,
@@ -653,8 +654,9 @@ Validator::Custom - HTML form Validation, easy and flexibly
     'int'
   )->message('id should be integer');
   
-  # Rule syntax - not blank, length is 1 to 5, have error messages
+  # Rule syntax - string, not blank, length is 1 to 5, have error messages
   $rule->require('name')->check(
+    ['string' => 'name should be string'],
     ['not_blank' => 'name is emtpy'],
     [{length => [1, 5]} => 'name is too long']
   );
@@ -949,7 +951,7 @@ you can call constraints from $_ in subroutine.
 Multiple parameters validation is available.
 
   Data: {password1 => 'xxx', password2 => 'xxx'}
-  Rule: require([qw/password1 password2/])->name('password_check)
+  Rule: $rule->require([qw/password1 password2/])->name('password_check)
           ->check('duplication')
 
 In this example, We check if 'password1' and 'password2' is same.
@@ -963,7 +965,7 @@ This is used by L<Validator::Result> object.
 You can also use the reference of regular expression if you need.
 
   Data: {person1 => 'Taro', person2 => 'Rika', person3 => 'Ken'}
-  Rule: require(qr/^person/)->name('merged_person')
+  Rule: $rule->require(qr/^person/)->name('merged_person')
           ->check('merge') # TaroRikaKen
 
 All matched value is passed to constraint function as array reference.
@@ -975,7 +977,7 @@ In this example, the following value is passed.
 
 You can negative a constraint function
 
-  Rule: require('age')->check('!int')
+  Rule: $rule->require('age')->check('!int')
 
 "!" is added to the head of the constraint name
 if you negative a constraint function.
@@ -987,21 +989,21 @@ In this example,
 
 You can create "OR" of constraint functions
 
-  Rule: require('email')->check('blank || email')
+  Rule: $rule->require('email')->check('blank || email')
 
 Use "||" to create "OR" of constraint functions.
 'blank || email' means 'blank' or 'email'.
 
 You can combine "||" and "!".
 
-  Rule: require('email')->check('blank || !int')
+  Rule: $rule->require('email')->check('blank || !int')
 
 =head3 Array validation
 
 You can check if all the elements of array is valid.
 
   Data: {nums => [1, 2, 3]}
-  Rule: require('nums')->check('@int')
+  Rule: $rule->require('nums')->check('@int')
 
 "@" is added to the head of constraint function name
 to validate all the elements of array.
@@ -1216,7 +1218,7 @@ Default to 1.
 =head2 ascii
 
   Data: {name => 'Ken'}
-  Rule: require('name')->check('ascii')
+  Rule: $rule->require('name')->check('ascii')
 
 Ascii graphic characters(hex 21-7e).
 
@@ -1224,21 +1226,21 @@ Ascii graphic characters(hex 21-7e).
 
   # Check (1, 2, .. 19, 20)
   Data: {age => 19}
-  Rule: require('age')->check({between => [1, 20]})
+  Rule: $rule->require('age')->check({between => [1, 20]})
 
 Between A and B.
 
 =head2 blank
 
   Data: {name => ''}
-  Rule: require('name')->check('blank')
+  Rule: $rule->require('name')->check('blank')
 
 Blank.
 
 =head2 decimal
   
   Data: {num1 => '123', num2 => '1.45'}
-  Rule: require('num1')->check({'decimal' => 3})
+  Rule: $rule->require('num1')->check({'decimal' => 3})
         require('num2')->check({'decimal' => [1, 2]})
 
 Decimal. You can specify maximum digits number at before
@@ -1247,14 +1249,14 @@ and after '.'.
 =head2 defined
 
   Data: {name => 'Ken'}
-  Rule: require('name')->check('defined')
+  Rule: $rule->require('name')->check('defined')
 
 Defined.
 
 =head2 duplication
 
   Data: {mail1 => 'a@somehost.com', mail2 => 'a@somehost.com'};
-  Rule: require(['mail1', 'mail2'])->name('mail')->check('duplication)
+  Rule: $rule->require(['mail1', 'mail2'])->name('mail')->check('duplication)
 
 Check if the two data are same or not.
 
@@ -1268,35 +1270,35 @@ result of validation is false.
 =head2 equal_to
 
   Data: {price => 1000}
-  Rule: require('price')->check({'equal_to' => 1000})
+  Rule: $rule->require('price')->check({'equal_to' => 1000})
 
 Numeric equal comparison.
 
 =head2 greater_than
 
   Data: {price => 1000}
-  Rule: require('price')->check({'greater_than' => 900})
+  Rule: $rule->require('price')->check({'greater_than' => 900})
 
 Numeric "greater than" comparison
 
 =head2 http_url
 
   Data: {url => 'http://somehost.com'};
-  Rule: require('url')->check('http_url')
+  Rule: $rule->require('url')->check('http_url')
 
 HTTP(or HTTPS) URL.
 
 =head2 int
 
   Data: {age => 19};
-  Rule: require('age')->check('int')
+  Rule: $rule->require('age')->check('int')
 
 Integer.
 
 =head2 in_array
 
   Data: {food => 'sushi'};
-  Rule: require('food')->check({'in_array' => [qw/sushi bread apple/]})
+  Rule: $rule->require('food')->check({'in_array' => [qw/sushi bread apple/]})
 
 Check if the values is in array.
 
@@ -1322,28 +1324,28 @@ if value is byte string, length is byte length.
 =head2 less_than
 
   Data: {num => 20}
-  Rule: require('num')->check({'less_than' => 25});
+  Rule: $rule->require('num')->check({'less_than' => 25});
 
 Numeric "less than" comparison.
 
 =head2 not_blank
 
   Data: {name => 'Ken'}
-  Rule: require('name')->check('not_blank') # Except for ''
+  Rule: $rule->require('name')->check('not_blank') # Except for ''
 
 Not blank.
 
 =head2 not_defined
 
   Data: {name => 'Ken'}
-  Rule: require('name')->check('not_defined')
+  Rule: $rule->require('name')->check('not_defined')
 
 Not defined.
 
 =head2 not_space
 
   Data: {name => 'Ken'}
-  Rule: require('name')->check('not_space') # Except for '', ' ', '   '
+  Rule: $rule->require('name')->check('not_space') # Except for '', ' ', '   '
 
 Not contain only space characters. 
 Not that space is only C<[ \t\n\r\f]>
@@ -1352,30 +1354,38 @@ which don't contain unicode space character.
 =head2 space
 
   Data: {name => '   '}
-  Rule: require('name')->check('space') # '', ' ', '   '
+  Rule: $rule->require('name')->check('space') # '', ' ', '   '
 
 White space or empty string.
 Not that space is only C<[ \t\n\r\f]>
 which don't contain unicode space character.
 
+=head2 string
+
+  Data: {name => 'abc'}
+  Rule: $rule->require('name')->check('string') # '', 'abc', 0, 1, 1.23
+
+Check if the value is string, which contain numeric value.
+if value is not defined or reference, this check return false.
+
 =head2 uint
 
   Data: {age => 19}
-  Rule: require('age')->check('uint')
+  Rule: $rule->require('age')->check('uint')
 
 Unsigned integer(contain zero).
   
 =head2 regex
 
   Data: {num => '123'}
-  Rule: require('num')->check({'regex' => qr/\d{0,3}/})
+  Rule: $rule->require('num')->check({'regex' => qr/\d{0,3}/})
 
 Match a regular expression.
 
 =head2 selected_at_least
 
   Data: {hobby => ['music', 'movie' ]}
-  Rule: require('hobby')->check({selected_at_least => 1})
+  Rule: $rule->require('hobby')->check({selected_at_least => 1})
 
 Selected at least specified count item.
 In other word, the array contains at least specified count element.
@@ -1385,7 +1395,7 @@ In other word, the array contains at least specified count element.
 =head2 date_to_timepiece
 
   Data: {date => '2010/11/12'}
-  Rule: require('date')->check('date_to_timepiece')
+  Rule: $rule->require('date')->check('date_to_timepiece')
 
 The value which looks like date is converted
 to L<Time::Piece> object.
@@ -1400,7 +1410,7 @@ If the value contains 8 digits, the value is assumed date.
 And year and month and mday combination is ok.
 
   Data: {year => 2011, month => 3, mday => 9}
-  Rule: require(['year', 'month', 'mday'])->name('date')
+  Rule: $rule->require(['year', 'month', 'mday'])->name('date')
                                           ->check('date_to_timepiece')
 
 You can get result value.
@@ -1412,7 +1422,7 @@ Note that L<Time::Piece> is required.
 =head2 datetime_to_timepiece
 
   Data: {datetime => '2010/11/12 12:14:45'}
-  Rule: require('datetime')->check('datetime_to_timepiece');
+  Rule: $rule->require('datetime')->check('datetime_to_timepiece');
 
 The value which looks like date and time is converted
 to L<Time::Piece> object.
@@ -1428,7 +1438,7 @@ And year and month and mday combination is ok.
 
   Data: {year => 2011, month => 3, mday => 9
          hour => 10, min => 30, sec => 30}
-  Rule: require(['year', 'month', 'mday', 'hour', 'min', 'sec'])
+  Rule: $rule->require(['year', 'month', 'mday', 'hour', 'min', 'sec'])
           ->name('datetime')->check('datetime_to_timepiece')
 
 You can get result value.
@@ -1440,7 +1450,7 @@ Note that L<Time::Piece> is required.
 =head2 merge
 
   Data: {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'}
-  Rule: require(['name1', 'name2', 'name3'])->name('mergd_name')
+  Rule: $rule->require(['name1', 'name2', 'name3'])->name('mergd_name')
           ->check('merge') # KenRikaTaro
 
 Merge the values.
@@ -1454,14 +1464,14 @@ Note that if one value is not defined, merged value become undefined.
 =head2 shift
 
   Data: {names => ['Ken', 'Taro']}
-  Rule: require('names')->check('shift') # 'Ken'
+  Rule: $rule->require('names')->check('shift') # 'Ken'
 
 Shift the head element of array.
 
 =head2 to_array
 
   Data: {languages => 'Japanese'}
-  Rule: require('languages')->check('to_array') # ['Japanese']
+  Rule: $rule->require('languages')->check('to_array') # ['Japanese']
   
 Convert non array reference data to array reference.
 This is useful to check checkbox values or select multiple values.
@@ -1469,7 +1479,7 @@ This is useful to check checkbox values or select multiple values.
 =head2 trim
 
   Data: {name => '  Ken  '}
-  Rule: require('name')->check('trim') # 'Ken'
+  Rule: $rule->require('name')->check('trim') # 'Ken'
 
 Trim leading and trailing white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1478,7 +1488,7 @@ which don't contain unicode space character.
 =head2 trim_collapse
 
   Data: {name => '  Ken   Takagi  '}
-  Rule: require('name')->check('trim_collapse') # 'Ken Takagi'
+  Rule: $rule->require('name')->check('trim_collapse') # 'Ken Takagi'
 
 Trim leading and trailing white space,
 and collapse all whitespace characters into a single space.
@@ -1488,7 +1498,7 @@ which don't contain unicode space character.
 =head2 trim_lead
 
   Data: {name => '  Ken  '}
-  Rule: require('name')->check('trim_lead') # 'Ken  '
+  Rule: $rule->require('name')->check('trim_lead') # 'Ken  '
 
 Trim leading white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1497,7 +1507,7 @@ which don't contain unicode space character.
 =head2 trim_trail
 
   Data: {name => '  Ken  '}
-  Rule: require('name')->check('trim_trail') # '  Ken'
+  Rule: $rule->require('name')->check('trim_trail') # '  Ken'
 
 Trim trailing white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1506,28 +1516,28 @@ which don't contain unicode space character.
 =head2 trim_uni
 
   Data: {name => '  Ken  '}
-  Rule: require('name')->check('trim_uni') # 'Ken'
+  Rule: $rule->require('name')->check('trim_uni') # 'Ken'
 
 Trim leading and trailing white space, which contain unicode space character.
 
 =head2 trim_uni_collapse
 
   Data: {name => '  Ken   Takagi  '};
-  Rule: require('name')->check('trim_uni_collapse') # 'Ken Takagi'
+  Rule: $rule->require('name')->check('trim_uni_collapse') # 'Ken Takagi'
 
 Trim leading and trailing white space, which contain unicode space character.
 
 =head2 trim_uni_lead
 
   Data: {name => '  Ken  '};
-  Rule: require('name')->check('trim_uni_lead') # 'Ken  '
+  Rule: $rule->require('name')->check('trim_uni_lead') # 'Ken  '
 
 Trim leading white space, which contain unicode space character.
 
 =head2 trim_uni_trail
   
   Data: {name => '  Ken  '};
-  Rule: require('name')->check('trim_uni_trail') # '  Ken'
+  Rule: $rule->require('name')->check('trim_uni_trail') # '  Ken'
 
 Trim trailing white space, which contain unicode space character.
 
