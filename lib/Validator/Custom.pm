@@ -476,7 +476,7 @@ sub _parse_constraint {
   # Simple constraint name
   else {
     my $constraints;
-    if ($constraint eq 'ARRAY') {
+    if (ref $constraint eq 'ARRAY') {
       $constraints = $constraint;
     }
     else {

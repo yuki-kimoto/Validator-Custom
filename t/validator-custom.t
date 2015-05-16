@@ -14,6 +14,26 @@ my $js;
 
 use Validator::Custom;
 
+# check_or
+{
+  my $vc = Validator::Custom->new;
+
+  # or condition new syntax
+  my $rule = $vc->create_rule;
+  my $data = {k1 => '3', k2 => '', k3 => 'a'};
+  $rule->require('k1')
+    ->check_or('blank', 'int');
+  $rule->require('k2')
+    ->check_or('blank', 'int');
+  $rule->require('k3')
+    ->check_or('blank', 'int');
+  
+  my $vresult = $vc->validate($data, $rule);
+  ok($vresult->is_valid('k1'));
+  ok($vresult->is_valid('k2'));
+  ok(!$vresult->is_valid('k3'));
+}
+
 our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
 
 {
@@ -2625,24 +2645,4 @@ ok(!$result->is_valid('key3_3'));
   }
 }
 
-=pod
-# check_or
-{
-  my $vc = Validator::Custom->new;
 
-  # or condition new syntax
-  my $rule = $vc->create_rule;
-  my $data = {key1 => '3', key2 => '', key3 => 'a'};
-  $rule->require('k1')
-    ->check_or('blank', 'int');
-  $rule->require('k2')
-    ->check_or('blank', 'int');
-  $rule->require('k3')
-    ->check_or('blank', 'int');
-  
-  my $vresult = $vc->validate($data, $rule);
-  ok($vresult->is_valid('k1'));
-  ok($vresult->is_valid('k2'));
-  ok(!$vresult->is_valid('k3'));
-}
-=cut
