@@ -493,7 +493,13 @@ sub _parse_constraint {
     my @cfuncs;
     
     # Constraint names
-    my @cnames = split(/\|\|/, $constraint);
+    my @cnames;
+    if (ref $constraint eq 'ARRAY') {
+      @cnames = @$constraint;
+    }
+    else {
+      @cnames = split(/\|\|/, $constraint);
+    }
     
     # Convert constraint names to constraint functions
     for my $cname (@cnames) {
