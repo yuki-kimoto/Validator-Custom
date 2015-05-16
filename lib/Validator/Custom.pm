@@ -478,7 +478,7 @@ sub _parse_constraint {
     $cinfo->{funcs} = [$constraint];
   }
   # Simple constraint name
-  elsif ($constraint =~ /\W/) {
+  else {
     # Trim space
     $constraint ||= '';
     $constraint =~ s/^\s+//;
@@ -534,12 +534,6 @@ sub _parse_constraint {
     }
     
     $cinfo->{funcs} = \@cfuncs;
-  }
-  else {
-    my $cfunc = $self->constraints->{$constraint} || '';
-    croak qq{"$constraint" is not registered}
-      unless ref $cfunc eq 'CODE';
-    $cinfo->{funcs} = [$cfunc];
   }
   
   return $cinfo;
