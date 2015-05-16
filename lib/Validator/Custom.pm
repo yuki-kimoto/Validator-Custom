@@ -324,11 +324,11 @@ sub validate {
       
       # Arrange constraint information
       my $constraint = $c->{constraint};
-      my $message = $c->{message};
       
       # Constraint information
-      my $cinfo = $self->_parse_constraint($constraint);
+      my $cinfo = $self->_parse_constraint($c);
       my $arg = $cinfo->{arg};
+      my $message = $cinfo->{message};
                                       
       # Constraint function
       my $cfuncs = $cinfo->{funcs};
@@ -460,10 +460,14 @@ sub validate {
 }
 
 sub _parse_constraint {
-  my ($self, $constraint) = @_;
+  my ($self, $c) = @_;
 
   # Constraint information
   my $cinfo = {};
+
+  # Arrange constraint information
+  my $constraint = $c->{constraint};
+  $cinfo->{message} = $c->{message};
 
   # Arrange constraint
   if (ref $constraint eq 'HASH') {
