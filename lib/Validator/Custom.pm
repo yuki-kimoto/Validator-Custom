@@ -465,13 +465,6 @@ sub _parse_constraint {
   my $constraint = $c->{constraint};
   $cinfo->{message} = $c->{message};
   $cinfo->{original_constraint} = $c->{constraint};
-
-  # Arrange constraint
-  if (ref $constraint eq 'HASH') {
-    my $first_key = (keys %$constraint)[0];
-    $cinfo->{arg} = $constraint->{$first_key};
-    $constraint = $first_key;
-  }
   
   # Code reference
   if (ref $constraint eq 'CODE') {
@@ -479,6 +472,13 @@ sub _parse_constraint {
   }
   # Simple constraint name
   else {
+    # Arrange constraint
+    if (ref $constraint eq 'HASH') {
+      my $first_key = (keys %$constraint)[0];
+      $cinfo->{arg} = $constraint->{$first_key};
+      $constraint = $first_key;
+    }
+
     # Trim space
     $constraint ||= '';
     $constraint =~ s/^\s+//;

@@ -6,6 +6,20 @@ has 'topic';
 has 'rule' => sub { [] };
 has 'validator';
 
+sub check_or {
+  my ($self, @constraints) = @_;
+  
+  my $constraint_h = {};
+  $constraint_h->{constraint} = \@constraints;
+  
+  my $cinfo = $self->validator->_parse_constraint($constraint_h);
+  
+  $self->topic->{constraints} ||= [];
+  push @{$self->topic->{constraints}}, $cinfo;
+  
+  return $self;
+}
+
 sub check {
   my ($self, @constraints) = @_;
 

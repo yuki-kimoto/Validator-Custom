@@ -1466,7 +1466,7 @@ $value = $result->data->{key};
 ok(index($value, 'a') > -1);
 
 
-# or condtioon new syntax
+# or condition new syntax
 $data = {key1 => '3', key2 => '', key3 => 'a'};
 $rule = [
   key1 => [
@@ -2624,3 +2624,25 @@ ok(!$result->is_valid('key3_3'));
     );
   }
 }
+
+=pod
+# check_or
+{
+  my $vc = Validator::Custom->new;
+
+  # or condition new syntax
+  my $rule = $vc->create_rule;
+  my $data = {key1 => '3', key2 => '', key3 => 'a'};
+  $rule->require('k1')
+    ->check_or('blank', 'int');
+  $rule->require('k2')
+    ->check_or('blank', 'int');
+  $rule->require('k3')
+    ->check_or('blank', 'int');
+  
+  my $vresult = $vc->validate($data, $rule);
+  ok($vresult->is_valid('k1'));
+  ok($vresult->is_valid('k2'));
+  ok(!$vresult->is_valid('k3'));
+}
+=cut
