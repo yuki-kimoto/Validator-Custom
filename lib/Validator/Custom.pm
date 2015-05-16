@@ -12,6 +12,11 @@ use Validator::Custom::Constraints;
 has ['data_filter', 'rule', 'rule_obj'];
 has error_stock => 1;
 
+sub new_rule {
+  return Validator::Custom::Rule->new(check_receive_one => 1);
+}
+
+# Use new_rule. create_rule is for old syntax backword compatibility
 sub create_rule { Validator::Custom::Rule->new }
 
 sub js_fill_form_button {
@@ -647,16 +652,16 @@ Validator::Custom - HTML form Validation, easy and flexibly
   my $data = {id => 1, name => 'Ken Suzuki', age => 19};
 
   # Create Rule
-  my $rule = $vc->create_rule;
+  my $rule = $vc->new_rule;
   
   # Rule syntax - integer, have error message
   $rule->require('id')->check('int')->message('id should be integer');
   
   # Rule syntax - string, not blank, length is 1 to 5, have error messages
   $rule->require('name')
-    ->check(['string' => 'name should be string'])
-    ->check(['not_blank' => 'name is emtpy'])
-    ->check([{length => [1, 5]} => 'name is too long']);
+    ->check('string')->message('name should be string')
+    ->check('not_blank')->message('name is emtpy')
+    ->check({length => [1, 5]})->message('name is too long');
   
   # Rule syntax - value is optional, default is 20
   $rule->optional('age')->check('int')->default(20);
@@ -677,12 +682,14 @@ Validator::Custom - HTML form Validation, easy and flexibly
     my $value = shift;
     return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
   };
-  $rule->require('age')->check(
-    [$blank_or_number => 'age must be blank or number']
-  );
+  $rule->require('age')
+    ->check($blank_or_number)->message('age must be blank or number');
   
-  # Rule old syntax, please use above new syntax.
-  # Old syntax take many miss-typing.
+  ### Rule old syntax, please use above new syntax.
+  # Old syntax2, please use new_rule method
+  my $rule = $dbi->create_rule;
+  
+  # Old syntax1 take many miss-typing.
   my $rule = [
     id => {message => 'id should be integer'} => [
       'int'
@@ -746,14 +753,14 @@ Data must be hash reference.
 
 B<3. Prepare a rule for validation>
 
-  my $ruel = $vc->create_rule;
+  my $ruel = $vc->new_rule;
   $rule->require('age')->message('age must be integer')
     ->check('not_blank')
     ->check('int');
   
   $rule->require('name')
-    ->check(['not_blank' => 'name is empty'])
-    ->check([{length => [1, 5]} => 'name must be length 1 to 5']);
+    ->check('not_blank')->message('name is empty')
+    ->check({length => [1, 5]})->message('name must be length 1 to 5');
 
 Please see L<Validator::Custom/"RULE"> about rule syntax.
 
@@ -849,23 +856,23 @@ in the POD of L<Validator::Custom::Result>
 =head2 RULE
 
   # Create Rule
-  my $rule = $vc->create_rule;
+  my $rule = $vc->new_rule;
   
   # Rule syntax - integer, have error message
   $rule->require('id')->check('int')->message('id should be integer');
   
   # Rule syntax - not blank, length is 1 to 5, have error messages
   $rule->require('name')
-    ->check(['not_blank' => 'name is emtpy'])
-    ->check([{length => [1, 5]} => 'name is too long']);
+    ->check('not_blank')->message('name is emtpy')
+    ->check({length => [1, 5]})->message('name is too long');
   
   # Rule syntax - value is optional, default is 20
   $rule->optional('age')->check('int')->default(20);
 
 Rule is L<Validator::Custom::Rule> ojbect.
-You can create C<create_rule> method of L<Validator::Custom>.
+You can create C<new_rule> method of L<Validator::Custom>.
 
-  my $rule = $vc->create_rule
+  my $rule = $vc->new_rule
 
 At first you set topic, C<require> method or C<optional> method.
 If the value is required, you use C<require> method.
@@ -915,8 +922,8 @@ You set constraints by C<check> method.
 You can set message for each constraint function
 
   $rule->require('name')
-    ->check(['not_blank' => 'name must be not blank'])
-    ->check([{length => [1, 5]} => 'name must be 1 to 5 length']);
+    ->check('not_blank')->message('name must be not blank')
+    ->check({length => [1, 5]})->message('name must be 1 to 5 length');
 
 You can create original constraint function using
 original constraints.

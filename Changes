@@ -14,6 +14,14 @@
     by using after message.
     $rule->require('k1')
       ->check('string')->check('not_blank')->message('k1 should be string having length')
+  - check can receive arguments by second after arguments.
+    $rule->require('k1')->check('legnth', {max => 1});
+    from now, this should be check({'legnth', {max => 1}})
+  - add new_rule method to change rule check method behavior
+    rule can recieve constraint and arguments.
+    my $rule = $dbi->new_rule;
+    $rule->require('k1')->check(length => {max => 10});
+  
 0.24
   - when default option is specified, result data become valid
     (This is backword imcompatible, but old behavior is a little
