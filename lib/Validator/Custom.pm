@@ -333,7 +333,7 @@ sub validate {
       my $is_valid;
       
       # Data is array
-      if($cinfo->{array}) {
+      if($cinfo->{each}) {
           
         # To array
         $value = [$value] unless ref $value eq 'ARRAY';
@@ -500,7 +500,7 @@ sub _parse_constraint {
       }
 
       # Target is array elements
-      $cinfo->{array} = 1 if $cname =~ s/^@//;
+      $cinfo->{each} = 1 if $cname =~ s/^@//;
       croak qq{"\@" must be one at the top of constrinat name}
         if index($cname, '@') > -1;
       

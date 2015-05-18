@@ -6,15 +6,15 @@ has 'topic';
 has 'rule' => sub { [] };
 has 'validator';
 
-sub array {
+sub each {
   my $self = shift;
   
   if (@_) {
-    $self->topic->{array} = $_[0];
+    $self->topic->{each} = $_[0];
     return $self;
   }
   else {
-    return $self->topic->{array};
+    return $self->topic->{each};
   }
   
   return $self;
@@ -27,13 +27,15 @@ sub check_or {
   $constraint_h->{constraint} = \@constraints;
   
   my $cinfo = $self->validator->_parse_constraint($constraint_h);
-  $cinfo->{array} = $self->topic->{array};
+  $cinfo->{each} = $self->topic->{each};
   
   $self->topic->{constraints} ||= [];
   push @{$self->topic->{constraints}}, $cinfo;
   
   return $self;
 }
+
+sub filter { shift->check(@_) }
 
 sub check {
   my ($self, @constraints) = @_;
@@ -49,7 +51,7 @@ sub check {
       $constraint_h->{constraint} = $constraint;
     }
     my $cinfo = $self->validator->_parse_constraint($constraint_h);
-    $cinfo->{array} = $self->topic->{array};
+    $cinfo->{each} = $self->topic->{each};
     push @$constraints_h, $cinfo;
   }
 
