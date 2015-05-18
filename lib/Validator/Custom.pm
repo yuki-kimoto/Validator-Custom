@@ -1370,6 +1370,9 @@ In other word, the array contains at least specified count element.
 
 =head1 FILTERS
 
+You can use the following filter by default.
+C<filter> method is only alias for C<check> method for readability.
+
 =head2 date_to_timepiece
 
   Data: {date => '2010/11/12'}
