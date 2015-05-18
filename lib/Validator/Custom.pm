@@ -162,6 +162,7 @@ sub new {
     space             => \&Validator::Custom::Constraint::space,
     string            => \&Validator::Custom::Constraint::string,
     to_array          => \&Validator::Custom::Constraint::to_array,
+    to_array_remove_blank => \&Validator::Custom::Constraint::to_array_remove_blank,
     trim              => \&Validator::Custom::Constraint::trim,
     trim_collapse     => \&Validator::Custom::Constraint::trim_collapse,
     trim_lead         => \&Validator::Custom::Constraint::trim_lead,
@@ -884,6 +885,10 @@ Message corresponding to the parameter name which value is invalid.
 Default value. This value is automatically set to result data
 if the parameter value is invalid or the parameter name specified in rule is missing in the data.
 
+If you set not string or number value, you should the value which surrounded by code reference
+
+  $rule->require('age')->default(sub { [] })
+  
 =item 3. copy
 
   $rule->require('age')->copy(0)
@@ -1174,6 +1179,10 @@ Message corresponding to the parameter name which value is invalid.
 Default value. This value is automatically set to result data
 if the parameter value is invalid or the parameter name specified in rule is missing in the data.
 
+If you set not string or number value, you should the value which surrounded by code reference
+
+  {default => sub { [] }}
+  
 =item 3. copy
 
   {copy => 0}

@@ -267,6 +267,15 @@ sub to_array {
   return [1, $value];
 }
 
+sub to_array_remove_blank {
+  my $values = shift;
+  
+  $values = [$values] unless ref $values eq 'ARRAY';
+  $values = [grep { defined $_ && CORE::length $_} @$values];
+  
+  return [1, $values];
+}
+
 sub trim {
   my $value = shift;
   $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms if defined $value;

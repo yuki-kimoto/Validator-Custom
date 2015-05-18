@@ -14,6 +14,23 @@ my $js;
 
 use Validator::Custom;
 
+# to_array_remove_blank filter
+{
+  my $vc = Validator::Custom->new;
+  my $data = {key1 => 1, key2 => [1, 2], key3 => '', key4 => [1, 3, '', '']};
+  my $rule = $vc->create_rule;
+  $rule->require('key1')->filter('to_array_remove_blank');
+  $rule->require('key2')->filter('to_array_remove_blank');
+  $rule->require('key3')->filter('to_array_remove_blank');
+  $rule->require('key4')->filter('to_array_remove_blank');
+  
+  my $vresult = $vc->validate($data, $rule);
+  is_deeply($vresult->data->{key1}, [1]);
+  is_deeply($vresult->data->{key2}, [1, 2]);
+  is_deeply($vresult->data->{key3}, []);
+  is_deeply($vresult->data->{key4}, [1, 3]);
+}
+
 # Validator::Custom::Resut filter method
 {
   my $vc = Validator::Custom->new;
