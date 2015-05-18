@@ -33,11 +33,11 @@ use Validator::Custom;
   my $vc = Validator::Custom->new;
   my $rule = $vc->create_rule;
   my $data = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a', k5 => []};
-  $rule->require('k1')->each(1)->check({selected_at_least => 1})->check('int')->message('k1Error1');
-  $rule->require('k2')->each(1)->check({selected_at_least => 1})->check('int')->message('k2Error1');
-  $rule->require('k3')->each(1)->check({selected_at_least => 1})->check('int')->message('k3Error1');
-  $rule->require('k4')->each(1)->check({selected_at_least => 1})->check('int')->message('k4Error1');
-  $rule->require('k5')->each(1)->check({selected_at_least => 1})->check('int')->message('k5Error1');
+  $rule->require('k1')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k1Error1');
+  $rule->require('k2')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k2Error1');
+  $rule->require('k3')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k3Error1');
+  $rule->require('k4')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k4Error1');
+  $rule->require('k5')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k5Error1');
   
   my $messages = $vc->validate($data, $rule)->messages;
 

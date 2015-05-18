@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '0.25';
+our $VERSION = '0.26';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
@@ -630,7 +630,7 @@ Validator::Custom - HTML form Validation, easy and flexibly
   my $vc = Validator::Custom->new;
   
   # Data
-  my $data = {id => 1, name => 'Ken Suzuki', age => 19};
+  my $data = {id => 1, name => 'Ken Suzuki', age => ' 19 '};
 
   # Create Rule
   my $rule = $vc->create_rule;
@@ -641,11 +641,11 @@ Validator::Custom - HTML form Validation, easy and flexibly
   # Rule syntax - string, not blank, length is 1 to 5, have error messages
   $rule->require('name')
     ->check('string')->message('name should be string')
-    ->check('not_blank')->message('name is emtpy')
+    ->check('not_blank')->message('name should be not blank')
     ->check({length => [1, 5]})->message('name is too long');
   
   # Rule syntax - value is optional, default is 20
-  $rule->optional('age')->check('int')->default(20);
+  $rule->optional('age')->filter('trim')->check('int')->default(20);
   
   # Validation
   my $result = $vc->validate($data, $rule);
@@ -1373,7 +1373,7 @@ In other word, the array contains at least specified count element.
 =head2 date_to_timepiece
 
   Data: {date => '2010/11/12'}
-  Rule: $rule->require('date')->check('date_to_timepiece')
+  Rule: $rule->require('date')->filter('date_to_timepiece')
 
 The value which looks like date is converted
 to L<Time::Piece> object.
@@ -1389,7 +1389,7 @@ And year and month and mday combination is ok.
 
   Data: {year => 2011, month => 3, mday => 9}
   Rule: $rule->require(['year', 'month', 'mday'])->name('date')
-                                          ->check('date_to_timepiece')
+                                          ->filter('date_to_timepiece')
 
 You can get result value.
 
@@ -1400,7 +1400,7 @@ Note that L<Time::Piece> is required.
 =head2 datetime_to_timepiece
 
   Data: {datetime => '2010/11/12 12:14:45'}
-  Rule: $rule->require('datetime')->check('datetime_to_timepiece');
+  Rule: $rule->require('datetime')->filter('datetime_to_timepiece');
 
 The value which looks like date and time is converted
 to L<Time::Piece> object.
@@ -1417,7 +1417,7 @@ And year and month and mday combination is ok.
   Data: {year => 2011, month => 3, mday => 9
          hour => 10, min => 30, sec => 30}
   Rule: $rule->require(['year', 'month', 'mday', 'hour', 'min', 'sec'])
-          ->name('datetime')->check('datetime_to_timepiece')
+          ->name('datetime')->filter('datetime_to_timepiece')
 
 You can get result value.
 
@@ -1429,7 +1429,7 @@ Note that L<Time::Piece> is required.
 
   Data: {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'}
   Rule: $rule->require(['name1', 'name2', 'name3'])->name('mergd_name')
-          ->check('merge') # KenRikaTaro
+          ->filter('merge') # KenRikaTaro
 
 Merge the values.
 
@@ -1442,14 +1442,14 @@ Note that if one value is not defined, merged value become undefined.
 =head2 shift
 
   Data: {names => ['Ken', 'Taro']}
-  Rule: $rule->require('names')->check('shift') # 'Ken'
+  Rule: $rule->require('names')->filter('shift') # 'Ken'
 
 Shift the head element of array.
 
 =head2 to_array
 
   Data: {languages => 'Japanese'}
-  Rule: $rule->require('languages')->check('to_array') # ['Japanese']
+  Rule: $rule->require('languages')->filter('to_array') # ['Japanese']
   
 Convert non array reference data to array reference.
 This is useful to check checkbox values or select multiple values.
@@ -1457,7 +1457,7 @@ This is useful to check checkbox values or select multiple values.
 =head2 trim
 
   Data: {name => '  Ken  '}
-  Rule: $rule->require('name')->check('trim') # 'Ken'
+  Rule: $rule->require('name')->filter('trim') # 'Ken'
 
 Trim leading and trailing white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1466,7 +1466,7 @@ which don't contain unicode space character.
 =head2 trim_collapse
 
   Data: {name => '  Ken   Takagi  '}
-  Rule: $rule->require('name')->check('trim_collapse') # 'Ken Takagi'
+  Rule: $rule->require('name')->filter('trim_collapse') # 'Ken Takagi'
 
 Trim leading and trailing white space,
 and collapse all whitespace characters into a single space.
@@ -1476,7 +1476,7 @@ which don't contain unicode space character.
 =head2 trim_lead
 
   Data: {name => '  Ken  '}
-  Rule: $rule->require('name')->check('trim_lead') # 'Ken  '
+  Rule: $rule->require('name')->filter('trim_lead') # 'Ken  '
 
 Trim leading white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1485,7 +1485,7 @@ which don't contain unicode space character.
 =head2 trim_trail
 
   Data: {name => '  Ken  '}
-  Rule: $rule->require('name')->check('trim_trail') # '  Ken'
+  Rule: $rule->require('name')->filter('trim_trail') # '  Ken'
 
 Trim trailing white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1494,28 +1494,28 @@ which don't contain unicode space character.
 =head2 trim_uni
 
   Data: {name => '  Ken  '}
-  Rule: $rule->require('name')->check('trim_uni') # 'Ken'
+  Rule: $rule->require('name')->filter('trim_uni') # 'Ken'
 
 Trim leading and trailing white space, which contain unicode space character.
 
 =head2 trim_uni_collapse
 
   Data: {name => '  Ken   Takagi  '};
-  Rule: $rule->require('name')->check('trim_uni_collapse') # 'Ken Takagi'
+  Rule: $rule->require('name')->filter('trim_uni_collapse') # 'Ken Takagi'
 
 Trim leading and trailing white space, which contain unicode space character.
 
 =head2 trim_uni_lead
 
   Data: {name => '  Ken  '};
-  Rule: $rule->require('name')->check('trim_uni_lead') # 'Ken  '
+  Rule: $rule->require('name')->filter('trim_uni_lead') # 'Ken  '
 
 Trim leading white space, which contain unicode space character.
 
 =head2 trim_uni_trail
   
   Data: {name => '  Ken  '};
-  Rule: $rule->require('name')->check('trim_uni_trail') # '  Ken'
+  Rule: $rule->require('name')->filter('trim_uni_trail') # '  Ken'
 
 Trim trailing white space, which contain unicode space character.
 
@@ -1655,10 +1655,25 @@ Filter function return array reference,
 first element is the value if the value is valid or not,
 second element is the converted value by filter function.
 
-=head1 EXAMPLES
+=head1 FAQ
 
-See L<Validator::Custom Wiki|https://github.com/yuki-kimoto/Validator-Custom/wiki>.
-There are many examples.
+=head2 How to do check box validation?
+
+Check box validation is a little difficult because
+check box value is not exists or one or multiple.
+
+  # Data
+  my $data = {}
+  my $data = {feature => 1}
+  my $data = {feature => [1, 2]}
+
+You can do the following way.
+
+  $rule->require('feature')
+    ->filter('to_array')
+    ->check({selected_at_least => 1})->message('feature should select at least 1')
+    ->each(1)
+    ->check('int')->message('features should be integer');
 
 =head1 DEPRECATED FUNCTIONALITIES
 

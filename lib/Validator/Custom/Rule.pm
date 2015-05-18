@@ -230,11 +230,11 @@ Content of rule object.
 
 =head1 METHODS
 
-=head2 array
+=head2 each
 
-  $rule->array(1);
+  $rule->each(1);
 
-Tell current topic data structure is array.
+Tell checke each element.
 
 =head2 check
 
@@ -259,6 +259,12 @@ Set copy option
   $rule->default(0);
 
 Set default option
+
+=head2 filter
+
+  $rule->filter('trim');
+
+This is C<check> method alias for readability.
 
 =head2 message
 

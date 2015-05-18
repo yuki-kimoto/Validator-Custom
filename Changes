@@ -1,6 +1,6 @@
 0.26
   - add filter method, this is check method alias for readability
-  - rename Validator::Custom::Rule array method to each
+  - rename Validator::Custom::Rule array(this is added at 0.25) method to each
 0.25
   - add string constraint. This is used to check the value is string.
     $rule->require('k1')->check('string')
