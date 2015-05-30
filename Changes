@@ -1,3 +1,10 @@
+0.28
+  - improve decimal check. you can specify undef value which mean unlimit muximanu digits
+    Example:
+    Data: {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'}
+    Rule: $rule->require('num1')->check('decimal')
+      $rule->require('num2')->check({'decimal' => [undef, 2]})
+      $rule->require('num2')->check({'decimal' => [2, undef]})
 0.27
   - add to_array_remove_blank constraint.
 0.26

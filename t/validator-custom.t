@@ -961,6 +961,13 @@ my @infos = (
       k4 => '12',
       k5 => '123',
       k6 => '123.a',
+      k7 => '1234.1234',
+      k8 => '',
+      k9 => 'a',
+      k10 => '1111111.12',
+      k11 => '1111111.123',
+      k12 => '12.1111111',
+      k13 => '123.1111111'
     },
     [
       k1 => [
@@ -980,9 +987,30 @@ my @infos = (
       ],
       k6 => [
         {'decimal' => 2}
+      ],
+      k7 => [
+        'decimal'
+      ],
+      k8 => [
+        'decimal'
+      ],
+      k9 => [
+        'decimal'
+      ],
+      k10 => [
+        {'decimal' => [undef, 2]}
+      ],
+      k11 => [
+        {'decimal' => [undef, 2]}
+      ],
+      k12 => [
+        {'decimal' => [2, undef]}
+      ],
+      k13 => [
+        {'decimal' => [2, undef]}
       ]
     ],
-    [qw/k2 k3 k5 k6/]
+    [qw/k2 k3 k5 k6 k8 k9 k11 k13/]
   ],
   [
     'in_array',
@@ -1170,42 +1198,6 @@ my @exception_infos = (
     ],
     qr/\Qbetween' needs two numeric arguments/
   ],
-  [
-    'decimal target undef',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        'decimal'
-      ]
-    ],
-    qr/\QConstraint 'decimal' needs one or two numeric arguments/
-  ],
-  [
-    'decimal target not number 1',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        {'decimal' => ['a']}
-      ]
-    ],
-    qr/\QConstraint 'decimal' needs one or two numeric arguments/
-  ],
-  [
-    'DECIMAL target not number 2',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        {'decimal' => [1, 'a']}
-      ]
-    ],
-    qr/\QConstraint 'decimal' needs one or two numeric arguments/
-  ],
 );
 
 foreach my $exception_info (@exception_infos) {
@@ -1265,18 +1257,6 @@ sub validate_exception {
     'trim check'
   );
 }
-
-# Carp trust relationship
-$data = {a => undef};
-$vc = Validator::Custom->new;
-$rule = [
-  a => [
-    'decimal'
-  ]
-];
-eval{$vc->validate($data, $rule)};
-like($@, qr/\.t /);
-
 
 # Negative validation
 $data = {key1 => 'a', key2 => 1};

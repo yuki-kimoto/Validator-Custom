@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '0.27';
+our $VERSION = '0.28';
 
 use Carp 'croak';
 use Validator::Custom::Constraint;
@@ -1228,10 +1228,17 @@ Blank.
   
   Data: {num1 => '123', num2 => '1.45'}
   Rule: $rule->require('num1')->check({'decimal' => 3})
-        require('num2')->check({'decimal' => [1, 2]})
+        $rule->require('num2')->check({'decimal' => [1, 2]})
 
 Decimal. You can specify maximum digits number at before
 and after '.'.
+
+If you set undef value or don't set any value, that means there is no maximum limit.
+  
+  Data: {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'}
+  Rule: $rule->require('num1')->check('decimal')
+        $rule->require('num2')->check({'decimal' => [undef, 2]})
+        $rule->require('num2')->check({'decimal' => [2, undef]})
 
 =head2 defined
 
