@@ -6,6 +6,271 @@ has 'topic';
 has 'rule' => sub { [] };
 has 'validator';
 
+sub validate {
+  my ($self, $data, $rule) = @_;
+  
+  # Class
+  my $class = ref $self;
+  
+  # Validation rule
+  $rule ||= $self->rule;
+  
+  # Data filter
+  my $filter = $self->data_filter;
+  $data = $filter->($data) if $filter;
+  
+  # Check data
+  croak "First argument must be hash ref"
+    unless ref $data eq 'HASH';
+  
+  # Check rule
+  unless (ref $rule eq 'Validator::Custom::Rule') {
+    croak "Invalid rule structure" unless ref $rule eq 'ARRAY';
+  }
+  
+  # Result
+  my $result = Validator::Custom::Result->new;
+  $result->{_error_infos} = {};
+  
+  # Save raw data
+  $result->raw_data($data);
+  
+  # Error is stock?
+  my $error_stock = $self->error_stock;
+  
+  # Valid keys
+  my $valid_keys = {};
+  
+  # Error position
+  my $pos = 0;
+  
+  # Found missing parameters
+  my $found_missing_params = {};
+  
+  # Shared rule
+  my $shared_rule = $self->shared_rule;
+  warn "DBIx::Custom::shared_rule is DEPRECATED!"
+    if @$shared_rule;
+  
+  if (ref $rule eq 'Validator::Custom::Rule') {
+    $self->rule_obj($rule);
+  }
+  else {
+    my $rule_obj = $self->create_rule;
+    $rule_obj->parse($rule, $shared_rule);
+    $self->rule_obj($rule_obj);
+  }
+  my $rule_obj = $self->rule_obj;
+
+  # Process each key
+  OUTER_LOOP:
+  for (my $i = 0; $i < @{$rule_obj->rule}; $i++) {
+    
+    my $r = $rule_obj->rule->[$i];
+    
+    # Increment position
+    $pos++;
+    
+    # Key, options, and constraints
+    my $key = $r->{key};
+    my $opts = $r->{option};
+    my $cinfos = $r->{constraints} || [];
+    
+    # Check constraints
+    croak "Invalid rule structure"
+      unless ref $cinfos eq 'ARRAY';
+
+    # Arrange key
+    my $result_key = $key;
+    if (ref $key eq 'HASH') {
+      my $first_key = (keys %$key)[0];
+      $result_key = $first_key;
+      $key         = $key->{$first_key};
+    }
+    
+    # Real keys
+    my $keys;
+    
+    if (ref $key eq 'ARRAY') { $keys = $key }
+    elsif (ref $key eq 'Regexp') {
+      $keys = [];
+      for my $k (keys %$data) {
+         push @$keys, $k if $k =~ /$key/;
+      }
+    }
+    else { $keys = [$key] }
+    
+    # Is data copy?
+    my $copy = 1;
+    $copy = $opts->{copy} if exists $opts->{copy};
+    
+    # Check missing parameters
+    my $require = exists $opts->{require} ? $opts->{require} : 1;
+    my $found_missing_param;
+    my $missing_params = $result->missing_params;
+    for my $key (@$keys) {
+      unless (exists $data->{$key}) {
+        if ($require && !exists $opts->{default}) {
+          push @$missing_params, $key
+            unless $found_missing_params->{$key};
+          $found_missing_params->{$key}++;
+        }
+        $found_missing_param = 1;
+      }
+    }
+    if ($found_missing_param) {
+      $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
+          ? $opts->{default}->($self) : $opts->{default}
+        if exists $opts->{default} && $copy;
+      next if $opts->{default} || !$require;
+    }
+    
+    # Already valid
+    next if $valid_keys->{$result_key};
+    
+    # Validation
+    my $value = @$keys > 1
+      ? [map { $data->{$_} } @$keys]
+      : $data->{$keys->[0]};
+    
+    for my $cinfo (@$cinfos) {
+      
+      # Constraint information
+      my $args = $cinfo->{args};
+      my $message = $cinfo->{message};
+                                      
+      # Constraint function
+      my $cfuncs = $cinfo->{funcs};
+      
+      # Is valid?
+      my $is_valid;
+      
+      # Data is array
+      if($cinfo->{each}) {
+          
+        # To array
+        $value = [$value] unless ref $value eq 'ARRAY';
+        
+        # Validation loop
+        for (my $k = 0; $k < @$value; $k++) {
+          my $data = $value->[$k];
+          
+          # Validation
+          for (my $j = 0; $j < @$cfuncs; $j++) {
+            my $cfunc = $cfuncs->[$j];
+            my $arg = $args->[$j];
+            
+            # Validate
+            my $cresult;
+            {
+              local $_ = Validator::Custom::Constraints->new(
+                constraints => $self->constraints
+              );
+              $cresult= $cfunc->($data, $arg, $self);
+            }
+            
+            # Constrint result
+            my $v;
+            if (ref $cresult eq 'ARRAY') {
+              ($is_valid, $v) = @$cresult;
+              $value->[$k] = $v;
+            }
+            elsif (ref $cresult eq 'HASH') {
+              $is_valid = $cresult->{result};
+              $message = $cresult->{message} unless $is_valid;
+              $value->[$k] = $cresult->{output} if exists $cresult->{output};
+            }
+            else { $is_valid = $cresult }
+            
+            last if $is_valid;
+          }
+          
+          # Validation error
+          last unless $is_valid;
+        }
+      }
+      
+      # Data is scalar
+      else {
+        # Validation
+        for (my $k = 0; $k < @$cfuncs; $k++) {
+          my $cfunc = $cfuncs->[$k];
+          my $arg = $args->[$k];
+        
+          my $cresult;
+          {
+            local $_ = Validator::Custom::Constraints->new(
+              constraints => $self->constraints
+            );
+            $cresult = $cfunc->($value, $arg, $self);
+          }
+          
+          if (ref $cresult eq 'ARRAY') {
+            my $v;
+            ($is_valid, $v) = @$cresult;
+            $value = $v if $is_valid;
+          }
+          elsif (ref $cresult eq 'HASH') {
+            $is_valid = $cresult->{result};
+            $message = $cresult->{message} unless $is_valid;
+            $value = $cresult->{output} if exists $cresult->{output} && $is_valid;
+          }
+          else { $is_valid = $cresult }
+          
+          last if $is_valid;
+        }
+      }
+      
+      # Add error if it is invalid
+      unless ($is_valid) {
+        if (exists $opts->{default}) {
+          # Set default value
+          $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
+                                       ? $opts->{default}->($self)
+                                       : $opts->{default}
+            if exists $opts->{default} && $copy;
+          $valid_keys->{$result_key} = 1
+        }
+        else {
+          # Resist error info
+          $message = $opts->{message} unless defined $message;
+          $result->{_error_infos}->{$result_key} = {
+            message      => $message,
+            position     => $pos,
+            reason       => $cinfo->{original_constraint},
+            original_key => $key
+          } unless exists $result->{_error_infos}->{$result_key};
+          
+          # No Error stock
+          unless ($error_stock) {
+            # Check rest constraint
+            my $found;
+            for (my $k = $i + 1; $k < @{$rule_obj->rule}; $k++) {
+              my $r_next = $rule_obj->rule->[$k];
+              my $key_next = $r_next->{key};
+              $key_next = (keys %$key)[0] if ref $key eq 'HASH';
+              $found = 1 if $key_next eq $result_key;
+            }
+            last OUTER_LOOP unless $found;
+          }
+        }
+        next OUTER_LOOP;
+      }
+    }
+    
+    # Result data
+    $result->data->{$result_key} = $value if $copy;
+    
+    # Key is valid
+    $valid_keys->{$result_key} = 1;
+    
+    # Remove invalid key
+    delete $result->{_error_infos}->{$key};
+  }
+  
+  return $result;
+}
+
 sub each {
   my $self = shift;
   
