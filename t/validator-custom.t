@@ -140,7 +140,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   my $messages_hash2 = $vresult->messages_to_hash;
   is_deeply($messages_hash2, {k1 => 'k1Error2', k2 => 'k2Error2'}, 'rule errors hash');
   
-  my $messages = Validator::Custom->new(rule => $rule)->validate($data)->messages;
+  $messages = Validator::Custom->new(rule => $rule)->validate($data)->messages;
   is_deeply($messages, [qw/k1Error2 k2Error2/], 'rule');
   
   $validator = Validator::Custom->new->error_stock(0);
@@ -585,20 +585,12 @@ $params = {key1 => 'aaa', key0 => 1, key2 => 2};
 $vresult = $vc->validate($params, $rule);
 ok($vresult->is_ok, "second key");
 
-$params = {key1 => 'bbb', key0 => 1, key2 => 2};
-$vresult = $vc->validate($params, $rule);
-ok($vresult->is_ok, "third key");
-ok(!$vresult->error_reason('key1'), "third key : error reason");
-eval { $vresult->error_reason };
-like($@, qr/Parameter name must be specified/, 'error_reason not Parameter name');
-
 $params = {key1 => 'ccc', key0 => 1, key2 => 2};
 $vresult = $vc->validate($params, $rule);
 ok(!$vresult->is_ok, "invalid");
 is_deeply($vresult->invalid_rule_keys, ['key1'], "invalid_rule_keys");
 is_deeply($vresult->messages, ['Error-key1-0'], "errors");
 is_deeply($vresult->messages, ['Error-key1-0'], "messages");
-is($vresult->error_reason('key1'), 'Int', "error reason");
 is($vresult->error('key1'), 'Error-key1-0', "error");
 is($vresult->message('key1'), 'Error-key1-0', "error");
 eval{ $vresult->error };
@@ -643,7 +635,6 @@ like($@, qr/Parameter name must be specified/, 'error not Parameter name');
   ok(!$vresult->is_ok, "invalid");
   is_deeply($vresult->invalid_rule_keys, ['key1'], "invalid_rule_keys");
   is_deeply($vresult->messages, ['Error-key1-0'], "errors");
-  is($vresult->error_reason('key1'), 'Int', "error reason");
 }
 
 # data_filter
