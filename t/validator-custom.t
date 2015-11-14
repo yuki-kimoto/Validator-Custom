@@ -109,8 +109,6 @@ use Validator::Custom;
   }
 }
 
-our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
-
 {
   my $data = { k1 => 1, k2 => 2, k3 => 3 };
   my $rule = [
@@ -490,10 +488,10 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   is_deeply($invalid_rule_keys, ['name'], 'constraint argument first');
   
   my $messages_hash = $vresult->messages_to_hash;
-  is_deeply($messages_hash, {name => $DEFAULT_MESSAGE},
+  is_deeply($messages_hash, {name => 'Error message not specified'},
             'errors_to_hash message not specified');
   
-  is($vresult->message('name'), $DEFAULT_MESSAGE, 'error default message');
+  is($vresult->message('name'), 'Error message not specified', 'error default message');
   
   $invalid_rule_keys = $vc->rule($rule)->validate($data)->invalid_rule_keys;
   is_deeply($invalid_rule_keys, ['name'], 'constraint argument second');

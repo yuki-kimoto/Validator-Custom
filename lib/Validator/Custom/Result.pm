@@ -7,23 +7,6 @@ use Carp 'croak';
 has data => sub { {} };
 has missing_params => sub { [] };
 
-# Default message
-our $DEFAULT_MESSAGE = 'Error message not specified';
-
-sub error_reason {
-
-  warn "Validator::Custom::Result error_reason is DEPRECATED!.";
-
-  my ($self, $name) = @_;
-  
-  # Parameter name not specified
-  croak 'Parameter name must be specified'
-    unless $name;
-  
-  # Error reason
-  return $self->{_error_infos}->{$name}{reason};
-}
-
 sub has_invalid {
   my $self = shift;
   
@@ -92,7 +75,7 @@ sub message {
   
   return $self->{_error_infos}->{$name}{message}
     || $self->{_default_messages}{$name}
-    || $DEFAULT_MESSAGE;
+    || 'Error message not specified';
 }
 
 sub messages {
@@ -139,6 +122,21 @@ sub to_hash {
 
 # Version 1 attributes
 has raw_data  => sub { {} };
+
+# DEPRECATED!
+sub error_reason {
+
+  warn "Validator::Custom::Result error_reason is DEPRECATED!.";
+
+  my ($self, $name) = @_;
+  
+  # Parameter name not specified
+  croak 'Parameter name must be specified'
+    unless $name;
+  
+  # Error reason
+  return $self->{_error_infos}->{$name}{reason};
+}
 
 # DEPRECATED!
 has error_infos => sub { {} };
