@@ -503,7 +503,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   is_deeply($messages_hash, {name => $DEFAULT_MESSAGE},
             'errors_to_hash message not specified');
   
-  is($vresult->error('name'), $DEFAULT_MESSAGE, 'error default message');
+  is($vresult->message('name'), $DEFAULT_MESSAGE, 'error default message');
   
   $invalid_rule_keys = $vc->rule($rule)->validate($data)->invalid_rule_keys;
   is_deeply($invalid_rule_keys, ['name'], 'constraint argument second');
@@ -591,9 +591,8 @@ ok(!$vresult->is_ok, "invalid");
 is_deeply($vresult->invalid_rule_keys, ['key1'], "invalid_rule_keys");
 is_deeply($vresult->messages, ['Error-key1-0'], "errors");
 is_deeply($vresult->messages, ['Error-key1-0'], "messages");
-is($vresult->error('key1'), 'Error-key1-0', "error");
 is($vresult->message('key1'), 'Error-key1-0', "error");
-eval{ $vresult->error };
+eval{ $vresult->message };
 like($@, qr/Parameter name must be specified/, 'error not Parameter name');
 
 {
