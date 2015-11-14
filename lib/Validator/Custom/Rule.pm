@@ -67,10 +67,6 @@ sub validate {
     }
     else { $keys = [$key] }
     
-    # Is data copy?
-    my $copy = 1;
-    $copy = $opts->{copy} if exists $opts->{copy};
-    
     # Check missing parameters
     my $required = exists $opts->{required} ? $opts->{required} : 1;
     my $found_missing_param;
@@ -88,7 +84,7 @@ sub validate {
     if ($found_missing_param) {
       $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
           ? $opts->{default}->($self) : $opts->{default}
-        if exists $opts->{default} && $copy;
+        if exists $opts->{default};
       next if $opts->{default} || !$required;
     }
     
@@ -103,11 +99,9 @@ sub validate {
     for my $cinfo (@$cinfos) {
       
       # Constraint information
-      my $args = $cinfo->{args};
+      my $cfunc = $cinfo->{funcs}[0];
+      my $arg = $cinfo->{args}[0];
       my $message = $cinfo->{message};
-                                      
-      # Constraint function
-      my $cfuncs = $cinfo->{funcs};
       
       # Is valid?
       my $is_valid;
@@ -122,65 +116,43 @@ sub validate {
         for (my $k = 0; $k < @$value; $k++) {
           my $input = $value->[$k];
           
-          # Validation
-          for (my $j = 0; $j < @$cfuncs; $j++) {
-            my $cfunc = $cfuncs->[$j];
-            my $arg = $args->[$j];
-            
-            # Validate
-            my $cresult;
-            $cresult= $cfunc->($self, $input, $arg);
-            
-            # Constrint result
-            my $v;
-            if (ref $cresult eq 'ARRAY') {
-              ($is_valid, $v) = @$cresult;
-              $value->[$k] = $v;
-            }
-            elsif (ref $cresult eq 'HASH') {
-              $is_valid = $cresult->{result};
-              $message = $cresult->{message} unless $is_valid;
-              $value->[$k] = $cresult->{output} if exists $cresult->{output};
-            }
-            else { $is_valid = $cresult }
-            
-            last if $is_valid;
-          }
+          # Validate
+          my $cresult;
+          $cresult= $cfunc->($self, $input, $arg);
           
-          # Validation error
+          # Constrint result
+          my $v;
+          if (ref $cresult eq 'ARRAY') {
+            ($is_valid, $v) = @$cresult;
+            $value->[$k] = $v;
+          }
+          elsif (ref $cresult eq 'HASH') {
+            $is_valid = $cresult->{result};
+            $message = $cresult->{message} unless $is_valid;
+            $value->[$k] = $cresult->{output} if exists $cresult->{output};
+          }
+          else { $is_valid = $cresult }
+          
+          # Validation failed
           last unless $is_valid;
         }
       }
       
       # Data is scalar
-      else {
-        # Validation
-        for (my $k = 0; $k < @$cfuncs; $k++) {
-          my $cfunc = $cfuncs->[$k];
-          my $arg = $args->[$k];
+      else {      
+        my $cresult = $cfunc->($value, $arg, $self);
         
-          my $cresult;
-          {
-            local $_ = Validator::Custom::Constraints->new(
-              constraints => $self->constraints
-            );
-            $cresult = $cfunc->($value, $arg, $self);
-          }
-          
-          if (ref $cresult eq 'ARRAY') {
-            my $v;
-            ($is_valid, $v) = @$cresult;
-            $value = $v if $is_valid;
-          }
-          elsif (ref $cresult eq 'HASH') {
-            $is_valid = $cresult->{result};
-            $message = $cresult->{message} unless $is_valid;
-            $value = $cresult->{output} if exists $cresult->{output} && $is_valid;
-          }
-          else { $is_valid = $cresult }
-          
-          last if $is_valid;
+        if (ref $cresult eq 'ARRAY') {
+          my $v;
+          ($is_valid, $v) = @$cresult;
+          $value = $v if $is_valid;
         }
+        elsif (ref $cresult eq 'HASH') {
+          $is_valid = $cresult->{result};
+          $message = $cresult->{message} unless $is_valid;
+          $value = $cresult->{output} if exists $cresult->{output} && $is_valid;
+        }
+        else { $is_valid = $cresult }
       }
       
       # Add error if it is invalid
@@ -190,11 +162,11 @@ sub validate {
           $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
                                        ? $opts->{default}->($self)
                                        : $opts->{default}
-            if exists $opts->{default} && $copy;
+            if exists $opts->{default};
           $valid_keys->{$result_key} = 1
         }
         else {
-          # Resist error info
+          # Resister error info
           $message = $opts->{message} unless defined $message;
           $result->{_error_infos}->{$result_key} = {
             message      => $message,
@@ -207,7 +179,7 @@ sub validate {
     }
     
     # Result data
-    $result->data->{$result_key} = $value if $copy;
+    $result->data->{$result_key} = $value;
     
     # Key is valid
     $valid_keys->{$result_key} = 1;
@@ -274,14 +246,6 @@ sub check {
   return $self;
 }
 
-sub copy {
-  my ($self, $copy) = @_;
-  
-  $self->topic->{option}{copy} = $copy;
-  
-  return $self;
-}
-
 sub default {
   my ($self, $default) = @_;
   
@@ -341,10 +305,10 @@ sub required {
   return $self;
 }
 
-# Version 0 methods(Not used now)
+# Version 0 method(Not used now)
 sub require { shift->required(@_) }
 
-# Version 0 methods(Not used now)
+# Version 0 method(Not used now)
 sub parse {
   my ($self, $rule, $shared_rule) = @_;
   
@@ -403,6 +367,15 @@ sub parse {
   return $self;
 }
 
+# Version 0 method(Not used now)
+sub copy {
+  my ($self, $copy) = @_;
+  
+  $self->topic->{option}{copy} = $copy;
+  
+  return $self;
+}
+
 # Version 0 attributes(Not used now)
 has 'rule' => sub {
   my $self = shift;
@@ -414,6 +387,7 @@ has 'rule' => sub {
     return $self->content;
   }
 };
+
 
 1;
 
