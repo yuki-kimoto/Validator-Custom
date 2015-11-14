@@ -5,24 +5,20 @@ use warnings;
 use utf8;
 use Validator::Custom::Rule;
 
-{
-  package T1;
-  use base 'Validator::Custom';
-
-  __PACKAGE__->register_constraint(
-      Int => sub{$_[0] =~ /^\d+$/},
-      Num => sub{
-          require Scalar::Util;
-          Scalar::Util::looks_like_number($_[0]);
-      },
-      C1 => sub {
-          my ($value, $args, $options) = @_;
-          return [1, $value * 2];
-      },
-      aaa => sub {$_[0] eq 'aaa'},
-      bbb => sub {$_[0] eq 'bbb'}
-  );
-}
+my $vc_common = Validator::Custom->new;
+$vc_common->register_constraint(
+  Int => sub{$_[0] =~ /^\d+$/},
+  Num => sub{
+      require Scalar::Util;
+      Scalar::Util::looks_like_number($_[0]);
+  },
+  C1 => sub {
+      my ($value, $args, $options) = @_;
+      return [1, $value * 2];
+  },
+  aaa => sub {$_[0] eq 'aaa'},
+  bbb => sub {$_[0] eq 'bbb'}
+);
 
 my $value;
 my $r;
@@ -206,9 +202,19 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   is_deeply([$result->invalid_keys], [qw/k2 k4/], 'invalid keys hash');  
   ok(!$result->is_ok, 'is_ok');
   
-  my $constraints = T1->constraints;
-  ok(exists($constraints->{Int}), 'get constraints');
-  ok(exists($constraints->{Num}), 'get constraints');
+  {
+    my $vc = Validator::Custom->new;
+    $vc->register_constraint(
+      Int => sub{$_[0] =~ /^\d+$/},
+      Num => sub{
+        require Scalar::Util;
+        Scalar::Util::looks_like_number($_[0]);
+      }
+    );
+    my $constraints = $vc->constraints;
+    ok(exists($constraints->{Int}), 'get constraints');
+    ok(exists($constraints->{Num}), 'get constraints');
+  }
 }
 
 {
@@ -228,13 +234,22 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
     ],
   ];
   
-  my $t = T1->new;
-  my $errors = $t->validate($data, $rule)->errors;
-  is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator one');
-  
-  $errors = $t->validate($data, $rule)->errors;
-  is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator two');
-  
+  {
+    my $vc = Validator::Custom->new;
+    $vc->register_constraint(
+        Int => sub{$_[0] =~ /^\d+$/},
+        Num => sub{
+            require Scalar::Util;
+            Scalar::Util::looks_like_number($_[0]);
+        },
+    );
+
+    my $errors = $vc->validate($data, $rule)->errors;
+    is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator one');
+    
+    $errors = $vc->validate($data, $rule)->errors;
+    is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator two');
+  }
 }
 
 {
@@ -244,7 +259,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
       ['No', "k1Error1"],
     ],
   ];
-  eval{T1->new->validate($data, $rule)};
+  eval{Validator::Custom->new->validate($data, $rule)};
   like($@, qr/"No" is not registered/, 'no custom type');
 }
 
@@ -265,7 +280,9 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
     ],
   ];    
   
-  my $vc = T1->new;
+  my $vc = Validator::Custom->new;
+  $vc->register_constraint(Int => sub{$_[0] =~ /^\d+$/});
+
   my $errors = $vc->validate($data, $rule)->errors;
 
   is_deeply($errors, [qw/k3Error1 k4Error1/], 'array validate');
@@ -280,7 +297,14 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
     ],
   ];    
   
-  my $vc = T1->new;
+  my $vc = Validator::Custom->new;
+  $vc->register_constraint(
+    C1 => sub {
+      my ($value, $args, $options) = @_;
+      return [1, $value * 2];
+    }
+  );
+
   my $result= $vc->validate($data, $rule);
   is_deeply(scalar $result->errors, [], 'no error');
   
@@ -295,7 +319,10 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
       ['Int', "k1Error1"],
     ],
   ];    
-  my @errors = T1->new->validate($data, $rule)->errors;
+  my @errors = Validator::Custom
+    ->new
+    ->register_constraint(Int => sub{$_[0] =~ /^\d+$/})
+    ->validate($data, $rule)->errors;
   is(scalar @errors, 0, 'no error');
 }
 
@@ -490,7 +517,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
 }
 
 {
-  my $vc = T1->new;
+  my $vc = Validator::Custom->new;
   $vc->register_constraint(
    'C1' => sub {
       my $value = shift;
@@ -532,7 +559,7 @@ my $data;
 
 
 # or expression
-$vc = T1->new;
+$vc = $vc_common;
 $rule = [
   key0 => [
     ['Int', 'Error-key0']
@@ -579,17 +606,50 @@ is($vresult->message('key1'), 'Error-key1-0', "error");
 eval{ $vresult->error };
 like($@, qr/Parameter name must be specified/, 'error not Parameter name');
 
-$vc = T1->new(error_stock => 0);
-$params = {key1 => 'ccc', key0 => 1, key2 => 'no_num'};
-$vresult = $vc->validate($params, $rule);
-ok(!$vresult->is_ok, "invalid");
-is_deeply([$vresult->invalid_keys], ['key1'], "invalid_keys");
-is_deeply([$vresult->errors], ['Error-key1-0'], "errors");
-is($vresult->error_reason('key1'), 'Int', "error reason");
-
+{
+  my $rule = [
+    key0 => [
+      ['Int', 'Error-key0']
+    ],
+    key1 => [
+      ['Int', 'Error-key1-0'],
+      'Int'
+    ],
+    key1 => [
+      ['aaa', 'Error-key1-1'],
+      'aaa'
+    ],
+    key1 => [
+      ['bbb', 'Error-key1-2']
+    ],
+    key2 => [
+      ['Int', 'Error-key2']
+    ]
+  ];
+  $vc = Validator::Custom->new(error_stock => 0);
+  $vc->register_constraint(
+    Int => sub{$_[0] =~ /^\d+$/},
+    Num => sub{
+        require Scalar::Util;
+        Scalar::Util::looks_like_number($_[0]);
+    },
+    C1 => sub {
+        my ($value, $args, $options) = @_;
+        return [1, $value * 2];
+    },
+    aaa => sub {$_[0] eq 'aaa'},
+    bbb => sub {$_[0] eq 'bbb'}
+  );
+  $params = {key1 => 'ccc', key0 => 1, key2 => 'no_num'};
+  $vresult = $vc->validate($params, $rule);
+  ok(!$vresult->is_ok, "invalid");
+  is_deeply([$vresult->invalid_keys], ['key1'], "invalid_keys");
+  is_deeply([$vresult->errors], ['Error-key1-0'], "errors");
+  is($vresult->error_reason('key1'), 'Int', "error reason");
+}
 
 # data_filter
-$vc = T1->new;
+$vc = $vc_common;
 $params = {key1 => 1};
 $vc->data_filter(sub {
   my $data = shift;
