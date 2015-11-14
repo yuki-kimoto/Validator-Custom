@@ -189,7 +189,7 @@ sub register_constraint {
 our %VALID_OPTIONS = map {$_ => 1} qw/message default copy require/;
 
 sub validate {
-  my ($self, $data, $rule) = @_;
+  my ($self, $input, $rule) = @_;
   
   # Class
   my $class = ref $self;
@@ -199,11 +199,11 @@ sub validate {
   
   # Data filter
   my $filter = $self->data_filter;
-  $data = $filter->($data) if $filter;
+  $input = $filter->($input) if $filter;
   
   # Check data
   croak "First argument must be hash ref"
-    unless ref $data eq 'HASH';
+    unless ref $input eq 'HASH';
   
   # Check rule
   unless (ref $rule eq 'Validator::Custom::Rule') {
@@ -215,7 +215,7 @@ sub validate {
   $result->{_error_infos} = {};
   
   # Save raw data
-  $result->raw_data($data);
+  $result->raw_data($input);
   
   # Error is stock?
   my $error_stock = $self->error_stock;
@@ -276,7 +276,7 @@ sub validate {
     if (ref $key eq 'ARRAY') { $keys = $key }
     elsif (ref $key eq 'Regexp') {
       $keys = [];
-      for my $k (keys %$data) {
+      for my $k (keys %$input) {
          push @$keys, $k if $k =~ /$key/;
       }
     }
@@ -297,7 +297,7 @@ sub validate {
     my $found_missing_param;
     my $missing_params = $result->missing_params;
     for my $key (@$keys) {
-      unless (exists $data->{$key}) {
+      unless (exists $input->{$key}) {
         if ($require && !exists $opts->{default}) {
           push @$missing_params, $key
             unless $found_missing_params->{$key};
@@ -318,8 +318,8 @@ sub validate {
     
     # Validation
     my $value = @$keys > 1
-      ? [map { $data->{$_} } @$keys]
-      : $data->{$keys->[0]};
+      ? [map { $input->{$_} } @$keys]
+      : $input->{$keys->[0]};
     
     for my $cinfo (@$cinfos) {
       
@@ -341,7 +341,7 @@ sub validate {
         
         # Validation loop
         for (my $k = 0; $k < @$value; $k++) {
-          my $data = $value->[$k];
+          my $input = $value->[$k];
           
           # Validation
           for (my $j = 0; $j < @$cfuncs; $j++) {
@@ -354,7 +354,7 @@ sub validate {
               local $_ = Validator::Custom::Constraints->new(
                 constraints => $self->constraints
               );
-              $cresult= $cfunc->($data, $arg, $self);
+              $cresult= $cfunc->($input, $arg, $self);
             }
             
             # Constrint result
@@ -631,7 +631,7 @@ Validator::Custom - HTML form Validation, easy and flexibly
   my $vc = Validator::Custom->new;
   
   # Data
-  my $data = {id => 1, name => 'Ken Suzuki', age => ' 19 '};
+  my $input = {id => 1, name => 'Ken Suzuki', age => ' 19 '};
 
   # Create Rule
   my $rule = $vc->create_rule;
@@ -649,7 +649,7 @@ Validator::Custom - HTML form Validation, easy and flexibly
   $rule->optional('age')->filter('trim')->check('int')->default(20);
   
   # Validation
-  my $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($input, $rule);
   if ($result->is_ok) {
     # Safety data
     my $safe_data = $vresult->data;
@@ -726,7 +726,7 @@ B<1. Create a new Validator::Custom object>
 
 B<2. Prepare data for validation>
 
-  my $data = {age => 19, name => 'Ken Suzuki'};
+  my $input = {age => 19, name => 'Ken Suzuki'};
 
 Data must be hash reference.
 
@@ -752,7 +752,7 @@ Rule details is explained in L</"3. Rule syntax"> section.
 
 B<4. Validate data>
   
-  my $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($input, $rule);
 
 use C<validate()> to validate the data applying the rule.
 C<validate()> return L<Validator::Custom::Result> object.
@@ -809,7 +809,7 @@ The following ones is often used methods.
 
 B<data()>
 
-  my $data = $result->data;
+  my $input = $result->data;
 
 Get the data in the end state. L<Validator::Custom> has filtering ability.
 The parameter values in data passed to C<validate()>
@@ -1547,58 +1547,6 @@ Trim trailing white space, which contain unicode space character.
 
 Constraint functions.
 
-=head2 data_filter
-
-  my $filter = $vc->data_filter;
-  $vc        = $vc->data_filter(\&data_filter);
-
-Filter for input data. If data is not hash reference, you can convert
-the data to hash reference.
-
-  $vc->data_filter(sub {
-    my $data = shift;
-    
-    my $hash = {};
-    
-    # Convert data to hash reference
-    
-    return $hash;
-  });
-
-=head2 error_stock
-
-  my $error_stock = $vc->error_stcok;
-  $vc             = $vc->error_stock(1);
-
-If error_stock is set to 0, C<validate()> return soon after invalid value is found.
-
-Default to 1. 
-
-=head2 rule_obj EXPERIMENTAL
-
-  my $rule_obj = $vc->rule_obj($rule);
-
-L<Validator::Custom> rule is a little complex.
-You maybe make mistakes often.
-If you want to know that how Validator::Custom parse rule,
-See C<rule_obj> attribute after calling C<validate> method.
-This is L<Validator::Custom::Rule> object.
-  
-  my $vresult = $vc->validate($data, $rule);
-
-  use Data::Dumper;
-  print Dumper $vc->rule_obj->rule;
-
-If you see C<ERROR> key, rule syntax is wrong.
-
-=head2 rule
-
-  my $rule = $vc->rule;
-  $vc      = $vc->rule(\@rule);
-
-Validation rule. If second argument of C<validate()> is not specified.
-this rule is used.
-
 =head1 METHODS
 
 L<Validator::Custom> inherits all methods from L<Object::Simple>
@@ -1609,34 +1557,6 @@ and implements the following new ones.
   my $vc = Validator::Custom->new;
 
 Create a new L<Validator::Custom> object.
-
-=head2 js_fill_form_button
-
-  my $button = $self->js_fill_form_button(
-    mail => '[abc]{3}@[abc]{2}.com,
-    title => '[pqr]{5}'
-  );
-
-Create javascript button source code to fill form.
-You can specify string or pattern like regular expression.
-
-If you click this button, each text box is filled with the
-specified pattern string,
-and checkbox, radio button, and list box is automatically selected.
-
-Note that this methods require L<JSON> module.
-
-=head2 validate
-
-  $result = $vc->validate($data, $rule);
-  $result = $vc->validate($data);
-
-Validate the data.
-Return value is L<Validator::Custom::Result> object.
-If second argument isn't passed, C<rule> attribute is used as rule.
-
-$rule is array reference
-(or L<Validator::Custom::Rule> object, this is EXPERIMENTAL).
 
 =head2 register_constraint
 
@@ -1682,9 +1602,9 @@ Check box validation is a little difficult because
 check box value is not exists or one or multiple.
 
   # Data
-  my $data = {}
-  my $data = {feature => 1}
-  my $data = {feature => [1, 2]}
+  my $input = {}
+  my $input = {feature => 1}
+  my $input = {feature => [1, 2]}
 
 You can do the following way.
 

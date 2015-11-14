@@ -3,7 +3,7 @@ use Object::Simple -base;
 use Carp 'croak';
 
 has 'topic';
-has 'rule' => sub { [] };
+has 'content';
 has 'validator';
 
 sub validate {
@@ -399,6 +399,9 @@ sub parse {
   return $self;
 }
 
+# Version 0 attributes
+has 'rule' => sub { [] };
+
 1;
 
 =head1 NAME
@@ -434,10 +437,10 @@ Validator::Custom::Rule is the class to parse rule and store it as object.
 
 =head1 ATTRIBUTES
 
-=head2 rule
+=head2 content
 
-  my $rule_content = $rule->rule;
-  $rule_content = $rule->rule($content);
+  my $content = $rule->content;
+  $content = $rule->rule($content);
 
 Content of rule object.
 
@@ -447,7 +450,7 @@ Content of rule object.
 
   $rule->each(1);
 
-Tell checke each element.
+Tell check each element.
 
 =head2 check
 
@@ -455,23 +458,12 @@ Tell checke each element.
 
 Add constraints to current topic.
 
-=head2 check_or
-
-  $rule->check_or('not_blank', 'ascii');
-
-Add "or" condition constraints to current topic.
-
-=head2 copy
-
-  $rule->copy(0);
-
-Set copy option
-
 =head2 default
 
   $rule->default(0);
+  $rule->default(sub { Time::Piece::localtime });
 
-Set default option
+Set default value.
 
 =head2 filter
 

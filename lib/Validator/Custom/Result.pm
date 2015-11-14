@@ -4,9 +4,8 @@ use Object::Simple -base;
 use Carp 'croak';
 
 # Attrbutes
-has data => sub { {} },
-  missing_params => sub { [] },
-  raw_data  => sub { {} };
+has data => sub { {} };
+has missing_params => sub { [] };
 
 # Default message
 our $DEFAULT_MESSAGE = 'Error message not specified';
@@ -137,6 +136,9 @@ sub to_hash {
   
   return $result;
 }
+
+# Version 1 attributes
+has raw_data  => sub { {} };
 
 # DEPRECATED!
 has error_infos => sub { {} };
