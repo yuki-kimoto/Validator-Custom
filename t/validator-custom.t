@@ -5,8 +5,6 @@ use warnings;
 use utf8;
 use Validator::Custom::Rule;
 
-$SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ /DEPRECATED!/ };
-
 {
   package T1;
   use base 'Validator::Custom';
@@ -23,81 +21,6 @@ $SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ /DEPRECATED!/ };
       },
       aaa => sub {$_[0] eq 'aaa'},
       bbb => sub {$_[0] eq 'bbb'}
-  );
-
-  package T5;
-  use base 'Validator::Custom';
-
-  __PACKAGE__->register_constraint(
-      C1 => sub {
-          my ($value, $args) = @_;
-          
-          return [1, [$value, $args]];
-      },
-      
-      C2 => sub {
-          my ($value, $args) = @_;
-          
-          return [0, [$value, $args]];
-      },
-      
-      TRIM_LEAD => sub {
-          my $value = shift;
-          
-          $value =~ s/^ +//;
-          
-          return [1, $value];
-      },
-      
-      TRIM_TRAIL => sub {
-          my $value = shift;
-          
-          $value =~ s/ +$//;
-          
-          return [1, $value];
-      },
-      
-      NO_ERROR => sub {
-          return [0, 'a'];
-      },
-      
-      C3 => sub {
-          my ($values, $args) = @_;
-          if ($values->[0] == $values->[1] && $values->[0] == $args->[0]) {
-              return 1;
-          }
-          else {
-              return 0;
-          }
-      },
-      C4 => sub {
-          my ($value, $arg) = @_;
-          return defined $arg ? 1 : 0;
-      },
-      C5 => sub {
-          my ($value, $arg) = @_;
-          return [1, $arg];
-      },
-      C6 => sub {
-          my $self = $_[2];
-          return [1, $self];
-      }
-  );
-  
-  package T6;
-  use base 'Validator::Custom';
-
-  __PACKAGE__->register_constraint(
-      length => sub {
-          my ($value, $args) = @_;
-          
-          my $min;
-          my $max;
-          
-          ($min, $max) = @$args;
-          my $length  = length $value;
-          return $min <= $length && $length <= $max ? 1 : 0;
-      }
   );
 }
 
@@ -403,33 +326,88 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
     ]
   ];
   
-  my $vc = T5->new;
-  my $result= $vc->validate($data, $rule);
-  is_deeply([$result->errors], 
-            ['k2Error1', 'Error message not specified',
-             'Error message not specified'
-            ], 'variouse options');
-  
-  is_deeply([$result->invalid_keys], [qw/k2 k4 k7/], 'invalid key');
-  
-  is_deeply($result->data->{k1},[1, [3, 4]], 'data');
-  ok(!$result->data->{k2}, 'data not exist in error case');
-  cmp_ok($result->data->{k3}, 'eq', 3, 'filter');
-  ok(!$result->data->{k4}, 'data not set in case error');
-  isa_ok($result->data->{k11}->[0], 'T5');
-  isa_ok($result->data->{k11}->[1], 'T5');
+  {
+    my $vc = Validator::Custom->new;
+    $vc->register_constraint(
+      C1 => sub {
+        my ($value, $args) = @_;
+        
+        return [1, [$value, $args]];
+      },
+      
+      C2 => sub {
+        my ($value, $args) = @_;
+        
+        return [0, [$value, $args]];
+      },
+      
+      TRIM_LEAD => sub {
+        my $value = shift;
+        
+        $value =~ s/^ +//;
+        
+        return [1, $value];
+      },
+      
+      TRIM_TRAIL => sub {
+        my $value = shift;
+        
+        $value =~ s/ +$//;
+        
+        return [1, $value];
+      },
+      
+      NO_ERROR => sub {
+        return [0, 'a'];
+      },
+      
+      C3 => sub {
+        my ($values, $args) = @_;
+        if ($values->[0] == $values->[1] && $values->[0] == $args->[0]) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+      },
+      C4 => sub {
+        my ($value, $arg) = @_;
+        return defined $arg ? 1 : 0;
+      },
+      C5 => sub {
+        my ($value, $arg) = @_;
+        return [1, $arg];
+      },
+      C6 => sub {
+        my $self = $_[2];
+        return [1, $self];
+      }
+    );
+    my $result= $vc->validate($data, $rule);
+    is_deeply([$result->errors], 
+              ['k2Error1', 'Error message not specified',
+               'Error message not specified'
+              ], 'variouse options');
+    
+    is_deeply([$result->invalid_keys], [qw/k2 k4 k7/], 'invalid key');
+    
+    is_deeply($result->data->{k1},[1, [3, 4]], 'data');
+    ok(!$result->data->{k2}, 'data not exist in error case');
+    cmp_ok($result->data->{k3}, 'eq', 3, 'filter');
+    ok(!$result->data->{k4}, 'data not set in case error');
 
-  $data = {k5 => 5, k6 => 6};
-  $rule = [
-    [qw/k5 k6/] => [
-      [{'C3' => [5]}, 'k5 k6 Error']
-    ]
-  ];
-  
-  $result= $vc->validate($data, $rule);
-  local $SIG{__WARN__} = sub {};
-  ok(!$result->is_valid, 'corelative invalid_keys');
-  is(scalar @{$result->invalid_keys}, 1, 'corelative invalid_keys');
+    $data = {k5 => 5, k6 => 6};
+    $rule = [
+      [qw/k5 k6/] => [
+        [{'C3' => [5]}, 'k5 k6 Error']
+      ]
+    ];
+    
+    $result= $vc->validate($data, $rule);
+    local $SIG{__WARN__} = sub {};
+    ok(!$result->is_valid, 'corelative invalid_keys');
+    is(scalar @{$result->invalid_keys}, 1, 'corelative invalid_keys');
+  }
 }
 
 {
@@ -468,8 +446,19 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
 }
 
 {
-  my $vc = T6->new;
-  
+  my $vc = Validator::Custom->new;
+  $vc->register_constraint(
+      length => sub {
+          my ($value, $args) = @_;
+          
+          my $min;
+          my $max;
+          
+          ($min, $max) = @$args;
+          my $length  = length $value;
+          return $min <= $length && $length <= $max ? 1 : 0;
+      }
+  );
   my $data = {
     name => 'zz' x 30,
     age => 'zz',
