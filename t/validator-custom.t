@@ -197,9 +197,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   );
   my $result= $vc->validate($data, $rule);
   is_deeply($result->messages, [qw/k2Error1 k4Error1/], 'Custom validator');
-  is_deeply(scalar $result->invalid_keys, [qw/k2 k4/], 'invalid keys hash');
-  is_deeply($result->invalid_rule_keys, [qw/k2 k4/], 'invalid params hash');
-  is_deeply([$result->invalid_keys], [qw/k2 k4/], 'invalid keys hash');  
+  is_deeply($result->invalid_rule_keys, [qw/k2 k4/], 'invalid keys hash');
   ok(!$result->is_ok, 'is_ok');
   
   {
@@ -416,7 +414,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
                'Error message not specified'
               ], 'variouse options');
     
-    is_deeply([$result->invalid_keys], [qw/k2 k4 k7/], 'invalid key');
+    is_deeply($result->invalid_rule_keys, [qw/k2 k4 k7/], 'invalid key');
     
     is_deeply($result->data->{k1},[1, [3, 4]], 'data');
     ok(!$result->data->{k2}, 'data not exist in error case');
@@ -432,8 +430,8 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
     
     $result= $vc->validate($data, $rule);
     local $SIG{__WARN__} = sub {};
-    ok(!$result->is_valid, 'corelative invalid_keys');
-    is(scalar @{$result->invalid_keys}, 1, 'corelative invalid_keys');
+    ok(!$result->is_valid, 'corelative invalid_rule_keys');
+    is(scalar @{$result->invalid_rule_keys}, 1, 'corelative invalid_rule_keys');
   }
 }
 
@@ -498,8 +496,8 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   ];
   
   my $vresult = $vc->rule($rule)->validate($data);
-  my @invalid_keys = $vresult->invalid_keys;
-  is_deeply([@invalid_keys], ['name'], 'constraint argument first');
+  my $invalid_rule_keys = $vresult->invalid_rule_keys;
+  is_deeply($invalid_rule_keys, ['name'], 'constraint argument first');
   
   my $messages_hash = $vresult->messages_to_hash;
   is_deeply($messages_hash, {name => $DEFAULT_MESSAGE},
@@ -507,8 +505,8 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   
   is($vresult->error('name'), $DEFAULT_MESSAGE, 'error default message');
   
-  @invalid_keys = $vc->rule($rule)->validate($data)->invalid_keys;
-  is_deeply([@invalid_keys], ['name'], 'constraint argument second');
+  $invalid_rule_keys = $vc->rule($rule)->validate($data)->invalid_rule_keys;
+  is_deeply($invalid_rule_keys, ['name'], 'constraint argument second');
 }
 
 {
@@ -546,7 +544,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
     ]
   ]);
   
-  is_deeply([$vc->validate($data)->invalid_keys], [qw/k1_1 k2_1/], 'register_constraints object');
+  is_deeply($vc->validate($data)->invalid_rule_keys, [qw/k1_1 k2_1/], 'register_constraints object');
 }
 
 my $vc;
@@ -597,7 +595,7 @@ like($@, qr/Parameter name must be specified/, 'error_reason not Parameter name'
 $params = {key1 => 'ccc', key0 => 1, key2 => 2};
 $vresult = $vc->validate($params, $rule);
 ok(!$vresult->is_ok, "invalid");
-is_deeply([$vresult->invalid_keys], ['key1'], "invalid_keys");
+is_deeply($vresult->invalid_rule_keys, ['key1'], "invalid_rule_keys");
 is_deeply($vresult->messages, ['Error-key1-0'], "errors");
 is_deeply($vresult->messages, ['Error-key1-0'], "messages");
 is($vresult->error_reason('key1'), 'Int', "error reason");
@@ -643,7 +641,7 @@ like($@, qr/Parameter name must be specified/, 'error not Parameter name');
   $params = {key1 => 'ccc', key0 => 1, key2 => 'no_num'};
   $vresult = $vc->validate($params, $rule);
   ok(!$vresult->is_ok, "invalid");
-  is_deeply([$vresult->invalid_keys], ['key1'], "invalid_keys");
+  is_deeply($vresult->invalid_rule_keys, ['key1'], "invalid_rule_keys");
   is_deeply($vresult->messages, ['Error-key1-0'], "errors");
   is($vresult->error_reason('key1'), 'Int', "error reason");
 }
@@ -664,7 +662,7 @@ $vc->rule([
   ]
 ]);
 $vresult = $vc->validate($params);
-is_deeply([$vresult->invalid_keys], ['key1'], "basic");
+is_deeply($vresult->invalid_rule_keys, ['key1'], "basic");
 is_deeply($vresult->raw_data, {key1 => 'a'}, "raw_data");
 
 
@@ -1331,10 +1329,10 @@ foreach my $exception_info (@exception_infos) {
 }
 
 sub validate_ok {
-  my ($test_name, $data, $validation_rule, $invalid_keys, $result_data) = @_;
+  my ($test_name, $data, $validation_rule, $invalid_rule_keys, $result_data) = @_;
   my $vc = Validator::Custom->new;
   my $r = $vc->validate($data, $validation_rule);
-  is_deeply([$r->invalid_keys], $invalid_keys, "$test_name invalid_keys");
+  is_deeply($r->invalid_rule_keys, $invalid_rule_keys, "$test_name invalid_rule_keys");
   
   if (ref $result_data eq 'CODE') {
       $result_data->($r);
