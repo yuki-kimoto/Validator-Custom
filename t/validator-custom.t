@@ -20,10 +20,6 @@ $vc_common->register_constraint(
   bbb => sub {$_[0] eq 'bbb'}
 );
 
-my $value;
-my $r;
-my $js;
-
 use Validator::Custom;
 
 # to_array_remove_blank filter
@@ -685,37 +681,6 @@ $vresult = $vc->validate($data, $rule);
 is_deeply($vresult->invalid_rule_keys, ['k12', 'k3'], 'invalid_rule_keys');
 is_deeply($vresult->invalid_params, ['k1', 'k2', 'k3'],
         'invalid_params');
-
-# shared_rule;
-$vc = Validator::Custom->new;
-$vc->register_constraint(
-  defined   => sub { defined $_[0] },
-  not_blank => sub { $_[0] ne '' },
-  int       => sub { $_[0] =~ /\d+/ }
-);
-$data = {
-  k1 => undef,
-  k2 => 'a',
-  k3 => 1
-};
-$rule = [
-  k1 => [
-    # Nothing
-  ],
-  k2 => [
-    # Nothing
-  ],
-  k3 => [
-    'int'
-  ]
-];
-$vc->shared_rule([
-  ['defined', 'Must be defined'],
-  ['not_blank',   'Must be blank']
-]);
-$vresult = $vc->validate($data, $rule);
-is_deeply($vresult->messages_to_hash, {k1 => 'Must be defined'},
-        'shared rule');
 
 # constraints default;
 
@@ -1629,7 +1594,7 @@ $rule = [
 ];
 $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
-$value = $result->data->{key};
+my $value = $result->data->{key};
 ok(index($value, 'a') > -1);
 ok(index($value, 'b') > -1);
 ok(index($value, 'c') > -1);
@@ -1821,7 +1786,7 @@ $rule = {
   name5 => 'a{10}'
 };
 $vc = Validator::Custom->new;
-$r = $vc->_parse_random_string_rule($rule);
+my $r = $vc->_parse_random_string_rule($rule);
 is_deeply(
   $r,
   {
