@@ -12,9 +12,6 @@ sub validate {
   # Class
   my $class = ref $self;
   
-  # Validation rule
-  my $rule = $self;
-  
   # Check data
   croak "Input must be hash reference"
     unless ref $input eq 'HASH';
@@ -31,27 +28,12 @@ sub validate {
   
   # Found missing parameters
   my $found_missing_params = {};
-  
-  # Shared rule
-  my $shared_rule = $self->shared_rule;
-  warn "DBIx::Custom::shared_rule is DEPRECATED!"
-    if @$shared_rule;
-  
-  if (ref $rule eq 'Validator::Custom::Rule') {
-    $self->rule_obj($rule);
-  }
-  else {
-    my $rule_obj = $self->create_rule;
-    $rule_obj->parse($rule, $shared_rule);
-    $self->rule_obj($rule_obj);
-  }
-  my $rule_obj = $self->rule_obj;
 
   # Process each key
   OUTER_LOOP:
-  for (my $i = 0; $i < @{$rule_obj->rule}; $i++) {
+  for (my $i = 0; $i < @{$self->rule}; $i++) {
     
-    my $r = $rule_obj->rule->[$i];
+    my $r = $self->rule->[$i];
     
     # Increment position
     $pos++;
@@ -147,12 +129,7 @@ sub validate {
             
             # Validate
             my $cresult;
-            {
-              local $_ = Validator::Custom::Constraints->new(
-                constraints => $self->constraints
-              );
-              $cresult= $cfunc->($input, $arg, $self);
-            }
+            $cresult= $cfunc->($self, $input, $arg);
             
             # Constrint result
             my $v;
@@ -222,7 +199,6 @@ sub validate {
           $result->{_error_infos}->{$result_key} = {
             message      => $message,
             position     => $pos,
-            reason       => $cinfo->{original_constraint},
             original_key => $key
           } unless exists $result->{_error_infos}->{$result_key};
         }
@@ -449,7 +425,7 @@ Validator::Custom::Rule - Rule object
   
   # Option
   $rule->require('id')->default(4)->copy(0)->message('Error')->check(
-    'not_blank'
+      'not_blank'
   );
 
 =head1 DESCRIPTION
@@ -460,8 +436,8 @@ Validator::Custom::Rule is the class to parse rule and store it as object.
 
 =head2 rule
 
-  my $content = $rule_obj->rule;
-  $rule_obj = $rule->rule($content);
+  my $rule_content = $rule->rule;
+  $rule_content = $rule->rule($content);
 
 Content of rule object.
 
@@ -536,9 +512,3 @@ Set key and set require option to 0.
   $rule->require(['id1', 'id2']);
 
 Set key.
-
-=head2 parse
-
-  $rule_obj = $rule_obj->parse($rule);
-
-Parse rule and store it to C<rule> attribute.
