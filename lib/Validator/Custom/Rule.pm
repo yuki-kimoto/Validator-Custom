@@ -7,36 +7,21 @@ has 'rule' => sub { [] };
 has 'validator';
 
 sub validate {
-  my ($self, $data, $rule) = @_;
+  my ($self, $input) = @_;
   
   # Class
   my $class = ref $self;
   
   # Validation rule
-  $rule ||= $self->rule;
-  
-  # Data filter
-  my $filter = $self->data_filter;
-  $data = $filter->($data) if $filter;
+  my $rule = $self;
   
   # Check data
-  croak "First argument must be hash ref"
-    unless ref $data eq 'HASH';
-  
-  # Check rule
-  unless (ref $rule eq 'Validator::Custom::Rule') {
-    croak "Invalid rule structure" unless ref $rule eq 'ARRAY';
-  }
+  croak "Input must be hash reference"
+    unless ref $input eq 'HASH';
   
   # Result
   my $result = Validator::Custom::Result->new;
   $result->{_error_infos} = {};
-  
-  # Save raw data
-  $result->raw_data($data);
-  
-  # Error is stock?
-  my $error_stock = $self->error_stock;
   
   # Valid keys
   my $valid_keys = {};
@@ -94,7 +79,7 @@ sub validate {
     if (ref $key eq 'ARRAY') { $keys = $key }
     elsif (ref $key eq 'Regexp') {
       $keys = [];
-      for my $k (keys %$data) {
+      for my $k (keys %$input) {
          push @$keys, $k if $k =~ /$key/;
       }
     }
@@ -109,7 +94,7 @@ sub validate {
     my $found_missing_param;
     my $missing_params = $result->missing_params;
     for my $key (@$keys) {
-      unless (exists $data->{$key}) {
+      unless (exists $input->{$key}) {
         if ($require && !exists $opts->{default}) {
           push @$missing_params, $key
             unless $found_missing_params->{$key};
@@ -130,8 +115,8 @@ sub validate {
     
     # Validation
     my $value = @$keys > 1
-      ? [map { $data->{$_} } @$keys]
-      : $data->{$keys->[0]};
+      ? [map { $input->{$_} } @$keys]
+      : $input->{$keys->[0]};
     
     for my $cinfo (@$cinfos) {
       
@@ -153,7 +138,7 @@ sub validate {
         
         # Validation loop
         for (my $k = 0; $k < @$value; $k++) {
-          my $data = $value->[$k];
+          my $input = $value->[$k];
           
           # Validation
           for (my $j = 0; $j < @$cfuncs; $j++) {
@@ -166,7 +151,7 @@ sub validate {
               local $_ = Validator::Custom::Constraints->new(
                 constraints => $self->constraints
               );
-              $cresult= $cfunc->($data, $arg, $self);
+              $cresult= $cfunc->($input, $arg, $self);
             }
             
             # Constrint result
@@ -240,19 +225,6 @@ sub validate {
             reason       => $cinfo->{original_constraint},
             original_key => $key
           } unless exists $result->{_error_infos}->{$result_key};
-          
-          # No Error stock
-          unless ($error_stock) {
-            # Check rest constraint
-            my $found;
-            for (my $k = $i + 1; $k < @{$rule_obj->rule}; $k++) {
-              my $r_next = $rule_obj->rule->[$k];
-              my $key_next = $r_next->{key};
-              $key_next = (keys %$key)[0] if ref $key eq 'HASH';
-              $found = 1 if $key_next eq $result_key;
-            }
-            last OUTER_LOOP unless $found;
-          }
         }
         next OUTER_LOOP;
       }

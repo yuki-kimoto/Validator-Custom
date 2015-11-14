@@ -138,12 +138,6 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   
   $messages = Validator::Custom->new(rule => $rule)->validate($data)->messages;
   is_deeply($messages, [qw/k1Error2 k2Error2/], 'rule');
-  
-  $validator = Validator::Custom->new->error_stock(0);
-  $vresult = $validator->validate($data, $rule);
-  $messages = $vresult->messages;
-  is(scalar @$messages, 1, 'error_stock is 0');
-  is($messages->[0], 'k1Error2', 'error_stock is 0');
 }
 
 {
@@ -590,67 +584,6 @@ is_deeply($vresult->messages, ['Error-key1-0'], "messages");
 is($vresult->message('key1'), 'Error-key1-0', "error");
 eval{ $vresult->message };
 like($@, qr/Parameter name must be specified/, 'error not Parameter name');
-
-{
-  my $rule = [
-    key0 => [
-      ['Int', 'Error-key0']
-    ],
-    key1 => [
-      ['Int', 'Error-key1-0'],
-      'Int'
-    ],
-    key1 => [
-      ['aaa', 'Error-key1-1'],
-      'aaa'
-    ],
-    key1 => [
-      ['bbb', 'Error-key1-2']
-    ],
-    key2 => [
-      ['Int', 'Error-key2']
-    ]
-  ];
-  $vc = Validator::Custom->new(error_stock => 0);
-  $vc->register_constraint(
-    Int => sub{$_[0] =~ /^\d+$/},
-    Num => sub{
-        require Scalar::Util;
-        Scalar::Util::looks_like_number($_[0]);
-    },
-    C1 => sub {
-        my ($value, $args, $options) = @_;
-        return [1, $value * 2];
-    },
-    aaa => sub {$_[0] eq 'aaa'},
-    bbb => sub {$_[0] eq 'bbb'}
-  );
-  $params = {key1 => 'ccc', key0 => 1, key2 => 'no_num'};
-  $vresult = $vc->validate($params, $rule);
-  ok(!$vresult->is_ok, "invalid");
-  is_deeply($vresult->invalid_rule_keys, ['key1'], "invalid_rule_keys");
-  is_deeply($vresult->messages, ['Error-key1-0'], "errors");
-}
-
-# data_filter
-$vc = $vc_common;
-$params = {key1 => 1};
-$vc->data_filter(sub {
-  my $data = shift;
-  
-  $data->{key1} = 'a';
-  
-  return $data;
-});
-$vc->rule([
-  key1 => [
-    'Int'
-  ]
-]);
-$vresult = $vc->validate($params);
-is_deeply($vresult->invalid_rule_keys, ['key1'], "basic");
-is_deeply($vresult->raw_data, {key1 => 'a'}, "raw_data");
-
 
 # Validator::Custom::Result raw_invalid_rule_keys'
 $vc = Validator::Custom->new;
@@ -1536,22 +1469,6 @@ $vc = Validator::Custom->new;
 $result = $vc->validate($data, $rule);
 ok($result->is_ok, "ok");
 is_deeply($result->data, {}, "not copy");
-
-
-# error_stock plus
-$data = {key1 => 'a', 'key2' => 'b', key4 => 'a'};
-$rule = [
-  key4  => {message => 'e1'} => [
-    'int'
-  ],
-  {key3 => ['key1', 'key2']} => {message => 'e2'} => [
-    'duplication'
-  ],
-];
-$vc = Validator::Custom->new;
-$vc->error_stock(0);
-$result = $vc->validate($data, $rule);
-is_deeply($result->messages, ['e1']);
 
 
 # is_valid
