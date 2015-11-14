@@ -131,8 +131,8 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   my $validator = Validator::Custom->new;
   my $vresult   = $validator->validate($data, $rule);
   
-  my $errors      = $vresult->errors;
-  my $errors_hash = $vresult->errors_to_hash;
+  my $errors      = $vresult->messages;
+  my $errors_hash = $vresult->messages_to_hash;
   
   is_deeply($errors, [qw/k1Error2 k2Error2/], 'rule');
   is_deeply($errors_hash, {k1 => 'k1Error2', k2 => 'k2Error2'}, 'rule errors hash');
@@ -140,14 +140,14 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   my $errors_hash2 = $vresult->messages_to_hash;
   is_deeply($errors_hash2, {k1 => 'k1Error2', k2 => 'k2Error2'}, 'rule errors hash');
   
-  my @errors = Validator::Custom->new(rule => $rule)->validate($data)->errors;
-  is_deeply([@errors], [qw/k1Error2 k2Error2/], 'rule');
+  my $messages = Validator::Custom->new(rule => $rule)->validate($data)->messages;
+  is_deeply($messages, [qw/k1Error2 k2Error2/], 'rule');
   
   $validator = Validator::Custom->new->error_stock(0);
   $vresult = $validator->validate($data, $rule);
-  @errors = $vresult->errors;
-  is(scalar @errors, 1, 'error_stock is 0');
-  is($errors[0], 'k1Error2', 'error_stock is 0');
+  $messages = $vresult->messages;
+  is(scalar @$messages, 1, 'error_stock is 0');
+  is($messages->[0], 'k1Error2', 'error_stock is 0');
 }
 
 {
@@ -196,7 +196,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
       bbb => sub {$_[0] eq 'bbb'}
   );
   my $result= $vc->validate($data, $rule);
-  is_deeply([$result->errors], [qw/k2Error1 k4Error1/], 'Custom validator');
+  is_deeply($result->messages, [qw/k2Error1 k4Error1/], 'Custom validator');
   is_deeply(scalar $result->invalid_keys, [qw/k2 k4/], 'invalid keys hash');
   is_deeply($result->invalid_rule_keys, [qw/k2 k4/], 'invalid params hash');
   is_deeply([$result->invalid_keys], [qw/k2 k4/], 'invalid keys hash');  
@@ -244,10 +244,10 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
         },
     );
 
-    my $errors = $vc->validate($data, $rule)->errors;
+    my $errors = $vc->validate($data, $rule)->messages;
     is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator one');
     
-    $errors = $vc->validate($data, $rule)->errors;
+    $errors = $vc->validate($data, $rule)->messages;
     is_deeply($errors, [qw/k2Error1 k4Error1/], 'Custom validator two');
   }
 }
@@ -283,7 +283,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   my $vc = Validator::Custom->new;
   $vc->register_constraint(Int => sub{$_[0] =~ /^\d+$/});
 
-  my $errors = $vc->validate($data, $rule)->errors;
+  my $errors = $vc->validate($data, $rule)->messages;
 
   is_deeply($errors, [qw/k3Error1 k4Error1/], 'array validate');
 }
@@ -306,7 +306,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   );
 
   my $result= $vc->validate($data, $rule);
-  is_deeply(scalar $result->errors, [], 'no error');
+  is_deeply(scalar $result->messages, [], 'no error');
   
   is_deeply(scalar $result->data, {k1 => [4,8]}, 'array validate2');
 }
@@ -319,11 +319,11 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
       ['Int', "k1Error1"],
     ],
   ];    
-  my @errors = Validator::Custom
+  my $messages = Validator::Custom
     ->new
     ->register_constraint(Int => sub{$_[0] =~ /^\d+$/})
-    ->validate($data, $rule)->errors;
-  is(scalar @errors, 0, 'no error');
+    ->validate($data, $rule)->messages;
+  is(scalar @$messages, 0, 'no error');
 }
 
 {
@@ -411,7 +411,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
       }
     );
     my $result= $vc->validate($data, $rule);
-    is_deeply([$result->errors], 
+    is_deeply($result->messages, 
               ['k2Error1', 'Error message not specified',
                'Error message not specified'
               ], 'variouse options');
@@ -451,8 +451,8 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   ];
   
   my $vc = Validator::Custom->new;
-  my @errors = $vc->validate($data, $rule)->errors;
-  is_deeply([@errors], ['error_k1_2'], 'specify key');
+  my $messages = $vc->validate($data, $rule)->messages;
+  is_deeply($messages, ['error_k1_2'], 'specify key');
 }
 
 {
@@ -501,7 +501,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   my @invalid_keys = $vresult->invalid_keys;
   is_deeply([@invalid_keys], ['name'], 'constraint argument first');
   
-  my $errors_hash = $vresult->errors_to_hash;
+  my $errors_hash = $vresult->messages_to_hash;
   is_deeply($errors_hash, {name => $DEFAULT_MESSAGE},
             'errors_to_hash message not specified');
   
@@ -598,7 +598,7 @@ $params = {key1 => 'ccc', key0 => 1, key2 => 2};
 $vresult = $vc->validate($params, $rule);
 ok(!$vresult->is_ok, "invalid");
 is_deeply([$vresult->invalid_keys], ['key1'], "invalid_keys");
-is_deeply([$vresult->errors], ['Error-key1-0'], "errors");
+is_deeply($vresult->messages, ['Error-key1-0'], "errors");
 is_deeply($vresult->messages, ['Error-key1-0'], "messages");
 is($vresult->error_reason('key1'), 'Int', "error reason");
 is($vresult->error('key1'), 'Error-key1-0', "error");
@@ -644,7 +644,7 @@ like($@, qr/Parameter name must be specified/, 'error not Parameter name');
   $vresult = $vc->validate($params, $rule);
   ok(!$vresult->is_ok, "invalid");
   is_deeply([$vresult->invalid_keys], ['key1'], "invalid_keys");
-  is_deeply([$vresult->errors], ['Error-key1-0'], "errors");
+  is_deeply($vresult->messages, ['Error-key1-0'], "errors");
   is($vresult->error_reason('key1'), 'Int', "error reason");
 }
 
