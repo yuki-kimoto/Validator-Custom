@@ -2,104 +2,11 @@ use Test::More 'no_plan';
 
 use strict;
 use warnings;
+use lib 't/v0_test/validator-custom';
 use utf8;
 use Validator::Custom::Rule;
 
 $SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ /DEPRECATED!/ };
-
-{
-  package T1;
-  use base 'Validator::Custom';
-
-  __PACKAGE__->register_constraint(
-      Int => sub{$_[0] =~ /^\d+$/},
-      Num => sub{
-          require Scalar::Util;
-          Scalar::Util::looks_like_number($_[0]);
-      },
-      C1 => sub {
-          my ($value, $args, $options) = @_;
-          return [1, $value * 2];
-      },
-      aaa => sub {$_[0] eq 'aaa'},
-      bbb => sub {$_[0] eq 'bbb'}
-  );
-
-  package T5;
-  use base 'Validator::Custom';
-
-  __PACKAGE__->register_constraint(
-      C1 => sub {
-          my ($value, $args) = @_;
-          
-          return [1, [$value, $args]];
-      },
-      
-      C2 => sub {
-          my ($value, $args) = @_;
-          
-          return [0, [$value, $args]];
-      },
-      
-      TRIM_LEAD => sub {
-          my $value = shift;
-          
-          $value =~ s/^ +//;
-          
-          return [1, $value];
-      },
-      
-      TRIM_TRAIL => sub {
-          my $value = shift;
-          
-          $value =~ s/ +$//;
-          
-          return [1, $value];
-      },
-      
-      NO_ERROR => sub {
-          return [0, 'a'];
-      },
-      
-      C3 => sub {
-          my ($values, $args) = @_;
-          if ($values->[0] == $values->[1] && $values->[0] == $args->[0]) {
-              return 1;
-          }
-          else {
-              return 0;
-          }
-      },
-      C4 => sub {
-          my ($value, $arg) = @_;
-          return defined $arg ? 1 : 0;
-      },
-      C5 => sub {
-          my ($value, $arg) = @_;
-          return [1, $arg];
-      },
-      C6 => sub {
-          my $self = $_[2];
-          return [1, $self];
-      }
-  );
-  
-  package T6;
-  use base 'Validator::Custom';
-
-  __PACKAGE__->register_constraint(
-      length => sub {
-          my ($value, $args) = @_;
-          
-          my $min;
-          my $max;
-          
-          ($min, $max) = @$args;
-          my $length  = length $value;
-          return $min <= $length && $length <= $max ? 1 : 0;
-      }
-  );
-}
 
 my $value;
 my $r;
@@ -246,6 +153,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   like($@, qr/\QConstraint name '===' must be [A-Za-z0-9_]/, 'constraint invalid name')
 }
 
+use T1;
 {
   my $data = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
   my $rule = [
@@ -262,20 +170,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
       ['Num', "k4Error1"],
     ],
   ];
-  my $vc = Validator::Custom->new;
-  $vc->register_constraint(
-      Int => sub{$_[0] =~ /^\d+$/},
-      Num => sub{
-          require Scalar::Util;
-          Scalar::Util::looks_like_number($_[0]);
-      },
-      C1 => sub {
-          my ($value, $args, $options) = @_;
-          return [1, $value * 2];
-      },
-      aaa => sub {$_[0] eq 'aaa'},
-      bbb => sub {$_[0] eq 'bbb'}
-  );
+  my $vc = T1->new;
   my $result= $vc->validate($data, $rule);
   is_deeply([$result->errors], [qw/k2Error1 k4Error1/], 'Custom validator');
   is_deeply(scalar $result->invalid_keys, [qw/k2 k4/], 'invalid keys hash');
@@ -323,6 +218,32 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
   ];
   eval{T1->new->validate($data, $rule)};
   like($@, qr/"No" is not registered/, 'no custom type');
+}
+
+{
+  use T2;
+  my $data = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
+  my $rule = [
+    k1 => [
+      ['Int', "k1Error1"],
+    ],
+    k2 => [
+      ['Int', "k2Error1"],
+    ],
+    k3 => [
+      ['Num', "k3Error1"],
+    ],
+    k4 => [
+      ['Num', "k4Error1"],
+    ],
+  ];    
+  my $errors = T2->new->validate($data, $rule)->errors;
+  is_deeply($errors, [qw/k2Error1 k4Error1/], 'mearge Custom validator');
+  
+  my $constraints = T2->constraints;
+  ok(exists($constraints->{Int}), 'merge get constraints');
+  ok(exists($constraints->{Num}), 'merge get constraints');
+  
 }
 
 {
@@ -377,6 +298,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
 }
 
 {
+  use T5;
   my $data = { k1 => 1, k2 => 'a', k3 => '  3  ', k4 => 4, k5 => 5, k6 => 5, k7 => 'a', k11 => [1,2]};
   my $rule = [
     k1 => [
@@ -467,6 +389,7 @@ our $DEFAULT_MESSAGE = $Validator::Custom::Result::DEFAULT_MESSAGE;
            'Constraints of key not array ref');
 }
 
+use T6;
 {
   my $vc = T6->new;
   
@@ -2768,3 +2691,5 @@ ok(!$result->is_valid('key3_3'));
     );
   }
 }
+
+
