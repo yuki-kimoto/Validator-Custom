@@ -9,9 +9,6 @@ use Validator::Custom::Result;
 use Validator::Custom::Rule;
 use Validator::Custom::Constraints;
 
-has ['data_filter', 'rule', 'rule_obj'];
-has error_stock => 1;
-
 sub create_rule { Validator::Custom::Rule->new(validator => shift) }
 
 sub js_fill_form_button {
@@ -188,6 +185,167 @@ sub register_constraint {
 
 our %VALID_OPTIONS = map {$_ => 1} qw/message default copy require/;
 
+sub _parse_constraint {
+  my ($self, $c) = @_;
+
+  # Constraint information
+  my $cinfo = {};
+
+  # Arrange constraint information
+  my $constraint = $c->{constraint};
+  $cinfo->{message} = $c->{message};
+  $cinfo->{original_constraint} = $c->{constraint};
+  
+  # Code reference
+  if (ref $constraint eq 'CODE') {
+    $cinfo->{funcs} = [$constraint];
+  }
+  # Simple constraint name
+  else {
+    my $constraints;
+    if (ref $constraint eq 'ARRAY') {
+      $constraints = $constraint;
+    }
+    else {
+      if ($constraint =~ /\|\|/) {
+        $constraints = [split(/\|\|/, $constraint)];
+      }
+      else {
+        $constraints = [$constraint];
+      }
+    }
+    
+    # Constraint functions
+    my @cfuncs;
+    my @cargs;
+    for my $cname (@$constraints) {
+      # Arrange constraint
+      if (ref $cname eq 'HASH') {
+        my $first_key = (keys %$cname)[0];
+        push @cargs, $cname->{$first_key};
+        $cname = $first_key;
+      }
+
+      # Target is array elements
+      $cinfo->{each} = 1 if $cname =~ s/^@//;
+      croak qq{"\@" must be one at the top of constrinat name}
+        if index($cname, '@') > -1;
+      
+      
+      # Trim space
+      $cname =~ s/^\s+//;
+      $cname =~ s/\s+$//;
+      
+      # Negative
+      my $negative = $cname =~ s/^!// ? 1 : 0;
+      croak qq{"!" must be one at the top of constraint name}
+        if index($cname, '!') > -1;
+      
+      # Trim space
+      $cname =~ s/^\s+//;
+      $cname =~ s/\s+$//;
+      
+      # Constraint function
+      croak "Constraint name '$cname' must be [A-Za-z0-9_]"
+        if $cname =~ /\W/;
+      my $cfunc = $self->constraints->{$cname} || '';
+      croak qq{"$cname" is not registered}
+        unless ref $cfunc eq 'CODE';
+      
+      # Negativate
+      my $f = $negative ? sub {
+        my $ret = $cfunc->(@_);
+        if (ref $ret eq 'ARRAY') {
+          $ret->[0] = ! $ret->[0];
+          return $ret;
+        }
+        else { return !$ret }
+      } : $cfunc;
+      
+      # Add
+      push @cfuncs, $f;
+    }
+    $cinfo->{funcs} = \@cfuncs;
+    $cinfo->{args} = \@cargs;
+  }
+  
+  return $cinfo;
+}
+
+sub _parse_random_string_rule {
+  my $self = shift;
+  
+  # Rule
+  my $rule = ref $_[0] eq 'HASH' ? $_[0] : {@_};
+  
+  # Result
+  my $result = {};
+  
+  # Parse string rule
+  for my $name (keys %$rule) {
+    # Pettern
+    my $pattern = $rule->{$name};
+    $pattern = '' unless $pattern;
+    
+    # State
+    my $state = 'character';
+
+    # Count
+    my $count = '';
+    
+    # Chacacter sets
+    my $csets = [];
+    my $cset = [];
+    
+    # Parse pattern
+    my $c;
+    while (defined ($c = substr($pattern, 0, 1, '')) && length $c) {
+      # Character class
+      if ($state eq 'character_class') {
+        if ($c eq ']') {
+          $state = 'character';
+          push @$csets, $cset;
+          $cset = [];
+          $state = 'character';
+        }
+        else { push @$cset, $c }
+      }
+      
+      # Count
+      elsif ($state eq 'count') {
+        if ($c eq '}') {
+          $count = 1 if $count < 1;
+          for (my $i = 0; $i < $count - 1; $i++) {
+              push @$csets, [@{$csets->[-1] || ['']}];
+          }
+          $count = '';
+          $state = 'character';
+        }
+        else { $count .= $c }
+      }
+      
+      # Character
+      else {
+        if ($c eq '[') { $state = 'character_class' }
+        elsif ($c eq '{') { $state = 'count' }
+        else { push @$csets, [$c] }
+      }
+    }
+    
+    # Add Charcter sets
+    $result->{$name} = $csets;
+  }
+  
+  return $result;
+}
+
+# DEPRECATED!
+has shared_rule => sub { [] };
+# DEPRECATED!
+__PACKAGE__->dual_attr('constraints',
+  default => sub { {} }, inherit => 'hash_copy');
+
+# Version 0 method(Not used now)
 sub validate {
   my ($self, $input, $rule) = @_;
   
@@ -282,7 +440,12 @@ sub validate {
     }
     else { $keys = [$key] }
     
+    
+    
     # Check option
+    if (exists $opts->{required}) {
+      $opts->{require} = delete $opts->{required};
+    }
     for my $oname (keys %$opts) {
       croak qq{Option "$oname" of "$result_key" is invalid name}
         unless $VALID_OPTIONS{$oname};
@@ -459,165 +622,11 @@ sub validate {
   return $result;
 }
 
-sub _parse_constraint {
-  my ($self, $c) = @_;
-
-  # Constraint information
-  my $cinfo = {};
-
-  # Arrange constraint information
-  my $constraint = $c->{constraint};
-  $cinfo->{message} = $c->{message};
-  $cinfo->{original_constraint} = $c->{constraint};
-  
-  # Code reference
-  if (ref $constraint eq 'CODE') {
-    $cinfo->{funcs} = [$constraint];
-  }
-  # Simple constraint name
-  else {
-    my $constraints;
-    if (ref $constraint eq 'ARRAY') {
-      $constraints = $constraint;
-    }
-    else {
-      if ($constraint =~ /\|\|/) {
-        $constraints = [split(/\|\|/, $constraint)];
-      }
-      else {
-        $constraints = [$constraint];
-      }
-    }
-    
-    # Constraint functions
-    my @cfuncs;
-    my @cargs;
-    for my $cname (@$constraints) {
-      # Arrange constraint
-      if (ref $cname eq 'HASH') {
-        my $first_key = (keys %$cname)[0];
-        push @cargs, $cname->{$first_key};
-        $cname = $first_key;
-      }
-
-      # Target is array elements
-      $cinfo->{each} = 1 if $cname =~ s/^@//;
-      croak qq{"\@" must be one at the top of constrinat name}
-        if index($cname, '@') > -1;
-      
-      
-      # Trim space
-      $cname =~ s/^\s+//;
-      $cname =~ s/\s+$//;
-      
-      # Negative
-      my $negative = $cname =~ s/^!// ? 1 : 0;
-      croak qq{"!" must be one at the top of constraint name}
-        if index($cname, '!') > -1;
-      
-      # Trim space
-      $cname =~ s/^\s+//;
-      $cname =~ s/\s+$//;
-      
-      # Constraint function
-      croak "Constraint name '$cname' must be [A-Za-z0-9_]"
-        if $cname =~ /\W/;
-      my $cfunc = $self->constraints->{$cname} || '';
-      croak qq{"$cname" is not registered}
-        unless ref $cfunc eq 'CODE';
-      
-      # Negativate
-      my $f = $negative ? sub {
-        my $ret = $cfunc->(@_);
-        if (ref $ret eq 'ARRAY') {
-          $ret->[0] = ! $ret->[0];
-          return $ret;
-        }
-        else { return !$ret }
-      } : $cfunc;
-      
-      # Add
-      push @cfuncs, $f;
-    }
-    $cinfo->{funcs} = \@cfuncs;
-    $cinfo->{args} = \@cargs;
-  }
-  
-  return $cinfo;
-}
-
-sub _parse_random_string_rule {
-  my $self = shift;
-  
-  # Rule
-  my $rule = ref $_[0] eq 'HASH' ? $_[0] : {@_};
-  
-  # Result
-  my $result = {};
-  
-  # Parse string rule
-  for my $name (keys %$rule) {
-    # Pettern
-    my $pattern = $rule->{$name};
-    $pattern = '' unless $pattern;
-    
-    # State
-    my $state = 'character';
-
-    # Count
-    my $count = '';
-    
-    # Chacacter sets
-    my $csets = [];
-    my $cset = [];
-    
-    # Parse pattern
-    my $c;
-    while (defined ($c = substr($pattern, 0, 1, '')) && length $c) {
-      # Character class
-      if ($state eq 'character_class') {
-        if ($c eq ']') {
-          $state = 'character';
-          push @$csets, $cset;
-          $cset = [];
-          $state = 'character';
-        }
-        else { push @$cset, $c }
-      }
-      
-      # Count
-      elsif ($state eq 'count') {
-        if ($c eq '}') {
-          $count = 1 if $count < 1;
-          for (my $i = 0; $i < $count - 1; $i++) {
-              push @$csets, [@{$csets->[-1] || ['']}];
-          }
-          $count = '';
-          $state = 'character';
-        }
-        else { $count .= $c }
-      }
-      
-      # Character
-      else {
-        if ($c eq '[') { $state = 'character_class' }
-        elsif ($c eq '{') { $state = 'count' }
-        else { push @$csets, [$c] }
-      }
-    }
-    
-    # Add Charcter sets
-    $result->{$name} = $csets;
-  }
-  
-  return $result;
-}
-
-# DEPRECATED!
-has shared_rule => sub { [] };
-# DEPRECATED!
-__PACKAGE__->dual_attr('constraints',
-  default => sub { {} }, inherit => 'hash_copy');
+# Version 0 attributes(Not used now)
+has 'data_filter';
+has 'rule';
+has 'rule_obj';
+has error_stock => 1;
 
 1;
 

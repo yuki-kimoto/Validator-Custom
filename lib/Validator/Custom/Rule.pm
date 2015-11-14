@@ -3,7 +3,7 @@ use Object::Simple -base;
 use Carp 'croak';
 
 has 'topic';
-has 'content';
+has 'content' => sub { [] };
 has 'validator';
 
 sub validate {
@@ -31,9 +31,9 @@ sub validate {
 
   # Process each key
   OUTER_LOOP:
-  for (my $i = 0; $i < @{$self->rule}; $i++) {
+  for (my $i = 0; $i < @{$self->content}; $i++) {
     
-    my $r = $self->rule->[$i];
+    my $r = $self->content->[$i];
     
     # Increment position
     $pos++;
@@ -72,12 +72,12 @@ sub validate {
     $copy = $opts->{copy} if exists $opts->{copy};
     
     # Check missing parameters
-    my $require = exists $opts->{require} ? $opts->{require} : 1;
+    my $required = exists $opts->{required} ? $opts->{required} : 1;
     my $found_missing_param;
     my $missing_params = $result->missing_params;
     for my $key (@$keys) {
       unless (exists $input->{$key}) {
-        if ($require && !exists $opts->{default}) {
+        if ($required && !exists $opts->{default}) {
           push @$missing_params, $key
             unless $found_missing_params->{$key};
           $found_missing_params->{$key}++;
@@ -89,7 +89,7 @@ sub validate {
       $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
           ? $opts->{default}->($self) : $opts->{default}
         if exists $opts->{default} && $copy;
-      next if $opts->{default} || !$require;
+      next if $opts->{default} || !$required;
     }
     
     # Already valid
@@ -319,15 +319,15 @@ sub optional {
   $self->topic($topic);
   
   # Value is optional
-  $topic->{option}{require} = 0;
+  $topic->{option}{required} = 0;
   
   # Add topic to rule
-  push @{$self->rule}, $topic;
+  push @{$self->content}, $topic;
   
   return $self;
 }
 
-sub require {
+sub required {
   my ($self, $key) = @_;
   
   # Create topic
@@ -336,11 +336,15 @@ sub require {
   $self->topic($topic);
   
   # Add topic to rule
-  push @{$self->rule}, $topic;
+  push @{$self->content}, $topic;
 
   return $self;
 }
 
+# Version 0 methods(Not used now)
+sub require { shift->required(@_) }
+
+# Version 0 methods(Not used now)
 sub parse {
   my ($self, $rule, $shared_rule) = @_;
   
@@ -394,13 +398,22 @@ sub parse {
     push @$normalized_rule, $r;
   }
   
-  $self->rule($normalized_rule);
+  $self->content($normalized_rule);
   
   return $self;
 }
 
-# Version 0 attributes
-has 'rule' => sub { [] };
+# Version 0 attributes(Not used now)
+has 'rule' => sub {
+  my $self = shift;
+  
+  if (@_) {
+    return $self->content(@_);
+  }
+  else {
+    return $self->content;
+  }
+};
 
 1;
 
@@ -415,7 +428,7 @@ Validator::Custom::Rule - Rule object
   
   # Create rule object
   my $rule = $vc->create_rule;
-  $rule->require('id')->check(
+  $rule->required('id')->check(
     'ascii'
   );
   $rule->optional('name')->check(
@@ -427,7 +440,7 @@ Validator::Custom::Rule - Rule object
   my $result = $vc->validate($data, $rule);
   
   # Option
-  $rule->require('id')->default(4)->copy(0)->message('Error')->check(
+  $rule->required('id')->default(4)->copy(0)->message('Error')->check(
       'not_blank'
   );
 
@@ -440,7 +453,7 @@ Validator::Custom::Rule is the class to parse rule and store it as object.
 =head2 content
 
   my $content = $rule->content;
-  $content = $rule->rule($content);
+  $content = $rule->content($content);
 
 Content of rule object.
 
@@ -473,7 +486,7 @@ This is C<check> method alias for readability.
 
 =head2 message
 
-  $rule->require('name')
+  $rule->required('name')
     ->check('not_blank')->message('should be not blank')
     ->check('int')->message('should be int');
 
@@ -482,7 +495,7 @@ Set message for each check.
 Message is fallback to before check
 so you can write the following way.
 
-  $rule->require('name')
+  $rule->required('name')
     ->check('not_blank')
     ->check('int')->message('should be not blank and int');
 
@@ -496,11 +509,11 @@ Set result key name
 
   $rule->optional('id');
 
-Set key and set require option to 0.
+Set key and set required option to 0.
 
-=head2 require
+=head2 required
 
-  $rule->require('id');
-  $rule->require(['id1', 'id2']);
+  $rule->required('id');
+  $rule->required(['id1', 'id2']);
 
 Set key.
