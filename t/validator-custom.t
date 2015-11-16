@@ -110,20 +110,18 @@ use Validator::Custom;
 }
 
 {
-  my $data = { k1 => 1, k2 => 2, k3 => 3 };
-  my $rule = [
-    k1 => [
-      [sub{$_[0] == 1}, "k1Error1"],
-      [sub{$_[0] == 2}, "k1Error2"],
-      [sub{$_[0] == 3}, "k1Error3"],
-    ],
-    k2 => [
-      [sub{$_[0] == 2}, "k2Error1"],
-      [sub{$_[0] == 3}, "k2Error2"]
-    ]
-  ];
-  my $validator = Validator::Custom->new;
-  my $vresult   = $validator->validate($data, $rule);
+  my $vc = Validator::Custom->new;
+  my $data = {k1 => 1, k2 => 2, k3 => 3};
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')
+    ->check(sub{$_[0] == 1})->message("k1Error1")
+    ->check(sub{$_[0] == 2})->message("k1Error2")
+    ->check(sub{$_[0] == 3})->message("k1Error3");
+  $rule->topic('k2')
+    ->check(sub{$_[0] == 2})->message("k2Error1")
+    ->check(sub{$_[0] == 3})->message("k2Error2");
+
+  my $vresult   = $vc->validate($data, $rule);
   
   my $messages      = $vresult->messages;
   my $messages_hash = $vresult->messages_to_hash;
