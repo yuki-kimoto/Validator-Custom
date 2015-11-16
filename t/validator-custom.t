@@ -3,7 +3,23 @@ use Test::More 'no_plan';
 use strict;
 use warnings;
 use utf8;
+use Validator::Custom;
 use Validator::Custom::Rule;
+
+{
+  my $vc = Validator::Custom->new;
+  $vc->register_constraint(Int => sub{$_[0] =~ /^\d+$/});
+  my $data = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a'};
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->each(1)->check('Int')->message("k1Error1");
+  $rule->topic('k2')->each(1)->check('Int')->message("k2Error1");
+  $rule->topic('k3')->each(1)->check('Int')->message("k3Error1");
+  $rule->topic('k4')->each(1)->check('Int')->message("k4Error1");
+
+  my $messages = $vc->validate($data, $rule)->messages;
+
+  is_deeply($messages, [qw/k3Error1 k4Error1/], 'array validate');
+}
 
 my $vc_common = Validator::Custom->new;
 $vc_common->register_constraint(
@@ -19,8 +35,6 @@ $vc_common->register_constraint(
   aaa => sub {$_[0] eq 'aaa'},
   bbb => sub {$_[0] eq 'bbb'}
 );
-
-use Validator::Custom;
 
 # to_array_remove_blank filter
 {
@@ -160,14 +174,7 @@ use Validator::Custom;
   ok(!$result->is_ok, 'is_ok');
   
   {
-    my $vc = Validator::Custom->new;
-    $vc->register_constraint(
-      Int => sub{$_[0] =~ /^\d+$/},
-      Num => sub{
-        require Scalar::Util;
-        Scalar::Util::looks_like_number($_[0]);
-      }
-    );
+    my $vc = $vc_common;
     my $constraints = $vc->constraints;
     ok(exists($constraints->{Int}), 'get constraints');
     ok(exists($constraints->{Num}), 'get constraints');
@@ -175,74 +182,27 @@ use Validator::Custom;
 }
 
 {
+  my $vc = $vc_common;
   my $data = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
-  my $rule = [
-    k1 => [
-      ['Int', "k1Error1"],
-    ],
-    k2 => [
-      ['Int', "k2Error1"],
-    ],
-    k3 => [
-      ['Num', "k3Error1"],
-    ],
-    k4 => [
-      ['Num', "k4Error1"],
-    ],
-  ];
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('Int')->message("k1Error1");
+  $rule->topic('k2')->check('Int')->message("k2Error1");
+  $rule->topic('k3')->check('Num')->message("k3Error1");
+  $rule->topic('k4')->check('Num')->message("k4Error1");
   
-  {
-    my $vc = Validator::Custom->new;
-    $vc->register_constraint(
-        Int => sub{$_[0] =~ /^\d+$/},
-        Num => sub{
-            require Scalar::Util;
-            Scalar::Util::looks_like_number($_[0]);
-        },
-    );
-
-    my $messages = $vc->validate($data, $rule)->messages;
-    is_deeply($messages, [qw/k2Error1 k4Error1/], 'Custom validator one');
-    
-    $messages = $vc->validate($data, $rule)->messages;
-    is_deeply($messages, [qw/k2Error1 k4Error1/], 'Custom validator two');
-  }
-}
-
-{
-  my $data = {k1 => 1};
-  my $rule = [
-    k1 => [
-      ['No', "k1Error1"],
-    ],
-  ];
-  eval{Validator::Custom->new->validate($data, $rule)};
-  like($@, qr/"No" is not registered/, 'no custom type');
-}
-
-{
-  my $data = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a'};
-  my $rule = [
-    k1 => [
-      ['@Int', "k1Error1"],
-    ],
-    k2 => [
-      ['@Int', "k2Error1"],
-    ],
-    k3 => [
-      ['@Int', "k3Error1"],
-    ],
-    k4 => [
-      ['@Int', "k4Error1"],
-    ],
-  ];    
-  
-  my $vc = Validator::Custom->new;
-  $vc->register_constraint(Int => sub{$_[0] =~ /^\d+$/});
-
   my $messages = $vc->validate($data, $rule)->messages;
+  is_deeply($messages, [qw/k2Error1 k4Error1/], 'Custom validator one');
+  
+  $messages = $vc->validate($data, $rule)->messages;
+  is_deeply($messages, [qw/k2Error1 k4Error1/], 'Custom validator two');
+}
 
-  is_deeply($messages, [qw/k3Error1 k4Error1/], 'array validate');
+{
+  my $vc = $vc_common;
+  my $data = {k1 => 1};
+  my $rule = $vc->create_rule;
+  eval { $rule->topic('k1')->check('No')->message("k1Error1") };
+  like($@, qr/"No" is not registered/, 'no custom type');
 }
 
 {
