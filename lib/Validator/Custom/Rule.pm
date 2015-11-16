@@ -68,12 +68,12 @@ sub validate {
     else { $keys = [$key] }
     
     # Check missing parameters
-    my $required = exists $opts->{required} ? $opts->{required} : 1;
+    my $require = exists $opts->{require} ? $opts->{require} : 1;
     my $found_missing_param;
     my $missing_params = $result->missing_params;
     for my $key (@$keys) {
       unless (exists $input->{$key}) {
-        if ($required && !exists $opts->{default}) {
+        if ($require && !exists $opts->{default}) {
           push @$missing_params, $key
             unless $found_missing_params->{$key};
           $found_missing_params->{$key}++;
@@ -85,7 +85,7 @@ sub validate {
       $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
           ? $opts->{default}->($self) : $opts->{default}
         if exists $opts->{default};
-      next if $opts->{default} || !$required;
+      next if $opts->{default} || !$require;
     }
     
     # Already valid
@@ -283,7 +283,7 @@ sub optional {
   $self->topic($topic);
   
   # Value is optional
-  $topic->{option}{required} = 0;
+  $topic->{option}{require} = 0;
   
   # Add topic to rule
   push @{$self->content}, $topic;
@@ -400,7 +400,7 @@ Validator::Custom::Rule - Rule object
   
   # Create rule object
   my $rule = $vc->create_rule;
-  $rule->required('id')->check(
+  $rule->require('id')->check(
     'ascii'
   );
   $rule->optional('name')->check(
@@ -412,7 +412,7 @@ Validator::Custom::Rule - Rule object
   my $result = $vc->validate($data, $rule);
   
   # Option
-  $rule->required('id')->default(4)->copy(0)->message('Error')->check(
+  $rule->require('id')->default(4)->copy(0)->message('Error')->check(
       'not_blank'
   );
 
@@ -458,7 +458,7 @@ This is C<check> method alias for readability.
 
 =head2 message
 
-  $rule->required('name')
+  $rule->require('name')
     ->check('not_blank')->message('should be not blank')
     ->check('int')->message('should be int');
 
@@ -467,7 +467,7 @@ Set message for each check.
 Message is fallback to before check
 so you can write the following way.
 
-  $rule->required('name')
+  $rule->require('name')
     ->check('not_blank')
     ->check('int')->message('should be not blank and int');
 
@@ -481,4 +481,4 @@ Set result key name
 
   $rule->optional('id');
 
-Set key and set required option to 0.
+Set key and set require option to 0.
