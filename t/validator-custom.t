@@ -2521,7 +2521,7 @@ ok(!$result->is_valid('key3_3'));
     $rule->topic('k3')->check(
       ['not_blank' => 'k3 is empty']
     );
-    $rule->optional('k4')->check(
+    $rule->topic('k4')->optional->check(
       'not_blank'
     )->default(5);
     my $vresult = $vc->validate({k1 => 'aaa', k2 => '', k3 => '', k4 => ''}, $rule);
