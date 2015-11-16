@@ -272,6 +272,7 @@ sub topic {
   
   return $self;
 }
+
 sub optional {
   my ($self, $key) = @_;
 

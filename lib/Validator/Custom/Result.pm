@@ -4,7 +4,7 @@ use Object::Simple -base;
 use Carp 'croak';
 
 # Attrbutes
-has data => sub { {} };
+has output => sub { {} };
 has missing_params => sub { [] };
 
 sub has_invalid {
@@ -63,7 +63,7 @@ sub is_ok {
 
 sub loose_data {
   my $self = shift;
-  return {%{$self->raw_data}, %{$self->data}};
+  return {%{$self->raw_data}, %{$self->output}};
 }
 
 sub message {
@@ -120,7 +120,17 @@ sub to_hash {
   return $result;
 }
 
-# Version 1 attributes
+# Version 0 attributes
+sub data {
+  my $self = shift;
+  
+  if (@_) {
+    return $self->output(@_);
+  }
+  else {
+    return $self->output;
+  }
+}
 has raw_data  => sub { {} };
 
 # DEPRECATED!
@@ -191,10 +201,10 @@ Validator::Custom::Result - Result of validation
 =head1 SYNOPSYS
     
   # Result
-  my $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($input, $rule);
 
-  # Safety data
-  my $safe_data = $result->data;
+  # Output
+  my $output = $result->output;
 
   # Chacke if the result is valid.
   # (this means result have neither missing nor invalid parameter)
@@ -226,22 +236,18 @@ Validator::Custom::Result - Result of validation
   
   # Result to hash
   my $rhash = $result->to_hash;
-  
-  # Raw data
-  my $raw_data = $result->raw_data;
-  
 
 =head1 ATTRIBUTES
 
-=head2 data
+=head2 output
 
-  my $data = $result->data;
-  $result  = $result->data($data);
+  my $output = $result->output;
+  $result  = $result->output($output);
 
-Get the data in the end state. L<Validator::Custom> has filtering ability
+Get the output in the end state. L<Validator::Custom> has filtering ability
 if you need.
-The data passed to C<validate()> is converted to other data by filter.
-You can get filtered data using C<data()>.
+Input is passed to C<validate()> method, and after validation the input is converted to output by filter.
+You can get filtered output using C<output>.
 
 =head2 missing_params
 
@@ -250,13 +256,6 @@ You can get filtered data using C<data()>.
 
 You can get missing parameter names using C<missing_params()>.
 In this example, return value is the following one.
-
-=head2 raw_data
-
-  my $data  = $result->raw_data;
-  $result   = $result->raw_data($data);
-
-Raw data soon after data_filter is executed.
 
 =head1 METHODS
 
@@ -304,15 +303,6 @@ names specified in the rule is found in the data.
   my $title_is_valid = $result->is_valid('title');
 
 Check if one parameter is valid.
-
-=head2 loose_data
-
-  my $loose_data = $result->loose_data;
-
-Loose data, which is data merged C<raw_data> and C<data>
-
-  # Loose data
-  {%{$self->raw_data}, %{$self->data}}
 
 =head2 message
 

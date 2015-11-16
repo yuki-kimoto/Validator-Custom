@@ -470,7 +470,7 @@ sub validate {
       }
     }
     if ($found_missing_param) {
-      $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
+      $result->output->{$result_key} = ref $opts->{default} eq 'CODE'
           ? $opts->{default}->($self) : $opts->{default}
         if exists $opts->{default} && $copy;
       next if $opts->{default} || !$require;
@@ -576,7 +576,7 @@ sub validate {
       unless ($is_valid) {
         if (exists $opts->{default}) {
           # Set default value
-          $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
+          $result->output->{$result_key} = ref $opts->{default} eq 'CODE'
                                        ? $opts->{default}->($self)
                                        : $opts->{default}
             if exists $opts->{default} && $copy;
@@ -610,7 +610,7 @@ sub validate {
     }
     
     # Result data
-    $result->data->{$result_key} = $value if $copy;
+    $result->output->{$result_key} = $value if $copy;
     
     # Key is valid
     $valid_keys->{$result_key} = 1;
@@ -661,7 +661,7 @@ Validator::Custom - HTML form Validation, easy and flexibly
   my $result = $vc->validate($input, $rule);
   if ($result->is_ok) {
     # Safety data
-    my $safe_data = $vresult->data;
+    my $safe_data = $vresult->output;
   }
   else {
     # Error messgaes
@@ -816,9 +816,9 @@ C<messages_to_hash()> is already explained in L</"1. Basic">
 
 The following ones is often used methods.
 
-B<data()>
+B<output> method
 
-  my $input = $result->data;
+  my $output = $result->output;
 
 Get the data in the end state. L<Validator::Custom> has filtering ability.
 The parameter values in data passed to C<validate()>
