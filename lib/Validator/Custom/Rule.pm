@@ -281,7 +281,11 @@ sub topic {
   my $topic_info = {};
   $topic_info->{key} = $key;
   $self->topic_info($topic_info);
+
+  # Add topic to rule
+  push @{$self->content}, $self->topic_info;
   
+  return $self;
 }
 sub optional {
   my ($self, $key) = @_;
@@ -292,10 +296,7 @@ sub optional {
   }
   
   # Value is optional
-  $self->topic_info->{option}{require} = 0;
-  
-  # Add topic to rule
-  push @{$self->content}, $self->topic_info;
+  $self->content->[-1]{option}{require} = 0;
   
   return $self;
 }
@@ -308,9 +309,6 @@ sub require {
   if (defined $key) {
     $self->topic($key);
   }
-  
-  # Add topic to rule
-  push @{$self->content}, $self->topic_info;
   
   return $self;
 }
