@@ -454,186 +454,162 @@ $vc_common->register_constraint(
 
 # constraints default;
 
+# not_defined
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => undef,
+    k2 => 'a'
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('not_defined');
+  $rule->topic('k2')->check('not_defined');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k2']);
+}
+
+# defined
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => undef,
+    k2 => 'a',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('defined');
+  $rule->topic('k2')->check('defined');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k1']);
+}
+
+# not_space
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => '',
+    k2 => ' ',
+    k3 => ' a '
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('not_space');
+  $rule->topic('k2')->check('not_space');
+  $rule->topic('k3')->check('not_space');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k1', 'k2']);
+}
+
+# not_blank
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => '',
+    k2 => 'a',
+    k3 => ' '
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('not_blank');
+  $rule->topic('k2')->check('not_blank');
+  $rule->topic('k3')->check('not_blank');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k1']);
+}
+
+# blank
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => '',
+    k2 => 'a',
+    k3 => ' '
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('blank');
+  $rule->topic('k2')->check('blank');
+  $rule->topic('k3')->check('blank');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k2', 'k3']);
+}
+
+# int
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1  => '19',
+    k2  => '-10',
+    k3 => 'a',
+    k4 => '10.0',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('int');
+  $rule->topic('k2')->check('int');
+  $rule->topic('k3')->check('int');
+  $rule->topic('k4')->check('int');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k3', 'k4']);
+}
+
+# uint
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1  => '19',
+    k2  => '-10',
+    k3 => 'a',
+    k4 => '10.0',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('uint');
+  $rule->topic('k2')->check('uint');
+  $rule->topic('k3')->check('uint');
+  $rule->topic('k4')->check('uint');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k2', 'k3', 'k4']);
+}
+
+# uint
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => '!~',
+    k2 => ' ',
+    k3 => "\0x7f",
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('ascii');
+  $rule->topic('k2')->check('ascii');
+  $rule->topic('k3')->check('ascii');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k2', 'k3']);
+}
+
+# length
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => '111',
+    k2 => '111',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')
+    ->check({'length' => [3, 4]})
+    ->check({'length' => [2, 3]})
+    ->check({'length' => [3]})
+    ->check({'length' => 3});
+  $rule->topic('k2')->check({'length' => [4, 5]});
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k2']);
+}
+
 my @infos = (
-  [
-    'not_defined',
-    {
-      k1 => undef,
-      k2 => 'a',
-    },
-    [
-      k1 => [
-        'not_defined'
-      ],
-      k2 => [
-        'not_defined'
-      ],
-    ],
-    [qw/k2/]
-  ],
-  [
-    'defined',
-    {
-      k1 => undef,
-      k2 => 'a',
-    },
-    [
-      k1 => [
-        'defined'
-      ],
-      k2 => [
-        'defined'
-      ],
-    ],
-    [qw/k1/]
-  ],
-  [
-    'not_space',
-    {
-      k1 => '',
-      k2 => ' ',
-      k3 => ' a '
-    },
-    [
-      k1 => [
-        'not_space'
-      ],
-      k2 => [
-        'not_space'
-      ],
-      k3 => [
-        'not_space'
-      ],
-    ],
-    [qw/k1 k2/]
-  ],
-  [
-    'not_blank',
-    {
-      k1 => '',
-      k2 => 'a',
-      k3 => ' '
-    },
-    [
-      k1 => [
-        'not_blank'
-      ],
-      k2 => [
-        'not_blank'
-      ],
-      k3 => [
-        'not_blank'
-      ],
-    ],
-    [qw/k1/]
-  ],
-  [
-    'blank',
-    {
-      k1 => '',
-      k2 => 'a',
-      k3 => ' '
-    },
-    [
-      k1 => [
-        'blank'
-      ],
-      k2 => [
-        'blank'
-      ],
-      k3 => [
-        'blank'
-      ],
-    ],
-    [qw/k2 k3/]
-  ],    
-  [
-    'int',
-    {
-      k8  => '19',
-      k9  => '-10',
-      k10 => 'a',
-      k11 => '10.0',
-    },
-    [
-      k8 => [
-        'int'
-      ],
-      k9 => [
-        'int'
-      ],
-      k10 => [
-        'int'
-      ],
-      k11 => [
-        'int'
-      ],
-    ],
-    [qw/k10 k11/]
-  ],
-  [
-    'uint',
-    {
-      k12  => '19',
-      k13  => '-10',
-      k14 => 'a',
-      k15 => '10.0',
-    },
-    [
-      k12 => [
-        'uint'
-      ],
-      k13 => [
-        'uint'
-      ],
-      k14 => [
-        'uint'
-      ],
-      k15 => [
-        'uint'
-      ],
-    ],
-    [qw/k13 k14 k15/]
-  ],
-  [
-    'ascii',
-    {
-      k16 => '!~',
-      k17 => ' ',
-      k18 => "\0x7f",
-    },
-    [
-      k16 => [
-        'ascii'
-      ],
-      k17 => [
-        'ascii'
-      ],
-      k18 => [
-        'ascii'
-      ],
-    ],
-    [qw/k17 k18/]
-  ],
-  [
-    'length',
-    {
-      k19 => '111',
-      k20 => '111',
-    },
-    [
-      k19 => [
-        {'length' => [3, 4]},
-        {'length' => [2, 3]},
-        {'length' => [3]},
-        {'length' => 3},
-      ],
-      k20 => [
-        {'length' => [4, 5]},
-      ]
-    ],
-    [qw/k20/],
-  ],
   [
     'duplication',
     {
