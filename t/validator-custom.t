@@ -303,30 +303,33 @@ $vc_common->register_constraint(
   $rule->topic('k7')->check({'C2' => [3, 4]});
   $rule->topic('k11')->each(1)->check('C6');
   
-  my $result= $vc->validate($data, $rule);
-  is_deeply($result->messages, 
-            ['k2Error1', 'Error message not specified',
-             'Error message not specified'
-            ], 'variouse options');
-  
-  is_deeply($result->invalid_rule_keys, [qw/k2 k4 k7/], 'invalid key');
-  
-  is_deeply($result->data->{k1},[1, [3, 4]], 'data');
-  ok(!$result->data->{k2}, 'data not exist in error case');
-  cmp_ok($result->data->{k3}, 'eq', 3, 'filter');
-  ok(!$result->data->{k4}, 'data not set in case error');
-
-  $data = {k5 => 5, k6 => 6};
-  $rule = [
-    [qw/k5 k6/] => [
-      [{'C3' => [5]}, 'k5 k6 Error']
-    ]
-  ];
-  
-  $result= $vc->validate($data, $rule);
-  local $SIG{__WARN__} = sub {};
-  ok(!$result->is_valid, 'corelative invalid_rule_keys');
-  is(scalar @{$result->invalid_rule_keys}, 1, 'corelative invalid_rule_keys');
+  {
+    my $result= $vc->validate($data, $rule);
+    is_deeply($result->messages, 
+              ['k2Error1', 'Error message not specified',
+               'Error message not specified'
+              ], 'variouse options');
+    
+    is_deeply($result->invalid_rule_keys, [qw/k2 k4 k7/], 'invalid key');
+    
+    is_deeply($result->data->{k1},[1, [3, 4]], 'data');
+    ok(!$result->data->{k2}, 'data not exist in error case');
+    cmp_ok($result->data->{k3}, 'eq', 3, 'filter');
+    ok(!$result->data->{k4}, 'data not set in case error');
+  }
+  {
+    my $data = {k5 => 5, k6 => 6};
+    $rule = [
+      [qw/k5 k6/] => [
+        [{'C3' => [5]}, 'k5 k6 Error']
+      ]
+    ];
+    
+    my $result = $vc->validate($data, $rule);
+    local $SIG{__WARN__} = sub {};
+    ok(!$result->is_valid, 'corelative invalid_rule_keys');
+    is(scalar @{$result->invalid_rule_keys}, 1, 'corelative invalid_rule_keys');
+  }
 }
 
 {
@@ -431,7 +434,6 @@ my $rule;
 my $vresult;
 my $messages;
 my @errors;
-my $result;
 
 # or expression
 $vc = $vc_common;
@@ -1193,7 +1195,7 @@ sub validate_exception {
       '@not_blank'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->invalid_params, ['key2'], "multi values");
 }
 
@@ -1220,7 +1222,7 @@ sub validate_exception {
       '!one'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->invalid_params, ['key2'], "filter value");
 }
 
@@ -1239,7 +1241,7 @@ sub validate_exception {
       'duplication'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_ok, "invalid");
   is_deeply($result->missing_params, ['key2', 'key3'], "names");
 }
@@ -1253,7 +1255,7 @@ sub validate_exception {
       'int'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->has_missing, "missing");
 }
 
@@ -1265,7 +1267,7 @@ sub validate_exception {
       'int'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->has_missing, "missing");
 }
 
@@ -1278,7 +1280,7 @@ sub validate_exception {
     ]
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is($result->data->{key3}, 'a');
 }
 
@@ -1291,7 +1293,7 @@ sub validate_exception {
     ]
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is($result->message('key1'), 'error');
 }
 
@@ -1304,7 +1306,7 @@ sub validate_exception {
     ]
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_ok);
   is($result->data->{key1}, 2, "data value");
 }
@@ -1317,7 +1319,7 @@ sub validate_exception {
     ]
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_ok, "has missing ");
   ok(!exists $result->data->{key1}, "missing : data value and no copy");
 }
@@ -1330,7 +1332,7 @@ sub validate_exception {
     ]
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_ok);
   is($result->data->{key1}, 2, "invalid : data value");
 }
@@ -1343,7 +1345,7 @@ sub validate_exception {
     ]
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_ok);
   ok(!exists $result->data->{key1}, "invalid : data value and no copy");
 }
@@ -1362,7 +1364,7 @@ sub validate_exception {
     ],
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is($result->data->{key1}, $vc, "data value");
   is($result->data->{key2}, 5, "data value");
   ok(exists $result->data->{key3} && !defined $result->data->{key3});
@@ -1377,7 +1379,7 @@ sub validate_exception {
     ]
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_ok, "ok");
   is_deeply($result->data, {}, "not copy");
 }
@@ -1397,7 +1399,7 @@ sub validate_exception {
     ]
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -1412,7 +1414,7 @@ sub validate_exception {
     ],
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is($result->data->{key}, 'abc');
 }
 
@@ -1425,7 +1427,7 @@ sub validate_exception {
     ],
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   my $value = $result->data->{key};
   ok(index($value, 'a') > -1);
   ok(index($value, 'b') > -1);
@@ -1441,7 +1443,7 @@ sub validate_exception {
     ],
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   my $value = $result->data->{key};
   ok(index($value, 'a') > -1);
 }
@@ -1461,7 +1463,7 @@ sub validate_exception {
     ],
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->invalid_rule_keys, ['key3']);
 }
 
@@ -1480,7 +1482,7 @@ sub validate_exception {
     ],
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->invalid_rule_keys, ['key1']);
 }
 
@@ -1499,7 +1501,7 @@ sub validate_exception {
     ],
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->invalid_rule_keys, ['key3']);
 }
 
@@ -1548,7 +1550,7 @@ sub validate_exception {
     }
 
   );
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_ok);
   is_deeply($result->data, {key1 => '20101104', key2 => '20101104',
                           key3 => '20101104'});
@@ -1564,7 +1566,7 @@ sub validate_exception {
       'blank || not_blank'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_ok);
 }
 
@@ -1613,7 +1615,7 @@ sub validate_exception {
     }
 
   );
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->invalid_params, ['key2']);
   is_deeply($result->data, {key1 => ['20101104', '20101104', '20101104'],
                           });
@@ -1654,7 +1656,7 @@ is_deeply(
     ],
   ];
   $vc = Validator::Custom->new;
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_ok);
 }
 
@@ -1680,7 +1682,7 @@ is_deeply(
       'int'
     ],
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->to_hash, {
     ok => $result->is_ok, invalid => $result->has_invalid,
     missing => $result->has_missing,
@@ -1710,7 +1712,7 @@ is_deeply(
       'int'
     ],
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->missing_params, ['key2']);
   ok(!$result->is_ok);
 }
@@ -1729,7 +1731,7 @@ is_deeply(
       'int'
     ],
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_ok);
   ok(!$result->has_invalid);
 }
@@ -1746,7 +1748,7 @@ is_deeply(
       'to_array'
     ],
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->data->{key1}, [1]);
   is_deeply($result->data->{key2}, [1, 2]);
 }
@@ -1760,7 +1762,7 @@ is_deeply(
       'to_array'
     ],
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->loose_data->{key1}, [1]);
   is_deeply($result->loose_data->{key2}, 2);
 }
@@ -1773,7 +1775,7 @@ is_deeply(
       'int'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->loose_data->{key1}, 5);
 }
 
@@ -1792,7 +1794,7 @@ is_deeply(
       'ascii'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -1811,7 +1813,7 @@ is_deeply(
       {between => [1, 3]}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -1827,7 +1829,7 @@ is_deeply(
       'blank'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok($result->is_valid('key2'));
 }
@@ -1845,7 +1847,7 @@ is_deeply(
       {decimal => [1, 1]}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -1870,7 +1872,7 @@ is_deeply(
       'duplication'
     ],
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_valid('key1-2'));
   ok($result->is_valid('key3-4'));
   ok(!$result->is_valid('key1-5'));
@@ -1891,7 +1893,7 @@ is_deeply(
       {equal_to => 1}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -1910,7 +1912,7 @@ is_deeply(
       {greater_than => 1}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -1929,7 +1931,7 @@ is_deeply(
       'http_url'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -1948,7 +1950,7 @@ is_deeply(
       'int'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -1967,7 +1969,7 @@ is_deeply(
       {'in_array' => [1, 2]}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -1986,7 +1988,7 @@ is_deeply(
       {'length' => [1, 4]}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -2005,7 +2007,7 @@ is_deeply(
       {'less_than' => 4}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -2024,7 +2026,7 @@ is_deeply(
       'not_blank'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -2043,7 +2045,7 @@ is_deeply(
       'not_space'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -2062,7 +2064,7 @@ is_deeply(
       'uint'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -2081,7 +2083,7 @@ is_deeply(
       {'regex' => qr/3/}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -2100,7 +2102,7 @@ is_deeply(
       'space'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok($result->is_valid('key2'));
   ok($result->is_valid('key3'));
@@ -2113,7 +2115,7 @@ is_deeply(
       'defined'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is_deeply($result->missing_params, ['key1']);
   is_deeply($result->messages, ['key1 is undefined']);
   ok(!$result->is_valid('key1'));
@@ -2130,7 +2132,7 @@ is_deeply(
       {between => [0, 9]}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_ok);
 }
 
@@ -2148,7 +2150,7 @@ is_deeply(
       {between => ['-2.5', '+1.9']}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_valid('key1'));
   ok($result->is_valid('key2'));
   ok(!$result->is_valid('key3'));
@@ -2162,7 +2164,7 @@ is_deeply(
       {equal_to => '0.9'}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
 }
 
 # greater_than decimal
@@ -2173,7 +2175,7 @@ is_deeply(
       {greater_than => '9.1'}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
 }
 
 # int unicode
@@ -2190,7 +2192,7 @@ is_deeply(
       'int'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_valid('key1'));
   ok($result->is_valid('key2'));
   ok(!$result->is_valid('key3'));
@@ -2204,7 +2206,7 @@ is_deeply(
       {less_than => '10.1'}
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
 }
 
 # uint unicode
@@ -2221,7 +2223,7 @@ is_deeply(
       'uint'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_valid('key1'));
   ok($result->is_valid('key2'));
   ok(!$result->is_valid('key3'));
@@ -2238,7 +2240,7 @@ is_deeply(
       'space'
     ],
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok($result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
 }
@@ -2254,7 +2256,7 @@ is_deeply(
       'not_space'
     ],
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1'));
   ok($result->is_valid('key2'));
 }
@@ -2276,7 +2278,7 @@ is_deeply(
       'trim_trail'
     ]
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   is($result->data->{key1}, '　');
   is($result->data->{key2}, '　');
   is($result->data->{key3}, '　');
@@ -2333,7 +2335,7 @@ is_deeply(
       {'length' => {max => 4}}
     ],
   ];
-  $result = $vc->validate($data, $rule);
+  my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1_1'));
   ok($result->is_valid('key1_2'));
   ok($result->is_valid('key1_3'));
