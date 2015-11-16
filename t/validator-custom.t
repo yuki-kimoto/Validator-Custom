@@ -431,9 +431,7 @@ $vc_common->register_constraint(
 my $vc;
 my $params;
 my $rule;
-my $vresult;
-my $messages;
-my @errors;
+
 
 # or expression
 $vc = $vc_common;
@@ -456,23 +454,30 @@ $rule = [
     ['Int', 'Error-key2']
   ]
 ];
-$params = {key1 => 1, key0 => 1, key2 => 2};
-$vresult = $vc->validate($params, $rule);
-ok($vresult->is_ok, "first key");
 
-$params = {key1 => 'aaa', key0 => 1, key2 => 2};
-$vresult = $vc->validate($params, $rule);
-ok($vresult->is_ok, "second key");
+{
+  my $params = {key1 => 1, key0 => 1, key2 => 2};
+  my $vresult = $vc->validate($params, $rule);
+  ok($vresult->is_ok, "first key");
+}
 
-$params = {key1 => 'ccc', key0 => 1, key2 => 2};
-$vresult = $vc->validate($params, $rule);
-ok(!$vresult->is_ok, "invalid");
-is_deeply($vresult->invalid_rule_keys, ['key1'], "invalid_rule_keys");
-is_deeply($vresult->messages, ['Error-key1-0'], "errors");
-is_deeply($vresult->messages, ['Error-key1-0'], "messages");
-is($vresult->message('key1'), 'Error-key1-0', "error");
-eval{ $vresult->message };
-like($@, qr/Parameter name must be specified/, 'error not Parameter name');
+{
+  my $params = {key1 => 'aaa', key0 => 1, key2 => 2};
+  my $vresult = $vc->validate($params, $rule);
+  ok($vresult->is_ok, "second key");
+}
+
+{
+  my $params = {key1 => 'ccc', key0 => 1, key2 => 2};
+  my $vresult = $vc->validate($params, $rule);
+  ok(!$vresult->is_ok, "invalid");
+  is_deeply($vresult->invalid_rule_keys, ['key1'], "invalid_rule_keys");
+  is_deeply($vresult->messages, ['Error-key1-0'], "errors");
+  is_deeply($vresult->messages, ['Error-key1-0'], "messages");
+  is($vresult->message('key1'), 'Error-key1-0', "error");
+  eval{ $vresult->message };
+  like($@, qr/Parameter name must be specified/, 'error not Parameter name');
+}
 
 # Validator::Custom::Result raw_invalid_rule_keys'
 $vc = Validator::Custom->new;
@@ -498,7 +503,7 @@ $vc->register_constraint(q => sub {
       'q'
     ]
   ];
-  $vresult = $vc->validate($data, $rule);
+  my $vresult = $vc->validate($data, $rule);
 
   is_deeply($vresult->invalid_rule_keys, ['k12', 'k3'], 'invalid_rule_keys');
   is_deeply($vresult->invalid_params, ['k1', 'k2', 'k3'],
