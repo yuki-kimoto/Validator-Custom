@@ -27,10 +27,10 @@ use Validator::Custom;
   my $vc = Validator::Custom->new;
   my $data = {key1 => 1, key2 => [1, 2], key3 => '', key4 => [1, 3, '', '']};
   my $rule = $vc->create_rule;
-  $rule->require('key1')->filter('to_array_remove_blank');
-  $rule->require('key2')->filter('to_array_remove_blank');
-  $rule->require('key3')->filter('to_array_remove_blank');
-  $rule->require('key4')->filter('to_array_remove_blank');
+  $rule->topic('key1')->filter('to_array_remove_blank');
+  $rule->topic('key2')->filter('to_array_remove_blank');
+  $rule->topic('key3')->filter('to_array_remove_blank');
+  $rule->topic('key4')->filter('to_array_remove_blank');
   
   my $vresult = $vc->validate($data, $rule);
   is_deeply($vresult->data->{key1}, [1]);
@@ -46,7 +46,7 @@ use Validator::Custom;
     k1 => ' 123 ',
   };
   my $rule = $vc->create_rule;
-  $rule->require('k1')->filter('trim');
+  $rule->topic('k1')->filter('trim');
 
   my $vresult= Validator::Custom->new->validate($data, $rule)->data;
 
@@ -58,11 +58,11 @@ use Validator::Custom;
   my $vc = Validator::Custom->new;
   my $rule = $vc->create_rule;
   my $data = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a', k5 => []};
-  $rule->require('k1')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k1Error1');
-  $rule->require('k2')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k2Error1');
-  $rule->require('k3')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k3Error1');
-  $rule->require('k4')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k4Error1');
-  $rule->require('k5')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k5Error1');
+  $rule->topic('k1')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k1Error1');
+  $rule->topic('k2')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k2Error1');
+  $rule->topic('k3')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k3Error1');
+  $rule->topic('k4')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k4Error1');
+  $rule->topic('k5')->filter('to_array')->check({selected_at_least => 1})->each(1)->check('int')->message('k5Error1');
   
   my $messages = $vc->validate($data, $rule)->messages;
 
@@ -77,11 +77,11 @@ use Validator::Custom;
   {
     my $rule = $vc->create_rule;
     my $data = {k1 => '3', k2 => '', k3 => 'a'};
-    $rule->require('k1')
+    $rule->topic('k1')
       ->check_or('blank', 'int');
-    $rule->require('k2')
+    $rule->topic('k2')
       ->check_or('blank', 'int');
-    $rule->require('k3')
+    $rule->topic('k3')
       ->check_or('blank', 'int');
     
     my $vresult = $vc->validate($data, $rule);
@@ -94,11 +94,11 @@ use Validator::Custom;
   {
     my $rule = $vc->create_rule;
     my $data = {k1 => '2', k2 => '7', k3 => '4'};
-    $rule->require('k1')
+    $rule->topic('k1')
       ->check_or({greater_than => 5}, {less_than => 3});
-    $rule->require('k2')
+    $rule->topic('k2')
       ->check_or({greater_than => 5}, {less_than => 3});
-    $rule->require('k3')
+    $rule->topic('k3')
       ->check_or({greater_than => 5}, {less_than => 3})->message('k3_error');
     
     my $vresult = $vc->validate($data, $rule);
@@ -2512,13 +2512,13 @@ ok(!$result->is_valid('key3_3'));
   # new rule syntax - basic
   {
     my $rule = $vc->create_rule;
-    $rule->require('k1')->check(
+    $rule->topic('k1')->check(
       'not_blank'
     );
-    $rule->require('k2')->check(
+    $rule->topic('k2')->check(
       'not_blank'
     );
-    $rule->require('k3')->check(
+    $rule->topic('k3')->check(
       ['not_blank' => 'k3 is empty']
     );
     $rule->optional('k4')->check(
@@ -2536,7 +2536,7 @@ ok(!$result->is_valid('key3_3'));
   # new rule syntax - message option
   {
     my $rule = $vc->create_rule;
-    $rule->require('k1')->check(
+    $rule->topic('k1')->check(
       'not_blank'
     )->message('k1 is invalid');
 
@@ -2548,7 +2548,7 @@ ok(!$result->is_valid('key3_3'));
   # new rule syntax - copy option
   {
     my $rule = $vc->create_rule;
-    $rule->require('k1')->check(
+    $rule->topic('k1')->check(
       'not_blank'
     )->copy(0);
 
@@ -2592,12 +2592,12 @@ ok(!$result->is_valid('key3_3'));
   
   {
     my $rule = $vc->create_rule;
-    $rule->require('k1')
+    $rule->topic('k1')
       ->check(['string' => 'k1_string_error'])
       ->check(['not_blank' => 'k1_not_blank_error'])
       ->check([{'length' => {max => 3}} => 'k1_length_error']);
 ;
-    $rule->require('k2')
+    $rule->topic('k2')
       ->check(['int' => 'k2_int_error'])
       ->check([{'greater_than' => 3} => 'k2_greater_than_error']);
     
@@ -2618,8 +2618,8 @@ ok(!$result->is_valid('key3_3'));
   {
     my $rule = $vc->create_rule;
     my $data = {k1 => 1, k2 => undef};
-    $rule->require('k1');
-    $rule->require('k2');
+    $rule->topic('k1');
+    $rule->topic('k2');
     my $vresult = $vc->validate($data, $rule);
     ok($vresult->is_ok);
   }
@@ -2628,8 +2628,8 @@ ok(!$result->is_valid('key3_3'));
   {
     my $rule = $vc->create_rule;
     my $data = {k1 => 1};
-    $rule->require('k1');
-    $rule->require('k2');
+    $rule->topic('k1');
+    $rule->topic('k2');
     my $vresult = $vc->validate($data, $rule);
     ok(!$vresult->is_ok);
   }
@@ -2642,10 +2642,10 @@ ok(!$result->is_valid('key3_3'));
   # No constraint - valid
   {
     my $rule = $vc->create_rule;
-    $rule->require('k1')
+    $rule->topic('k1')
       ->check('not_blank')->message('k1_not_blank_error')
       ->check('int')->message('k1_int_error');
-    $rule->require('k2')
+    $rule->topic('k2')
       ->check('int')->message('k2_int_error');
     my $vresult1 = $vc->validate({k1 => '', k2 => 4}, $rule);
     is_deeply(
