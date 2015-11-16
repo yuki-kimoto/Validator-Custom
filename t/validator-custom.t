@@ -83,46 +83,6 @@ $vc_common->register_constraint(
   is_deeply($messages, [qw/k3Error1 k4Error1 k5Error1/], 'array validate');
 }
 
-# check_or
-{
-  my $vc = Validator::Custom->new;
-
-  # check_or - basic
-  {
-    my $rule = $vc->create_rule;
-    my $data = {k1 => '3', k2 => '', k3 => 'a'};
-    $rule->topic('k1')
-      ->check_or('blank', 'int');
-    $rule->topic('k2')
-      ->check_or('blank', 'int');
-    $rule->topic('k3')
-      ->check_or('blank', 'int');
-    
-    my $vresult = $vc->validate($data, $rule);
-    ok($vresult->is_valid('k1'));
-    ok($vresult->is_valid('k2'));
-    ok(!$vresult->is_valid('k3'));
-  }
-
-  # check_or - args
-  {
-    my $rule = $vc->create_rule;
-    my $data = {k1 => '2', k2 => '7', k3 => '4'};
-    $rule->topic('k1')
-      ->check_or({greater_than => 5}, {less_than => 3});
-    $rule->topic('k2')
-      ->check_or({greater_than => 5}, {less_than => 3});
-    $rule->topic('k3')
-      ->check_or({greater_than => 5}, {less_than => 3})->message('k3_error');
-    
-    my $vresult = $vc->validate($data, $rule);
-    ok($vresult->is_valid('k1'));
-    ok($vresult->is_valid('k2'));
-    ok(!$vresult->is_valid('k3'));
-    ok($vresult->message('k3'), 'k3_error');
-  }
-}
-
 {
   my $vc = Validator::Custom->new;
   my $data = {k1 => 1, k2 => 2, k3 => 3};

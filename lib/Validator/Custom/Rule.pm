@@ -205,21 +205,6 @@ sub each {
   return $self;
 }
 
-sub check_or {
-  my ($self, @constraints) = @_;
-  
-  my $constraint_h = {};
-  $constraint_h->{constraint} = \@constraints;
-  
-  my $cinfo = $self->validator->_parse_constraint($constraint_h);
-  $cinfo->{each} = $self->topic_info->{each};
-  
-  $self->topic_info->{constraints} ||= [];
-  push @{$self->topic_info->{constraints}}, $cinfo;
-  
-  return $self;
-}
-
 sub filter { shift->check(@_) }
 
 sub check {
@@ -381,6 +366,22 @@ sub copy {
   return $self;
 }
 
+# Version 0 method(Not used now)
+sub check_or {
+  my ($self, @constraints) = @_;
+  
+  my $constraint_h = {};
+  $constraint_h->{constraint} = \@constraints;
+  
+  my $cinfo = $self->validator->_parse_constraint($constraint_h);
+  $cinfo->{each} = $self->topic_info->{each};
+  
+  $self->topic_info->{constraints} ||= [];
+  push @{$self->topic_info->{constraints}}, $cinfo;
+  
+  return $self;
+}
+
 # Version 0 attributes(Not used now)
 has 'rule' => sub {
   my $self = shift;
@@ -407,21 +408,15 @@ Validator::Custom::Rule - Rule object
   
   # Create rule object
   my $rule = $vc->create_rule;
-  $rule->require('id')->check(
-    'ascii'
-  );
-  $rule->optional('name')->check(
-   'not_blank'
-  );
+  $rule->topic('id')->check('ascii');
+  $rule->topic('name')->optional->check('not_blank');
   
   # Validate
   my $data = {id => '001', name => 'kimoto'};
   my $result = $vc->validate($data, $rule);
   
   # Option
-  $rule->require('id')->default(4)->copy(0)->message('Error')->check(
-      'not_blank'
-  );
+  $rule->topic('id')->check('not_blank')->message('Error')->default(4);
 
 =head1 DESCRIPTION
 
@@ -448,7 +443,7 @@ Tell check each element.
 
   $rule->check('not_blank')->check('ascii');
 
-Add constraints to current topic.
+Add check to current topic.
 
 =head2 default
 
@@ -461,11 +456,11 @@ Set default value.
 
   $rule->filter('trim');
 
-This is C<check> method alias for readability.
+Add filter to current topic.
 
 =head2 message
 
-  $rule->require('name')
+  $rule->topic('name')
     ->check('not_blank')->message('should be not blank')
     ->check('int')->message('should be int');
 
@@ -474,7 +469,7 @@ Set message for each check.
 Message is fallback to before check
 so you can write the following way.
 
-  $rule->require('name')
+  $rule->topic('name')
     ->check('not_blank')
     ->check('int')->message('should be not blank and int');
 
@@ -486,6 +481,6 @@ Set result key name
 
 =head2 optional
 
-  $rule->optional('id');
+  $rule->optional;
 
-Set key and set require option to 0.
+topic become optional.
