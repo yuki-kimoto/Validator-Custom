@@ -2277,41 +2277,19 @@ sub validate_exception {
     key3_2 => 'aaaa',
     key3_3 => 'aaaaa'
   };
-  my $rule = [
-    key1_1 => [
-      {'length' => {min => 2, max => 4}}
-    ],
-    key1_2 => [
-      {'length' => {min => 2, max => 4}}
-    ],
-    key1_3 => [
-      {'length' => {min => 2, max => 4}}
-    ],
-    key1_4 => [
-      {'length' => {min => 2, max => 4}}
-    ],
-    key1_5 => [
-      {'length' => {min => 2, max => 4}}
-    ],
-    key2_1 => [
-      {'length' => {min => 2}}
-    ],
-    key2_2 => [
-      {'length' => {min => 2}}
-    ],
-    key2_3 => [
-      {'length' => {min => 2}}
-    ],
-    key3_1 => [
-      {'length' => {max => 4}}
-    ],
-    key3_2 => [
-      {'length' => {max => 4}}
-    ],
-    key3_3 => [
-      {'length' => {max => 4}}
-    ],
-  ];
+  my $rule = $vc->create_rule;
+  $rule->topic('key1_1')->check({'length' => {min => 2, max => 4}});
+  $rule->topic('key1_2')->check({'length' => {min => 2, max => 4}});
+  $rule->topic('key1_3')->check({'length' => {min => 2, max => 4}});
+  $rule->topic('key1_4')->check({'length' => {min => 2, max => 4}});
+  $rule->topic('key1_5')->check({'length' => {min => 2, max => 4}});
+  $rule->topic('key2_1')->check({'length' => {min => 2}});
+  $rule->topic('key2_2')->check({'length' => {min => 2}});
+  $rule->topic('key2_3')->check({'length' => {min => 2}});
+  $rule->topic('key3_1')->check({'length' => {max => 4}});
+  $rule->topic('key3_2')->check({'length' => {max => 4}});
+  $rule->topic('key3_3')->check({'length' => {max => 4}});
+  
   my $result = $vc->validate($data, $rule);
   ok(!$result->is_valid('key1_1'));
   ok($result->is_valid('key1_2'));
