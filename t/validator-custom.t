@@ -2571,11 +2571,11 @@ ok(!$result->is_valid('key3_3'));
       k5 => []
     };
     my $rule = $vc->create_rule;
-    $rule->require('k1')->check('string');
-    $rule->require('k2')->check('string');
-    $rule->require('k3')->check('string');
-    $rule->require('k4')->check('string');
-    $rule->require('k5')->check('string');
+    $rule->topic('k1')->check('string');
+    $rule->topic('k2')->check('string');
+    $rule->topic('k3')->check('string');
+    $rule->topic('k4')->check('string');
+    $rule->topic('k5')->check('string');
     
     my $vresult = $vc->validate($data, $rule);
     ok($vresult->is_valid('k1'));
@@ -2670,7 +2670,7 @@ ok(!$result->is_valid('key3_3'));
   # No constraint - valid
   {
     my $rule = $vc->create_rule;
-    $rule->require('k1')
+    $rule->topic('k1')
       ->check('not_blank')
       ->check('int')->message('k1_int_not_blank_error');
     my $vresult1 = $vc->validate({k1 => ''}, $rule);
