@@ -330,19 +330,15 @@ $vc_common->register_constraint(
 }
 
 {
+  my $vc = Validator::Custom->new;
   my $data = { k1 => 1, k2 => 2};
   my $constraint = sub {
     my $values = shift;
     return $values->[0] eq $values->[1];
   };
   
-  my $rule = [
-    {k1_2 => [qw/k1 k2/]}  => [
-      [$constraint, 'error_k1_2' ]
-    ]
-  ];
-  
-  my $vc = Validator::Custom->new;
+  my $rule = $vc->create_rule;
+  $rule->topic([qw/k1 k2/])->name('k1_2')->check($constraint)->message('error_k1_2');
   my $messages = $vc->validate($data, $rule)->messages;
   is_deeply($messages, ['error_k1_2'], 'specify key');
 }
@@ -383,13 +379,10 @@ $vc_common->register_constraint(
     age => 'zz',
   };
   
-  my $rule = [
-    name => [
-      {length => [1, 2]}
-    ]
-  ];
+  my $rule = $vc->create_rule;
+  $rule->topic('name')->check({length => [1, 2]});
   
-  my $vresult = $vc->rule($rule)->validate($data);
+  my $vresult = $vc->validate($data, $rule);
   my $invalid_rule_keys = $vresult->invalid_rule_keys;
   is_deeply($invalid_rule_keys, ['name'], 'constraint argument first');
   
@@ -399,7 +392,7 @@ $vc_common->register_constraint(
   
   is($vresult->message('name'), 'Error message not specified', 'error default message');
   
-  $invalid_rule_keys = $vc->rule($rule)->validate($data)->invalid_rule_keys;
+  $invalid_rule_keys = $vc->validate($data, $rule)->invalid_rule_keys;
   is_deeply($invalid_rule_keys, ['name'], 'constraint argument second');
 }
 
@@ -423,22 +416,13 @@ $vc_common->register_constraint(
   
   my $data = {k1_1 => 1, k1_2 => 2, k2_1 => 5, k2_2 => 6};
   
-  $vc->rule([
-    k1_1 => [
-      'C1'
-    ],
-    k1_2 => [
-      'C1'
-    ],
-    k2_1 => [
-      'C2'
-    ],
-    k2_2 => [
-      'C2'
-    ]
-  ]);
+  my $rule = $vc->create_rule;
+  $rule->topic('k1_1')->check('C1');
+  $rule->topic('k1_2')->check('C1');
+  $rule->topic('k2_1')->check('C2');
+  $rule->topic('k2_2')->check('C2');
   
-  is_deeply($vc->validate($data)->invalid_rule_keys, [qw/k1_1 k2_1/], 'register_constraints object');
+  is_deeply($vc->validate($data, $rule)->invalid_rule_keys, [qw/k1_1 k2_1/], 'register_constraints object');
 }
 
 my $vc;
@@ -447,8 +431,7 @@ my $rule;
 my $vresult;
 my $messages;
 my @errors;
-my $data;
-
+my $result;
 
 # or expression
 $vc = $vc_common;
@@ -500,24 +483,25 @@ $vc->register_constraint(q => sub {
   return $value eq 1;
 });
 
+{
+  my $data = {k1 => 1, k2 => 2, k3 => 3, k4 => 1};
+  $rule = [
+    {k12 => ['k1', 'k2']} => [
+      'p'
+    ],
+    k3 => [
+      'q'
+    ],
+    k4 => [
+      'q'
+    ]
+  ];
+  $vresult = $vc->validate($data, $rule);
 
-$data = {k1 => 1, k2 => 2, k3 => 3, k4 => 1};
-$rule = [
-  {k12 => ['k1', 'k2']} => [
-    'p'
-  ],
-  k3 => [
-    'q'
-  ],
-  k4 => [
-    'q'
-  ]
-];
-$vresult = $vc->validate($data, $rule);
-
-is_deeply($vresult->invalid_rule_keys, ['k12', 'k3'], 'invalid_rule_keys');
-is_deeply($vresult->invalid_params, ['k1', 'k2', 'k3'],
-        'invalid_params');
+  is_deeply($vresult->invalid_rule_keys, ['k12', 'k3'], 'invalid_rule_keys');
+  is_deeply($vresult->invalid_params, ['k1', 'k2', 'k3'],
+          'invalid_params');
+}
 
 # constraints default;
 
@@ -1175,428 +1159,465 @@ sub validate_exception {
 }
 
 # Negative validation
-$data = {key1 => 'a', key2 => 1};
-$vc = Validator::Custom->new;
-$rule = [
-  key1 => [
-    'not_blank',
-    '!int',
-    'not_blank'
-  ],
-  key2 => [
-    'not_blank',
-    '!int',
-    'not_blank'
-  ]
-];
-my $result = $vc->validate($data, $rule);
-is_deeply($result->invalid_params, ['key2'], "single value");
+{
+  my $data = {key1 => 'a', key2 => 1};
+  $vc = Validator::Custom->new;
+  $rule = [
+    key1 => [
+      'not_blank',
+      '!int',
+      'not_blank'
+    ],
+    key2 => [
+      'not_blank',
+      '!int',
+      'not_blank'
+    ]
+  ];
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_params, ['key2'], "single value");
+}
 
-$data = {key1 => ['a', 'a'], key2 => [1, 1]};
-$vc = Validator::Custom->new;
-$rule = [
-  key1 => [
-    '@not_blank',
-    '@!int',
-    '@not_blank'
-  ],
-  key2 => [
-    '@not_blank',
-    '@!int',
-    '@not_blank'
-  ]
-];
-$result = $vc->validate($data, $rule);
-is_deeply($result->invalid_params, ['key2'], "multi values");
+{
+  my $data = {key1 => ['a', 'a'], key2 => [1, 1]};
+  $vc = Validator::Custom->new;
+  $rule = [
+    key1 => [
+      '@not_blank',
+      '@!int',
+      '@not_blank'
+    ],
+    key2 => [
+      '@not_blank',
+      '@!int',
+      '@not_blank'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_params, ['key2'], "multi values");
+}
 
-$data = {key1 => 2, key2 => 1};
-$vc = Validator::Custom->new;
-$vc->register_constraint(
-  one => sub {
-    my $value = shift;
-    
-    if ($value == 1) {
-      return [1, $value];
+{
+  my $data = {key1 => 2, key2 => 1};
+  $vc = Validator::Custom->new;
+  $vc->register_constraint(
+    one => sub {
+      my $value = shift;
+      
+      if ($value == 1) {
+        return [1, $value];
+      }
+      else {
+        return [0, $value];
+      }
     }
-    else {
-      return [0, $value];
-    }
-  }
-);
-$rule = [
-  key1 => [
-    '!one',
-  ],
-  key2 => [
-    '!one'
-  ]
-];
-$result = $vc->validate($data, $rule);
-is_deeply($result->invalid_params, ['key2'], "filter value");
-
+  );
+  $rule = [
+    key1 => [
+      '!one',
+    ],
+    key2 => [
+      '!one'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_params, ['key2'], "filter value");
+}
 
 # missing_params
-$data = {key1 => 1};
-$vc = Validator::Custom->new;
-$rule = [
-  key1 => [
-    'int'
-  ],
-  key2 => [
-    'int'
-  ],
-  {rkey1 => ['key2', 'key3']} => [
-    'duplication'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_ok, "invalid");
-is_deeply($result->missing_params, ['key2', 'key3'], "names");
+{
+  my $data = {key1 => 1};
+  $vc = Validator::Custom->new;
+  $rule = [
+    key1 => [
+      'int'
+    ],
+    key2 => [
+      'int'
+    ],
+    {rkey1 => ['key2', 'key3']} => [
+      'duplication'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_ok, "invalid");
+  is_deeply($result->missing_params, ['key2', 'key3'], "names");
+}
 
 # has_missing
-$data = {};
-$vc = Validator::Custom->new;
-$rule = [
-  key1 => [
-    'int'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok($result->has_missing, "missing");
+{
+  my $data = {};
+  $vc = Validator::Custom->new;
+  $rule = [
+    key1 => [
+      'int'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok($result->has_missing, "missing");
+}
 
-$data = {key1 => 'a'};
-$vc = Validator::Custom->new;
-$rule = [
-  key1 => [
-    'int'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->has_missing, "missing");
-
+{
+  my $data = {key1 => 'a'};
+  $vc = Validator::Custom->new;
+  $rule = [
+    key1 => [
+      'int'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->has_missing, "missing");
+}
 
 # duplication result value
-$data = {key1 => 'a', key2 => 'a'};
-$rule = [
-  {key3 => ['key1', 'key2']} => [
-    'duplication'
-  ]
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-is($result->data->{key3}, 'a');
-
+{
+  my $data = {key1 => 'a', key2 => 'a'};
+  $rule = [
+    {key3 => ['key1', 'key2']} => [
+      'duplication'
+    ]
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  is($result->data->{key3}, 'a');
+}
 
 # message option
-$data = {key1 => 'a'};
-$rule = [
-  key1 => {message => 'error'} => [
-    'int'
-  ]
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-is($result->message('key1'), 'error');
-
+{
+  my $data = {key1 => 'a'};
+  $rule = [
+    key1 => {message => 'error'} => [
+      'int'
+    ]
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  is($result->message('key1'), 'error');
+}
 
 # default option
-$data = {};
-$rule = [
-  key1 => {default => 2} => [
-  
-  ]
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-ok($result->is_ok);
-is($result->data->{key1}, 2, "data value");
+{
+  my $data = {};
+  $rule = [
+    key1 => {default => 2} => [
+    
+    ]
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  ok($result->is_ok);
+  is($result->data->{key1}, 2, "data value");
+}
 
-$data = {};
-$rule = [
-  key1 => {default => 2, copy => 0} => [
-  
-  ]
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-ok($result->is_ok, "has missing ");
-ok(!exists $result->data->{key1}, "missing : data value and no copy");
+{
+  my $data = {};
+  $rule = [
+    key1 => {default => 2, copy => 0} => [
+    
+    ]
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  ok($result->is_ok, "has missing ");
+  ok(!exists $result->data->{key1}, "missing : data value and no copy");
+}
 
-$data = {key1 => 'a'};
-$rule = [
-  key1 => {default => 2} => [
-    'int'
-  ]
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-ok($result->is_ok);
-is($result->data->{key1}, 2, "invalid : data value");
+{
+  my $data = {key1 => 'a'};
+  $rule = [
+    key1 => {default => 2} => [
+      'int'
+    ]
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  ok($result->is_ok);
+  is($result->data->{key1}, 2, "invalid : data value");
+}
 
-$data = {key1 => 'a'};
-$rule = [
-  key1 => {default => 2, copy => 0} => [
-    'int'
-  ]
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-ok($result->is_ok);
-ok(!exists $result->data->{key1}, "invalid : data value and no copy");
+{
+  my $data = {key1 => 'a'};
+  $rule = [
+    key1 => {default => 2, copy => 0} => [
+      'int'
+    ]
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  ok($result->is_ok);
+  ok(!exists $result->data->{key1}, "invalid : data value and no copy");
+}
 
-$data = {key1 => 'a', key3 => 'b'};
-$rule = [
-  key1 => {default => sub { return $_[0] }} => [
-    'int'
-  ],
-  key2 => {default => sub { return 5 }} => [
-    'int'
-  ],
-  key3 => {default => undef} => [
-    'int'
-  ],
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-is($result->data->{key1}, $vc, "data value");
-is($result->data->{key2}, 5, "data value");
-ok(exists $result->data->{key3} && !defined $result->data->{key3});
+{
+  my $data = {key1 => 'a', key3 => 'b'};
+  $rule = [
+    key1 => {default => sub { return $_[0] }} => [
+      'int'
+    ],
+    key2 => {default => sub { return 5 }} => [
+      'int'
+    ],
+    key3 => {default => undef} => [
+      'int'
+    ],
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  is($result->data->{key1}, $vc, "data value");
+  is($result->data->{key2}, 5, "data value");
+  ok(exists $result->data->{key3} && !defined $result->data->{key3});
+}
 
 # copy
-$data = {key1 => 'a', 'key2' => 'a'};
-$rule = [
-  {key3 => ['key1', 'key2']} => {copy => 0} => [
-    'duplication'
-  ]
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-ok($result->is_ok, "ok");
-is_deeply($result->data, {}, "not copy");
-
+{
+  my $data = {key1 => 'a', 'key2' => 'a'};
+  $rule = [
+    {key3 => ['key1', 'key2']} => {copy => 0} => [
+      'duplication'
+    ]
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  ok($result->is_ok, "ok");
+  is_deeply($result->data, {}, "not copy");
+}
 
 # is_valid
-$data = {key1 => 'a', key2 => 'b', key3 => 2};
-$rule = [
-  key1 => [
-    'int'
-  ],
-  key2 => [
-    'int'
-  ],
-  key3 => [
-    'int'
-  ]
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
-
+{
+  my $data = {key1 => 'a', key2 => 'b', key3 => 2};
+  $rule = [
+    key1 => [
+      'int'
+    ],
+    key2 => [
+      'int'
+    ],
+    key3 => [
+      'int'
+    ]
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
 # merge
-$data = {key1 => 'a', key2 => 'b', key3 => 'c'};
-$rule = [
-  {key => ['key1', 'key2', 'key3']} => [
-    'merge'
-  ],
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-is($result->data->{key}, 'abc');
+{
+  my $data = {key1 => 'a', key2 => 'b', key3 => 'c'};
+  $rule = [
+    {key => ['key1', 'key2', 'key3']} => [
+      'merge'
+    ],
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  is($result->data->{key}, 'abc');
+}
 
 # Multi-Paramater validation using regex
-$data = {key1 => 'a', key2 => 'b', key3 => 'c', p => 'd'};
-$rule = [
-  {key => qr/^key/} => [
-    'merge'
-  ],
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-my $value = $result->data->{key};
-ok(index($value, 'a') > -1);
-ok(index($value, 'b') > -1);
-ok(index($value, 'c') > -1);
-ok(index($value, 'd') == -1);
+{
+  my $data = {key1 => 'a', key2 => 'b', key3 => 'c', p => 'd'};
+  $rule = [
+    {key => qr/^key/} => [
+      'merge'
+    ],
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  my $value = $result->data->{key};
+  ok(index($value, 'a') > -1);
+  ok(index($value, 'b') > -1);
+  ok(index($value, 'c') > -1);
+  ok(index($value, 'd') == -1);
+}
 
-$data = {key1 => 'a'};
-$rule = [
-  {key => qr/^key/} => [
-    'merge'
-  ],
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-$value = $result->data->{key};
-ok(index($value, 'a') > -1);
-
-
-# or condition new syntax
-$data = {key1 => '3', key2 => '', key3 => 'a'};
-$rule = [
-  key1 => [
-    'blank || int'
-  ],
-  key2 => [
-    'blank || int'
-  ],
-  key3 => [
-    'blank || int'
-  ],
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-is_deeply($result->invalid_rule_keys, ['key3']);
-
+{
+  my $data = {key1 => 'a'};
+  $rule = [
+    {key => qr/^key/} => [
+      'merge'
+    ],
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  my $value = $result->data->{key};
+  ok(index($value, 'a') > -1);
+}
 
 # or condition new syntax
-$data = {key1 => '3', key2 => '', key3 => 'a'};
-$rule = [
-  key1 => [
-    'blank || !int'
-  ],
-  key2 => [
-    'blank || !int'
-  ],
-  key3 => [
-    'blank || !int'
-  ],
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-is_deeply($result->invalid_rule_keys, ['key1']);
+{
+  my $data = {key1 => '3', key2 => '', key3 => 'a'};
+  $rule = [
+    key1 => [
+      'blank || int'
+    ],
+    key2 => [
+      'blank || int'
+    ],
+    key3 => [
+      'blank || int'
+    ],
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['key3']);
+}
 
+# or condition new syntax
+{
+  my $data = {key1 => '3', key2 => '', key3 => 'a'};
+  $rule = [
+    key1 => [
+      'blank || !int'
+    ],
+    key2 => [
+      'blank || !int'
+    ],
+    key3 => [
+      'blank || !int'
+    ],
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['key1']);
+}
 
 # space
-$data = {key1 => '', key2 => ' ', key3 => 'a'};
-$rule = [
-  key1 => [
-    'space'
-  ],
-  key2 => [
-    'space'
-  ],
-  key3 => [
-    'space'
-  ],
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-is_deeply($result->invalid_rule_keys, ['key3']);
-
+{
+  my $data = {key1 => '', key2 => ' ', key3 => 'a'};
+  $rule = [
+    key1 => [
+      'space'
+    ],
+    key2 => [
+      'space'
+    ],
+    key3 => [
+      'space'
+    ],
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['key3']);
+}
 
 # or condition filter
-$data = {key1 => '2010/11/04', key2 => '2010-11-04', key3 => '2010 11 04'};
-$rule = [
-  key1 => [
-    'date1 || date2 || date3'
-  ],
-  key2 => [
-    'date1 || date2 || date3'
-  ],
-  key3 => [
-    'date1 || date2 || date3'
-  ],
-];
-$vc = Validator::Custom->new;
-$vc->register_constraint(
-  date1 => sub {
-    my $value = shift;
-    if ($value =~ m#(\d{4})/(\d{2})/(\d{2})#) {
-      return [1, "$1$2$3"];
+{
+  my $data = {key1 => '2010/11/04', key2 => '2010-11-04', key3 => '2010 11 04'};
+  $rule = [
+    key1 => [
+      'date1 || date2 || date3'
+    ],
+    key2 => [
+      'date1 || date2 || date3'
+    ],
+    key3 => [
+      'date1 || date2 || date3'
+    ],
+  ];
+  $vc = Validator::Custom->new;
+  $vc->register_constraint(
+    date1 => sub {
+      my $value = shift;
+      if ($value =~ m#(\d{4})/(\d{2})/(\d{2})#) {
+        return [1, "$1$2$3"];
+      }
+      else {
+        return [0, undef];
+      }
+    },
+    date2 => sub {
+      my $value = shift;
+      if ($value =~ /(\d{4})-(\d{2})-(\d{2})/) {
+        return [1, "$1$2$3"];
+      }
+      else {
+        return [0, undef];
+      }
+    },
+    date3 => sub {
+      my $value = shift;
+      if ($value =~ /(\d{4}) (\d{2}) (\d{2})/) {
+        return [1, "$1$2$3"];
+      }
+      else {
+        return [0, undef];
+      }
     }
-    else {
-      return [0, undef];
-    }
-  },
-  date2 => sub {
-    my $value = shift;
-    if ($value =~ /(\d{4})-(\d{2})-(\d{2})/) {
-      return [1, "$1$2$3"];
-    }
-    else {
-      return [0, undef];
-    }
-  },
-  date3 => sub {
-    my $value = shift;
-    if ($value =~ /(\d{4}) (\d{2}) (\d{2})/) {
-      return [1, "$1$2$3"];
-    }
-    else {
-      return [0, undef];
-    }
-  }
 
-);
-$result = $vc->validate($data, $rule);
-ok($result->is_ok);
-is_deeply($result->data, {key1 => '20101104', key2 => '20101104',
-                        key3 => '20101104'});
+  );
+  $result = $vc->validate($data, $rule);
+  ok($result->is_ok);
+  is_deeply($result->data, {key1 => '20101104', key2 => '20101104',
+                          key3 => '20101104'});
+}
 
-$data = {key1 => 'aaa', key2 => 'bbb'};
-$rule = [
-  key1 => [
-    'not_blank || blank'
-  ],
-  key2 => [
-    'blank || not_blank'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok($result->is_ok);
+{
+  my $data = {key1 => 'aaa', key2 => 'bbb'};
+  $rule = [
+    key1 => [
+      'not_blank || blank'
+    ],
+    key2 => [
+      'blank || not_blank'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok($result->is_ok);
+}
 
 # or condition filter array
-$data = {
-  key1 => ['2010/11/04', '2010-11-04', '2010 11 04'],
-  key2 => ['2010/11/04', '2010-11-04', 'xxx']
-};
-$rule = [
-  key1 => [
-    '@ date1 || date2 || date3'
-  ],
-  key2 => [
-    '@ date1 || date2 || date3'
-  ],
-];
-$vc = Validator::Custom->new;
-$vc->register_constraint(
-  date1 => sub {
-    my $value = shift;
-    if ($value =~ m#(\d{4})/(\d{2})/(\d{2})#) {
-      return [1, "$1$2$3"];
+{
+  my $data = {
+    key1 => ['2010/11/04', '2010-11-04', '2010 11 04'],
+    key2 => ['2010/11/04', '2010-11-04', 'xxx']
+  };
+  $rule = [
+    key1 => [
+      '@ date1 || date2 || date3'
+    ],
+    key2 => [
+      '@ date1 || date2 || date3'
+    ],
+  ];
+  $vc = Validator::Custom->new;
+  $vc->register_constraint(
+    date1 => sub {
+      my $value = shift;
+      if ($value =~ m#(\d{4})/(\d{2})/(\d{2})#) {
+        return [1, "$1$2$3"];
+      }
+      else {
+        return [0, undef];
+      }
+    },
+    date2 => sub {
+      my $value = shift;
+      if ($value =~ /(\d{4})-(\d{2})-(\d{2})/) {
+        return [1, "$1$2$3"];
+      }
+      else {
+        return [0, undef];
+      }
+    },
+    date3 => sub {
+      my $value = shift;
+      if ($value =~ /(\d{4}) (\d{2}) (\d{2})/) {
+        return [1, "$1$2$3"];
+      }
+      else {
+        return [0, undef];
+      }
     }
-    else {
-      return [0, undef];
-    }
-  },
-  date2 => sub {
-    my $value = shift;
-    if ($value =~ /(\d{4})-(\d{2})-(\d{2})/) {
-      return [1, "$1$2$3"];
-    }
-    else {
-      return [0, undef];
-    }
-  },
-  date3 => sub {
-    my $value = shift;
-    if ($value =~ /(\d{4}) (\d{2}) (\d{2})/) {
-      return [1, "$1$2$3"];
-    }
-    else {
-      return [0, undef];
-    }
-  }
 
-);
-$result = $vc->validate($data, $rule);
-is_deeply($result->invalid_params, ['key2']);
-is_deeply($result->data, {key1 => ['20101104', '20101104', '20101104'],
-                        });
-
+  );
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_params, ['key2']);
+  is_deeply($result->data, {key1 => ['20101104', '20101104', '20101104'],
+                          });
+}
 
 # _parse_random_string_rule
 $rule = {
@@ -1620,640 +1641,711 @@ is_deeply(
 
 
 # any
-$data = {
-  key1 => undef, key2 => 1
-};
-$rule = [
-  key1 => [
-    'any'
-  ],
-  key2 => [
-    'any'
-  ],
-];
-$vc = Validator::Custom->new;
-$result = $vc->validate($data, $rule);
-ok($result->is_ok);
+{
+  my $data = {
+    key1 => undef, key2 => 1
+  };
+  $rule = [
+    key1 => [
+      'any'
+    ],
+    key2 => [
+      'any'
+    ],
+  ];
+  $vc = Validator::Custom->new;
+  $result = $vc->validate($data, $rule);
+  ok($result->is_ok);
+}
 
 
 # to_hash
-$vc = Validator::Custom->new;
-$data = {key1 => 1, key2 => 'a', key3 => 'a'};
-$rule = [
-  key1 => [
-    'int'
-  ],
-  key2 => {message => 'a'} => [
-    'int'
-  ],
-  key3 => {message => 'b'} => [
-    'int'
-  ],
-  key4 => {message => 'key4 must be int'} => [
-    'int'
-  ],
-  key5 => {message => 'key5 must be int'} => [
-    'int'
-  ],
-];
-$result = $vc->validate($data, $rule);
-is_deeply($result->to_hash, {
-  ok => $result->is_ok, invalid => $result->has_invalid,
-  missing => $result->has_missing,
-  missing_params => $result->missing_params,
-  messages => $result->messages_to_hash
-});
-is_deeply($result->to_hash, {
-  ok => 0, invalid => 1,
-  missing => 1,
-  missing_params => ['key4', 'key5'],
-  messages => {key2 => 'a', key3 => 'b', key4 => 'key4 must be int', key5 => 'key5 must be int'}
-});
+{
+  $vc = Validator::Custom->new;
+  my $data = {key1 => 1, key2 => 'a', key3 => 'a'};
+  $rule = [
+    key1 => [
+      'int'
+    ],
+    key2 => {message => 'a'} => [
+      'int'
+    ],
+    key3 => {message => 'b'} => [
+      'int'
+    ],
+    key4 => {message => 'key4 must be int'} => [
+      'int'
+    ],
+    key5 => {message => 'key5 must be int'} => [
+      'int'
+    ],
+  ];
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->to_hash, {
+    ok => $result->is_ok, invalid => $result->has_invalid,
+    missing => $result->has_missing,
+    missing_params => $result->missing_params,
+    messages => $result->messages_to_hash
+  });
+  is_deeply($result->to_hash, {
+    ok => 0, invalid => 1,
+    missing => 1,
+    missing_params => ['key4', 'key5'],
+    messages => {key2 => 'a', key3 => 'b', key4 => 'key4 must be int', key5 => 'key5 must be int'}
+  });
+}
 
 # not_required
-$vc = Validator::Custom->new;
-$data = {key1 => 1};
-$rule = [
-  key1 => [
-    'int'
-  ],
-  key2 => {message => 'a'} => [
-    'int'
-  ],
-  key3 => {require => 0} => [
-    'int'
-  ],
-];
-$result = $vc->validate($data, $rule);
-is_deeply($result->missing_params, ['key2']);
-ok(!$result->is_ok);
+{
+  $vc = Validator::Custom->new;
+  my $data = {key1 => 1};
+  $rule = [
+    key1 => [
+      'int'
+    ],
+    key2 => {message => 'a'} => [
+      'int'
+    ],
+    key3 => {require => 0} => [
+      'int'
+    ],
+  ];
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->missing_params, ['key2']);
+  ok(!$result->is_ok);
+}
 
-$vc = Validator::Custom->new;
-$data = {key1 => 1};
-$rule = [
-  key1 => {require => 0} => [
-    'int'
-  ],
-  key2 => {require => 0} => [
-    'int'
-  ],
-  key3 => {require => 0} => [
-    'int'
-  ],
-];
-$result = $vc->validate($data, $rule);
-ok($result->is_ok);
-ok(!$result->has_invalid);
+{
+  $vc = Validator::Custom->new;
+  my $data = {key1 => 1};
+  $rule = [
+    key1 => {require => 0} => [
+      'int'
+    ],
+    key2 => {require => 0} => [
+      'int'
+    ],
+    key3 => {require => 0} => [
+      'int'
+    ],
+  ];
+  $result = $vc->validate($data, $rule);
+  ok($result->is_ok);
+  ok(!$result->has_invalid);
+}
 
 # to_array filter
-$vc = Validator::Custom->new;
-$data = {key1 => 1, key2 => [1, 2]};
-$rule = [
-  key1 => [
-    'to_array'
-  ],
-  key2 => [
-    'to_array'
-  ],
-];
-$result = $vc->validate($data, $rule);
-is_deeply($result->data->{key1}, [1]);
-is_deeply($result->data->{key2}, [1, 2]);
-
+{
+  $vc = Validator::Custom->new;
+  my $data = {key1 => 1, key2 => [1, 2]};
+  $rule = [
+    key1 => [
+      'to_array'
+    ],
+    key2 => [
+      'to_array'
+    ],
+  ];
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->data->{key1}, [1]);
+  is_deeply($result->data->{key2}, [1, 2]);
+}
 
 # loose_data
-$vc = Validator::Custom->new;
-$data = {key1 => 1, key2 => 2};
-$rule = [
-  key1 => [
-    'to_array'
-  ],
-];
-$result = $vc->validate($data, $rule);
-is_deeply($result->loose_data->{key1}, [1]);
-is_deeply($result->loose_data->{key2}, 2);
+{
+  $vc = Validator::Custom->new;
+  my $data = {key1 => 1, key2 => 2};
+  $rule = [
+    key1 => [
+      'to_array'
+    ],
+  ];
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->loose_data->{key1}, [1]);
+  is_deeply($result->loose_data->{key2}, 2);
+}
 
-$vc = Validator::Custom->new;
-$data = {key1 => 'a'};
-$rule = [
-  key1 => {default => 5} => [
-    'int'
-  ]
-];
-$result = $vc->validate($data, $rule);
-is_deeply($result->loose_data->{key1}, 5);
+{
+  $vc = Validator::Custom->new;
+  my $data = {key1 => 'a'};
+  $rule = [
+    key1 => {default => 5} => [
+      'int'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->loose_data->{key1}, 5);
+}
 
 # undefined value
-$vc = Validator::Custom->new;
-$data = {key1 => undef, key2 => '', key3 => 'a'};
-$rule = [
-  key1 => [
-    'ascii'
-  ],
-  key2 => [
-    'ascii'
-  ],
-  key3 => [
-    'ascii'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  $vc = Validator::Custom->new;
+  my $data = {key1 => undef, key2 => '', key3 => 'a'};
+  $rule = [
+    key1 => [
+      'ascii'
+    ],
+    key2 => [
+      'ascii'
+    ],
+    key3 => [
+      'ascii'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => '2'};
-$rule = [
-  key1 => [
-    {between => [1, 3]}
-  ],
-  key2 => [
-    {between => [1, 3]}
-  ],
-  key3 => [
-    {between => [1, 3]}
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => '2'};
+  $rule = [
+    key1 => [
+      {between => [1, 3]}
+    ],
+    key2 => [
+      {between => [1, 3]}
+    ],
+    key3 => [
+      {between => [1, 3]}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => ''};
-$rule = [
-  key1 => [
-    'blank'
-  ],
-  key2 => [
-    'blank'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok($result->is_valid('key2'));
+{
+  my $data = {key1 => undef, key2 => ''};
+  $rule = [
+    key1 => [
+      'blank'
+    ],
+    key2 => [
+      'blank'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok($result->is_valid('key2'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => '2.1'};
-$rule = [
-  key1 => [
-    {decimal => 1}
-  ],
-  key2 => [
-    {decimal => 1}
-  ],
-  key3 => [
-    {decimal => [1, 1]}
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => '2.1'};
+  $rule = [
+    key1 => [
+      {decimal => 1}
+    ],
+    key2 => [
+      {decimal => 1}
+    ],
+    key3 => [
+      {decimal => [1, 1]}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => 'a', key2 => 'a', key3 => '', key4 => '', key5 => undef, key6 => undef};
-$rule = [
-  {'key1-2' => ['key1', 'key2']} => [
-    'duplication'
-  ],
-  {'key3-4' => ['key3', 'key4']} => [
-    'duplication'
-  ],
-  {'key1-5' => ['key1', 'key5']} => [
-    'duplication'
-  ],
-  {'key5-1' => ['key5', 'key1']} => [
-    'duplication'
-  ],
-  {'key5-6' => ['key5', 'key6']} => [
-    'duplication'
-  ],
-];
-$result = $vc->validate($data, $rule);
-ok($result->is_valid('key1-2'));
-ok($result->is_valid('key3-4'));
-ok(!$result->is_valid('key1-5'));
-ok(!$result->is_valid('key5-1'));
-ok(!$result->is_valid('key5-6'));
+{
+  my $data = {key1 => 'a', key2 => 'a', key3 => '', key4 => '', key5 => undef, key6 => undef};
+  $rule = [
+    {'key1-2' => ['key1', 'key2']} => [
+      'duplication'
+    ],
+    {'key3-4' => ['key3', 'key4']} => [
+      'duplication'
+    ],
+    {'key1-5' => ['key1', 'key5']} => [
+      'duplication'
+    ],
+    {'key5-1' => ['key5', 'key1']} => [
+      'duplication'
+    ],
+    {'key5-6' => ['key5', 'key6']} => [
+      'duplication'
+    ],
+  ];
+  $result = $vc->validate($data, $rule);
+  ok($result->is_valid('key1-2'));
+  ok($result->is_valid('key3-4'));
+  ok(!$result->is_valid('key1-5'));
+  ok(!$result->is_valid('key5-1'));
+  ok(!$result->is_valid('key5-6'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => '1'};
-$rule = [
-  key1 => [
-    {equal_to => 1}
-  ],
-  key2 => [
-    {equal_to => 1}
-  ],
-  key3 => [
-    {equal_to => 1}
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => '1'};
+  $rule = [
+    key1 => [
+      {equal_to => 1}
+    ],
+    key2 => [
+      {equal_to => 1}
+    ],
+    key3 => [
+      {equal_to => 1}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => '5'};
-$rule = [
-  key1 => [
-    {greater_than => 1}
-  ],
-  key2 => [
-    {greater_than => 1}
-  ],
-  key3 => [
-    {greater_than => 1}
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => '5'};
+  $rule = [
+    key1 => [
+      {greater_than => 1}
+    ],
+    key2 => [
+      {greater_than => 1}
+    ],
+    key3 => [
+      {greater_than => 1}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => 'http://aaa.com'};
-$rule = [
-  key1 => [
-    'http_url'
-  ],
-  key2 => [
-    'http_url'
-  ],
-  key3 => [
-    'http_url'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => 'http://aaa.com'};
+  $rule = [
+    key1 => [
+      'http_url'
+    ],
+    key2 => [
+      'http_url'
+    ],
+    key3 => [
+      'http_url'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => '1'};
-$rule = [
-  key1 => [
-    'int'
-  ],
-  key2 => [
-    'int'
-  ],
-  key3 => [
-    'int'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => '1'};
+  $rule = [
+    key1 => [
+      'int'
+    ],
+    key2 => [
+      'int'
+    ],
+    key3 => [
+      'int'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => '1'};
-$rule = [
-  key1 => [
-    {'in_array' => [1, 2]}
-  ],
-  key2 => [
-    {'in_array' => [1, 2]}
-  ],
-  key3 => [
-    {'in_array' => [1, 2]}
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => '1'};
+  $rule = [
+    key1 => [
+      {'in_array' => [1, 2]}
+    ],
+    key2 => [
+      {'in_array' => [1, 2]}
+    ],
+    key3 => [
+      {'in_array' => [1, 2]}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => 'aaa'};
-$rule = [
-  key1 => [
-    {'length' => [1, 4]}
-  ],
-  key2 => [
-    {'length' => [1, 4]}
-  ],
-  key3 => [
-    {'length' => [1, 4]}
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => 'aaa'};
+  $rule = [
+    key1 => [
+      {'length' => [1, 4]}
+    ],
+    key2 => [
+      {'length' => [1, 4]}
+    ],
+    key3 => [
+      {'length' => [1, 4]}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => 3};
-$rule = [
-  key1 => [
-    {'less_than' => 4}
-  ],
-  key2 => [
-    {'less_than' => 4}
-  ],
-  key3 => [
-    {'less_than' => 4}
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => 3};
+  $rule = [
+    key1 => [
+      {'less_than' => 4}
+    ],
+    key2 => [
+      {'less_than' => 4}
+    ],
+    key3 => [
+      {'less_than' => 4}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => 3};
-$rule = [
-  key1 => [
-    'not_blank'
-  ],
-  key2 => [
-    'not_blank'
-  ],
-  key3 => [
-    'not_blank'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => 3};
+  $rule = [
+    key1 => [
+      'not_blank'
+    ],
+    key2 => [
+      'not_blank'
+    ],
+    key3 => [
+      'not_blank'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => 3};
-$rule = [
-  key1 => [
-    'not_space'
-  ],
-  key2 => [
-    'not_space'
-  ],
-  key3 => [
-    'not_space'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => 3};
+  $rule = [
+    key1 => [
+      'not_space'
+    ],
+    key2 => [
+      'not_space'
+    ],
+    key3 => [
+      'not_space'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => 3};
-$rule = [
-  key1 => [
-    'uint'
-  ],
-  key2 => [
-    'uint'
-  ],
-  key3 => [
-    'uint'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => 3};
+  $rule = [
+    key1 => [
+      'uint'
+    ],
+    key2 => [
+      'uint'
+    ],
+    key3 => [
+      'uint'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => 3};
-$rule = [
-  key1 => [
-    {'regex' => qr/3/}
-  ],
-  key2 => [
-    {'regex' => qr/3/}
-  ],
-  key3 => [
-    {'regex' => qr/3/}
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => 3};
+  $rule = [
+    key1 => [
+      {'regex' => qr/3/}
+    ],
+    key2 => [
+      {'regex' => qr/3/}
+    ],
+    key3 => [
+      {'regex' => qr/3/}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key1 => undef, key2 => '', key3 => ' '};
-$rule = [
-  key1 => [
-    'space'
-  ],
-  key2 => [
-    'space'
-  ],
-  key3 => [
-    'space'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok($result->is_valid('key2'));
-ok($result->is_valid('key3'));
+{
+  my $data = {key1 => undef, key2 => '', key3 => ' '};
+  $rule = [
+    key1 => [
+      'space'
+    ],
+    key2 => [
+      'space'
+    ],
+    key3 => [
+      'space'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok($result->is_valid('key2'));
+  ok($result->is_valid('key3'));
+}
 
-$data = {key2 => 2};
-$rule = [
-  key1 => {message => 'key1 is undefined'} => [
-    'defined'
-  ]
-];
-$result = $vc->validate($data, $rule);
-is_deeply($result->missing_params, ['key1']);
-is_deeply($result->messages, ['key1 is undefined']);
-ok(!$result->is_valid('key1'));
+{
+  my $data = {key2 => 2};
+  $rule = [
+    key1 => {message => 'key1 is undefined'} => [
+      'defined'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  is_deeply($result->missing_params, ['key1']);
+  is_deeply($result->messages, ['key1 is undefined']);
+  ok(!$result->is_valid('key1'));
+}
 
 # between 0-9
-$data = {key1 => 0, key2 => 9};
-$rule = [
-  key1 => [
-    {between => [0, 9]}
-  ],
-  key2 => [
-    {between => [0, 9]}
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok($result->is_ok);
+{
+  my $data = {key1 => 0, key2 => 9};
+  $rule = [
+    key1 => [
+      {between => [0, 9]}
+    ],
+    key2 => [
+      {between => [0, 9]}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok($result->is_ok);
+}
 
 # between decimal
-$data = {key1 => '-1.5', key2 => '+1.5', key3 => 3.5};
-$rule = [
-  key1 => [
-    {between => [-2.5, 1.9]}
-  ],
-  key2 => [
-    {between => ['-2.5', '+1.9']}
-  ],
-  key3 => [
-    {between => ['-2.5', '+1.9']}
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok($result->is_valid('key1'));
-ok($result->is_valid('key2'));
-ok(!$result->is_valid('key3'));
+{
+  my $data = {key1 => '-1.5', key2 => '+1.5', key3 => 3.5};
+  $rule = [
+    key1 => [
+      {between => [-2.5, 1.9]}
+    ],
+    key2 => [
+      {between => ['-2.5', '+1.9']}
+    ],
+    key3 => [
+      {between => ['-2.5', '+1.9']}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok($result->is_valid('key1'));
+  ok($result->is_valid('key2'));
+  ok(!$result->is_valid('key3'));
+}
 
 # equal_to decimal
-$data = {key1 => '+0.9'};
-$rule = [
-  key1 => [
-    {equal_to => '0.9'}
-  ]
-];
-$result = $vc->validate($data, $rule);
+{
+  my $data = {key1 => '+0.9'};
+  $rule = [
+    key1 => [
+      {equal_to => '0.9'}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+}
 
 # greater_than decimal
-$data = {key1 => '+10.9'};
-$rule = [
-  key1 => [
-    {greater_than => '9.1'}
-  ]
-];
-$result = $vc->validate($data, $rule);
+{
+  my $data = {key1 => '+10.9'};
+  $rule = [
+    key1 => [
+      {greater_than => '9.1'}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+}
 
 # int unicode
-$data = {key1 => 0, key2 => 9, key3 => '２'};
-$rule = [
-  key1 => [
-    'int'
-  ],
-  key2 => [
-    'int'
-  ],
-  key3 => [
-    'int'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok($result->is_valid('key1'));
-ok($result->is_valid('key2'));
-ok(!$result->is_valid('key3'));
+{
+  my $data = {key1 => 0, key2 => 9, key3 => '２'};
+  $rule = [
+    key1 => [
+      'int'
+    ],
+    key2 => [
+      'int'
+    ],
+    key3 => [
+      'int'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok($result->is_valid('key1'));
+  ok($result->is_valid('key2'));
+  ok(!$result->is_valid('key3'));
+}
 
 # less_than decimal
-$data = {key1 => '+0.9'};
-$rule = [
-  key1 => [
-    {less_than => '10.1'}
-  ]
-];
-$result = $vc->validate($data, $rule);
+{
+  my $data = {key1 => '+0.9'};
+  $rule = [
+    key1 => [
+      {less_than => '10.1'}
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+}
 
 # uint unicode
-$data = {key1 => 0, key2 => 9, key3 => '２'};
-$rule = [
-  key1 => [
-    'uint'
-  ],
-  key2 => [
-    'uint'
-  ],
-  key3 => [
-    'uint'
-  ]
-];
-$result = $vc->validate($data, $rule);
-ok($result->is_valid('key1'));
-ok($result->is_valid('key2'));
-ok(!$result->is_valid('key3'));
+{
+  my $data = {key1 => 0, key2 => 9, key3 => '２'};
+  $rule = [
+    key1 => [
+      'uint'
+    ],
+    key2 => [
+      'uint'
+    ],
+    key3 => [
+      'uint'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  ok($result->is_valid('key1'));
+  ok($result->is_valid('key2'));
+  ok(!$result->is_valid('key3'));
+}
 
 # space unicode
-$data = {key1 => ' ', key2 => '　'};
-$rule = [
-  key1 => [
-    'space'
-  ],
-  key2 => [
-    'space'
-  ],
-];
-$result = $vc->validate($data, $rule);
-ok($result->is_valid('key1'));
-ok(!$result->is_valid('key2'));
+{
+  my $data = {key1 => ' ', key2 => '　'};
+  $rule = [
+    key1 => [
+      'space'
+    ],
+    key2 => [
+      'space'
+    ],
+  ];
+  $result = $vc->validate($data, $rule);
+  ok($result->is_valid('key1'));
+  ok(!$result->is_valid('key2'));
+}
 
 # not_space unicode
-$data = {key1 => ' ', key2 => '　'};
-$rule = [
-  key1 => [
-    'not_space'
-  ],
-  key2 => [
-    'not_space'
-  ],
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1'));
-ok($result->is_valid('key2'));
+{
+  my $data = {key1 => ' ', key2 => '　'};
+  $rule = [
+    key1 => [
+      'not_space'
+    ],
+    key2 => [
+      'not_space'
+    ],
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1'));
+  ok($result->is_valid('key2'));
+}
 
 # not_space unicode
-$data = {key1 => '　', key2 => '　', key3 => '　', key4 => '　'};
-$rule = [
-  key1 => [
-    'trim'
-  ],
-  key2 => [
-    'trim_lead'
-  ],
-  key3 => [
-    'trim_collapse'
-  ],
-  key4 => [
-    'trim_trail'
-  ]
-];
-$result = $vc->validate($data, $rule);
-is($result->data->{key1}, '　');
-is($result->data->{key2}, '　');
-is($result->data->{key3}, '　');
-is($result->data->{key4}, '　');
+{
+  my $data = {key1 => '　', key2 => '　', key3 => '　', key4 => '　'};
+  $rule = [
+    key1 => [
+      'trim'
+    ],
+    key2 => [
+      'trim_lead'
+    ],
+    key3 => [
+      'trim_collapse'
+    ],
+    key4 => [
+      'trim_trail'
+    ]
+  ];
+  $result = $vc->validate($data, $rule);
+  is($result->data->{key1}, '　');
+  is($result->data->{key2}, '　');
+  is($result->data->{key3}, '　');
+  is($result->data->{key4}, '　');
+}
 
 # lenght {min => ..., max => ...}
-$data = {
-  key1_1 => 'a',
-  key1_2 => 'aa',
-  key1_3 => 'aaa',
-  key1_4 => 'aaaa',
-  key1_5 => 'aaaaa',
-  key2_1 => 'a',
-  key2_2 => 'aa',
-  key2_3 => 'aaa',
-  key3_1 => 'aaa',
-  key3_2 => 'aaaa',
-  key3_3 => 'aaaaa'
-};
-$rule = [
-  key1_1 => [
-    {'length' => {min => 2, max => 4}}
-  ],
-  key1_2 => [
-    {'length' => {min => 2, max => 4}}
-  ],
-  key1_3 => [
-    {'length' => {min => 2, max => 4}}
-  ],
-  key1_4 => [
-    {'length' => {min => 2, max => 4}}
-  ],
-  key1_5 => [
-    {'length' => {min => 2, max => 4}}
-  ],
-  key2_1 => [
-    {'length' => {min => 2}}
-  ],
-  key2_2 => [
-    {'length' => {min => 2}}
-  ],
-  key2_3 => [
-    {'length' => {min => 2}}
-  ],
-  key3_1 => [
-    {'length' => {max => 4}}
-  ],
-  key3_2 => [
-    {'length' => {max => 4}}
-  ],
-  key3_3 => [
-    {'length' => {max => 4}}
-  ],
-];
-$result = $vc->validate($data, $rule);
-ok(!$result->is_valid('key1_1'));
-ok($result->is_valid('key1_2'));
-ok($result->is_valid('key1_3'));
-ok($result->is_valid('key1_4'));
-ok(!$result->is_valid('key1_5'));
-ok(!$result->is_valid('key2_1'));
-ok($result->is_valid('key2_2'));
-ok($result->is_valid('key2_3'));
-ok($result->is_valid('key3_1'));
-ok($result->is_valid('key3_2'));
-ok(!$result->is_valid('key3_3'));
+{
+  my $data = {
+    key1_1 => 'a',
+    key1_2 => 'aa',
+    key1_3 => 'aaa',
+    key1_4 => 'aaaa',
+    key1_5 => 'aaaaa',
+    key2_1 => 'a',
+    key2_2 => 'aa',
+    key2_3 => 'aaa',
+    key3_1 => 'aaa',
+    key3_2 => 'aaaa',
+    key3_3 => 'aaaaa'
+  };
+  $rule = [
+    key1_1 => [
+      {'length' => {min => 2, max => 4}}
+    ],
+    key1_2 => [
+      {'length' => {min => 2, max => 4}}
+    ],
+    key1_3 => [
+      {'length' => {min => 2, max => 4}}
+    ],
+    key1_4 => [
+      {'length' => {min => 2, max => 4}}
+    ],
+    key1_5 => [
+      {'length' => {min => 2, max => 4}}
+    ],
+    key2_1 => [
+      {'length' => {min => 2}}
+    ],
+    key2_2 => [
+      {'length' => {min => 2}}
+    ],
+    key2_3 => [
+      {'length' => {min => 2}}
+    ],
+    key3_1 => [
+      {'length' => {max => 4}}
+    ],
+    key3_2 => [
+      {'length' => {max => 4}}
+    ],
+    key3_3 => [
+      {'length' => {max => 4}}
+    ],
+  ];
+  $result = $vc->validate($data, $rule);
+  ok(!$result->is_valid('key1_1'));
+  ok($result->is_valid('key1_2'));
+  ok($result->is_valid('key1_3'));
+  ok($result->is_valid('key1_4'));
+  ok(!$result->is_valid('key1_5'));
+  ok(!$result->is_valid('key2_1'));
+  ok($result->is_valid('key2_2'));
+  ok($result->is_valid('key2_3'));
+  ok($result->is_valid('key3_1'));
+  ok($result->is_valid('key3_2'));
+  ok(!$result->is_valid('key3_3'));
+}
 
 # trim_uni
 {
