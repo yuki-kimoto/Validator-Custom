@@ -609,284 +609,225 @@ $vc_common->register_constraint(
   is_deeply($result->invalid_rule_keys, ['k2']);
 }
 
-my @infos = (
-  [
-    'duplication',
-    {
-      k1_1 => 'a',
-      k1_2 => 'a',
-      
-      k2_1 => 'a',
-      k2_2 => 'b'
-    },
-    [
-      {k1 => [qw/k1_1 k1_2/]} => [
-        'duplication'
-      ],
-      {k2 => [qw/k2_1 k2_2/]} => [
-        'duplication'
-      ]
-    ],
-    [qw/k2/]
-  ],
-  [
-    'regex',
-    {
-      k1 => 'aaa',
-      k2 => 'aa',
-    },
-    [
-      k1 => [
-        {'regex' => "a{3}"}
-      ],
-      k2 => [
-        {'regex' => "a{4}"}
-      ]
-    ],
-    [qw/k2/]
-  ],
-  [
-    'http_url',
-    {
-      k1 => 'http://www.lost-season.jp/mt/',
-      k2 => 'iii',
-    },
-    [
-      k1 => [
-        'http_url'
-      ],
-      k2 => [
-        'http_url'
-      ]
-    ],
-    [qw/k2/]
-  ],
-  [
-    'selected_at_least',
-    {
-      k1 => 1,
-      k2 =>[1],
-      k3 => [1, 2],
-      k4 => [],
-      k5 => [1,2]
-    },
-    [
-      k1 => [
-        {selected_at_least => 1}
-      ],
-      k2 => [
-        {selected_at_least => 1}
-      ],
-      k3 => [
-        {selected_at_least => 2}
-      ],
-      k4 => [
-        'selected_at_least'
-      ],
-      k5 => [
-        {'selected_at_least' => 3}
-      ]
-    ],
-    [qw/k5/]
-  ],
-  [
-    'greater_than',
-    {
-      k1 => 5,
-      k2 => 5,
-      k3 => 'a',
-    },
-    [
-      k1 => [
-        {'greater_than' => 5}
-      ],
-      k2 => [
-        {'greater_than' => 4}
-      ],
-      k3 => [
-        {'greater_than' => 1}
-      ]
-    ],
-    [qw/k1 k3/]
-  ],
-  [
-    'less_than',
-    {
-      k1 => 5,
-      k2 => 5,
-      k3 => 'a',
-    },
-    [
-      k1 => [
-        {'less_than' => 5}
-      ],
-      k2 => [
-        {'less_than' => 6}
-      ],
-      k3 => [
-        {'less_than' => 1}
-      ]
-    ],
-    [qw/k1 k3/]
-  ],
-  [
-    'equal_to',
-    {
-      k1 => 5,
-      k2 => 5,
-      k3 => 'a',
-    },
-    [
-      k1 => [
-        {'equal_to' => 5}
-      ],
-      k2 => [
-        {'equal_to' => 4}
-      ],
-      k3 => [
-        {'equal_to' => 1}
-      ]
-    ],
-    [qw/k2 k3/]
-  ],
-  [
-    'between',
-    {
-      k1 => 5,
-      k2 => 5,
-      k3 => 5,
-      k4 => 5,
-      k5 => 'a',
-    },
-    [
-      k1 => [
-        {'between' => [5, 6]}
-      ],
-      k2 => [
-        {'between' => [4, 5]}
-      ],
-      k3 => [
-        {'between' => [6, 7]}
-      ],
-      k4 => [
-        {'between' => [5, 5]}
-      ],
-      k5 => [
-        {'between' => [5, 5]}
-      ]
-    ],
-    [qw/k3 k5/]
-  ],
-  [
-    'decimal',
-    {
-      k1 => '12.123',
-      k2 => '12.123',
-      k3 => '12.123',
-      k4 => '12',
-      k5 => '123',
-      k6 => '123.a',
-      k7 => '1234.1234',
-      k8 => '',
-      k9 => 'a',
-      k10 => '1111111.12',
-      k11 => '1111111.123',
-      k12 => '12.1111111',
-      k13 => '123.1111111'
-    },
-    [
-      k1 => [
-        {'decimal' => [2,3]}
-      ],
-      k2 => [
-        {'decimal' => [1,3]}
-      ],
-      k3 => [
-        {'decimal' => [2,2]}
-      ],
-      k4 => [
-        {'decimal' => [2]}
-      ],
-      k5 => [
-        {'decimal' => 2}
-      ],
-      k6 => [
-        {'decimal' => 2}
-      ],
-      k7 => [
-        'decimal'
-      ],
-      k8 => [
-        'decimal'
-      ],
-      k9 => [
-        'decimal'
-      ],
-      k10 => [
-        {'decimal' => [undef, 2]}
-      ],
-      k11 => [
-        {'decimal' => [undef, 2]}
-      ],
-      k12 => [
-        {'decimal' => [2, undef]}
-      ],
-      k13 => [
-        {'decimal' => [2, undef]}
-      ]
-    ],
-    [qw/k2 k3 k5 k6 k8 k9 k11 k13/]
-  ],
-  [
-    'in_array',
-    {
-      k1 => 'a',
-      k2 => 'a',
-      k3 => undef
-    },
-    [
-      k1 => [
-        {'in_array' => [qw/a b/]}
-      ],
-      k2 => [
-        {'in_array' => [qw/b c/]}
-      ],
-      k3 => [
-        {'in_array' => [qw/b c/]}
-      ]
-    ],
-    [qw/k2 k3/]
-  ],
-  [
-    'shift array',
-    {
-      k1 => [1, 2]
-    },
-    [
-      k1 => [
-        'shift'
-      ]
-    ],
-    [],
-    {k1 => 1}
-  ],
-  [
-    'shift scalar',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        'shift'
-      ]
-    ],
-    [],
-    {k1 => 1}
-  ],
-);
+# duplication
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1_1 => 'a',
+    k1_2 => 'a',
+    
+    k2_1 => 'a',
+    k2_2 => 'b'
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic([qw/k1_1 k1_2/])->check('duplication')->name('k1');
+  $rule->topic([qw/k2_1 k2_2/])->check('duplication')->name('k2');
 
-foreach my $info (@infos) {
-  validate_ok(@$info);
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k2']);
+}
+
+# regex
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => 'aaa',
+    k2 => 'aa',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check({'regex' => "a{3}"});
+  $rule->topic('k2')->check({'regex' => "a{4}"});
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k2']);
+}
+
+# http_url
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => 'http://www.lost-season.jp/mt/',
+    k2 => 'iii',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('http_url');
+  $rule->topic('k2')->check('http_url');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k2']);
+}
+
+# selected_at_least
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => 1,
+    k2 =>[1],
+    k3 => [1, 2],
+    k4 => [],
+    k5 => [1,2]
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check({selected_at_least => 1});
+  $rule->topic('k2')->check({selected_at_least => 1});
+  $rule->topic('k3')->check({selected_at_least => 2});
+  $rule->topic('k4')->check('selected_at_least');
+  $rule->topic('k5')->check({'selected_at_least' => 3});
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k5']);
+}
+
+# greater_than
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => 5,
+    k2 => 5,
+    k3 => 'a',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check({'greater_than' => 5});
+  $rule->topic('k2')->check({'greater_than' => 4});
+  $rule->topic('k3')->check({'greater_than' => 1});
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k1', 'k3']);
+}
+
+# less_than
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => 5,
+    k2 => 5,
+    k3 => 'a',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check({'less_than' => 5});
+  $rule->topic('k2')->check({'less_than' => 6});
+  $rule->topic('k3')->check({'less_than' => 1});
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k1', 'k3']);
+}
+
+# less_than
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => 5,
+    k2 => 5,
+    k3 => 'a',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check({'equal_to' => 5});
+  $rule->topic('k2')->check({'equal_to' => 4});
+  $rule->topic('k3')->check({'equal_to' => 1});
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k2', 'k3']);
+}
+
+# between
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => 5,
+    k2 => 5,
+    k3 => 5,
+    k4 => 5,
+    k5 => 'a',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check({'between' => [5, 6]});
+  $rule->topic('k2')->check({'between' => [4, 5]});
+  $rule->topic('k3')->check({'between' => [6, 7]});
+  $rule->topic('k4')->check({'between' => [5, 5]});
+  $rule->topic('k5')->check({'between' => [5, 5]});
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k3', 'k5']);
+}
+
+# decimal
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => '12.123',
+    k2 => '12.123',
+    k3 => '12.123',
+    k4 => '12',
+    k5 => '123',
+    k6 => '123.a',
+    k7 => '1234.1234',
+    k8 => '',
+    k9 => 'a',
+    k10 => '1111111.12',
+    k11 => '1111111.123',
+    k12 => '12.1111111',
+    k13 => '123.1111111'
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check({'decimal' => [2,3]});
+  $rule->topic('k2')->check({'decimal' => [1,3]});
+  $rule->topic('k3')->check({'decimal' => [2,2]});
+  $rule->topic('k4')->check({'decimal' => [2]});
+  $rule->topic('k5')->check({'decimal' => 2});
+  $rule->topic('k6')->check({'decimal' => 2});
+  $rule->topic('k7')->check('decimal');
+  $rule->topic('k8')->check('decimal');
+  $rule->topic('k9')->check('decimal');
+  $rule->topic('k10')->check({'decimal' => [undef, 2]});
+  $rule->topic('k11')->check({'decimal' => [undef, 2]});
+  $rule->topic('k12')->check({'decimal' => [2, undef]});
+  $rule->topic('k13')->check({'decimal' => [2, undef]});
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, [qw/k2 k3 k5 k6 k8 k9 k11 k13/]);
+}
+
+# in_array
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => 'a',
+    k2 => 'a',
+    k3 => undef
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check({'in_array' => [qw/a b/]});
+  $rule->topic('k2')->check({'in_array' => [qw/b c/]});
+  $rule->topic('k3')->check({'in_array' => [qw/b c/]});
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->invalid_rule_keys, ['k2', 'k3']);
+}
+
+# shift
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => [1, 2]
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('shift');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->data, {k1 => 1});
+}
+
+# shift
+{
+  my $vc = Validator::Custom->new;
+  my $data = {
+    k1 => 1
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('shift');
+
+  my $result = $vc->validate($data, $rule);
+  is_deeply($result->data, {k1 => 1});
 }
 
 # exception
@@ -1027,20 +968,6 @@ my @exception_infos = (
 
 foreach my $exception_info (@exception_infos) {
   validate_exception(@$exception_info)
-}
-
-sub validate_ok {
-  my ($test_name, $data, $validation_rule, $invalid_rule_keys, $result_data) = @_;
-  my $vc = Validator::Custom->new;
-  my $r = $vc->validate($data, $validation_rule);
-  is_deeply($r->invalid_rule_keys, $invalid_rule_keys, "$test_name invalid_rule_keys");
-  
-  if (ref $result_data eq 'CODE') {
-      $result_data->($r);
-  }
-  elsif($result_data) {
-      is_deeply($r->data, $result_data, "$test_name result data");
-  }
 }
 
 sub validate_exception {
