@@ -291,7 +291,8 @@ sub optional {
   return $self;
 }
 
-sub required {
+# Version 0 method(Not used now)
+sub require {
   my ($self, $key) = @_;
   
   # Create topic
@@ -304,9 +305,6 @@ sub required {
 
   return $self;
 }
-
-# Version 0 method(Not used now)
-sub require { shift->required(@_) }
 
 # Version 0 method(Not used now)
 sub parse {
@@ -484,10 +482,3 @@ Set result key name
   $rule->optional('id');
 
 Set key and set required option to 0.
-
-=head2 required
-
-  $rule->required('id');
-  $rule->required(['id1', 'id2']);
-
-Set key.
