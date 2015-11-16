@@ -206,14 +206,6 @@ $vc_common->register_constraint(
 }
 
 {
-  my $data = {k1 => [1,2]};
-  my $rule = [
-    k1 => [
-      ['@C1', "k1Error1"],
-      ['@C1', "k1Error1"]
-    ],
-  ];    
-  
   my $vc = Validator::Custom->new;
   $vc->register_constraint(
     C1 => sub {
@@ -221,6 +213,10 @@ $vc_common->register_constraint(
       return [1, $value * 2];
     }
   );
+  my $data = {k1 => [1,2]};
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->each(1)->check('C1')->message("k1Error1")
+    ->check('C1')->message("k1Error1");
 
   my $result= $vc->validate($data, $rule);
   is_deeply(scalar $result->messages, [], 'no error');
