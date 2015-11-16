@@ -2,7 +2,7 @@ package Validator::Custom::Rule;
 use Object::Simple -base;
 use Carp 'croak';
 
-has 'topic';
+has 'topic_info' => sub { {} };
 has 'content' => sub { [] };
 has 'validator';
 
@@ -195,11 +195,11 @@ sub each {
   my $self = shift;
   
   if (@_) {
-    $self->topic->{each} = $_[0];
+    $self->topic_info->{each} = $_[0];
     return $self;
   }
   else {
-    return $self->topic->{each};
+    return $self->topic_info->{each};
   }
   
   return $self;
@@ -212,10 +212,10 @@ sub check_or {
   $constraint_h->{constraint} = \@constraints;
   
   my $cinfo = $self->validator->_parse_constraint($constraint_h);
-  $cinfo->{each} = $self->topic->{each};
+  $cinfo->{each} = $self->topic_info->{each};
   
-  $self->topic->{constraints} ||= [];
-  push @{$self->topic->{constraints}}, $cinfo;
+  $self->topic_info->{constraints} ||= [];
+  push @{$self->topic_info->{constraints}}, $cinfo;
   
   return $self;
 }
@@ -236,12 +236,12 @@ sub check {
       $constraint_h->{constraint} = $constraint;
     }
     my $cinfo = $self->validator->_parse_constraint($constraint_h);
-    $cinfo->{each} = $self->topic->{each};
+    $cinfo->{each} = $self->topic_info->{each};
     push @$constraints_h, $cinfo;
   }
 
-  $self->topic->{constraints} ||= [];
-  $self->topic->{constraints} = [@{$self->topic->{constraints}}, @{$constraints_h}];
+  $self->topic_info->{constraints} ||= [];
+  $self->topic_info->{constraints} = [@{$self->topic_info->{constraints}}, @{$constraints_h}];
   
   return $self;
 }
@@ -249,7 +249,7 @@ sub check {
 sub default {
   my ($self, $default) = @_;
   
-  $self->topic->{option}{default} = $default;
+  $self->topic_info->{option}{default} = $default;
   
   return $self;
 }
@@ -257,7 +257,7 @@ sub default {
 sub message {
   my ($self, $message) = @_;
   
-  my $constraints = $self->topic->{constraints} || [];
+  my $constraints = $self->topic_info->{constraints} || [];
   for my $constraint (@$constraints) {
     $constraint->{message} ||= $message;
   }
@@ -268,25 +268,34 @@ sub message {
 sub name {
   my ($self, $result_key) = @_;
   
-  my $key = $self->topic->{key};
-  $self->topic->{key} = {$result_key => $key};
+  my $key = $self->topic_info->{key};
+  $self->topic_info->{key} = {$result_key => $key};
   
   return $self;
 }
 
+sub topic {
+  my ($self, $key) = @_;
+  
+  # Create topic
+  my $topic_info = {};
+  $topic_info->{key} = $key;
+  $self->topic_info($topic_info);
+  
+}
 sub optional {
   my ($self, $key) = @_;
 
   # Create topic
-  my $topic = {};
-  $topic->{key} = $key;
-  $self->topic($topic);
+  if (defined $key) {
+    $self->topic($key);
+  }
   
   # Value is optional
-  $topic->{option}{require} = 0;
+  $self->topic_info->{option}{require} = 0;
   
   # Add topic to rule
-  push @{$self->content}, $topic;
+  push @{$self->content}, $self->topic_info;
   
   return $self;
 }
@@ -296,13 +305,13 @@ sub require {
   my ($self, $key) = @_;
   
   # Create topic
-  my $topic = {};
-  $topic->{key} = $key;
-  $self->topic($topic);
+  if (defined $key) {
+    $self->topic($key);
+  }
   
   # Add topic to rule
-  push @{$self->content}, $topic;
-
+  push @{$self->content}, $self->topic_info;
+  
   return $self;
 }
 
@@ -369,7 +378,7 @@ sub parse {
 sub copy {
   my ($self, $copy) = @_;
   
-  $self->topic->{option}{copy} = $copy;
+  $self->topic_info->{option}{copy} = $copy;
   
   return $self;
 }
