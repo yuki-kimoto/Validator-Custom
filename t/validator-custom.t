@@ -147,40 +147,13 @@ use Validator::Custom;
 }
 
 {
-  eval{Validator::Custom->new->validate({k => 1}, [ k => [['===', 'error']]])->validate};
-  like($@, qr/\QConstraint name '===' must be [A-Za-z0-9_]/, 'constraint invalid name')
-}
-
-{
+  my $vc = $vc_common;
   my $data = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
-  my $rule = [
-    k1 => [
-      ['Int', "k1Error1"],
-    ],
-    k2 => [
-      ['Int', "k2Error1"],
-    ],
-    k3 => [
-      ['Num', "k3Error1"],
-    ],
-    k4 => [
-      ['Num', "k4Error1"],
-    ],
-  ];
-  my $vc = Validator::Custom->new;
-  $vc->register_constraint(
-      Int => sub{$_[0] =~ /^\d+$/},
-      Num => sub{
-          require Scalar::Util;
-          Scalar::Util::looks_like_number($_[0]);
-      },
-      C1 => sub {
-          my ($value, $args, $options) = @_;
-          return [1, $value * 2];
-      },
-      aaa => sub {$_[0] eq 'aaa'},
-      bbb => sub {$_[0] eq 'bbb'}
-  );
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('Int')->message("k1Error1");
+  $rule->topic('k2')->check('Int')->message("k2Error1");
+  $rule->topic('k3')->check('Num')->message("k3Error1");
+  $rule->topic('k4')->check('Num')->message("k4Error1");
   my $result= $vc->validate($data, $rule);
   is_deeply($result->messages, [qw/k2Error1 k4Error1/], 'Custom validator');
   is_deeply($result->invalid_rule_keys, [qw/k2 k4/], 'invalid keys hash');
