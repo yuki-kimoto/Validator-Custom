@@ -226,128 +226,107 @@ $vc_common->register_constraint(
 
 
 {
+  my $vc = $vc_common;
   my $data = { k1 => 1};
-  my $rule = [
-    k1 => [
-      ['Int', "k1Error1"],
-    ],
-  ];    
-  my $messages = Validator::Custom
-    ->new
-    ->register_constraint(Int => sub{$_[0] =~ /^\d+$/})
-    ->validate($data, $rule)->messages;
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('Int')->message("k1Error1");
+  my $messages = $vc->validate($data, $rule)->messages;
   is(scalar @$messages, 0, 'no error');
 }
 
 {
+  my $vc = Validator::Custom->new;
   my $data = { k1 => 1, k2 => 'a', k3 => '  3  ', k4 => 4, k5 => 5, k6 => 5, k7 => 'a', k11 => [1,2]};
-  my $rule = [
-    k1 => [
-      [{'C1' => [3, 4]}, "k1Error1"],
-    ],
-    k2 => [
-      [{'C2' => [3, 4]}, "k2Error1" ],
-    ],
-    k3 => [
-      'TRIM_LEAD',
-      'TRIM_TRAIL'
-    ],
-    k4 => [
-      ['NO_ERROR']
-    ],
+
+  $vc->register_constraint(
+    C1 => sub {
+      my ($value, $args) = @_;
+      
+      return [1, [$value, $args]];
+    },
+    
+    C2 => sub {
+      my ($value, $args) = @_;
+      
+      return [0, [$value, $args]];
+    },
+    
+    TRIM_LEAD => sub {
+      my $value = shift;
+      
+      $value =~ s/^ +//;
+      
+      return [1, $value];
+    },
+    
+    TRIM_TRAIL => sub {
+      my $value = shift;
+      
+      $value =~ s/ +$//;
+      
+      return [1, $value];
+    },
+    
+    NO_ERROR => sub {
+      return [0, 'a'];
+    },
+    
+    C3 => sub {
+      my ($values, $args) = @_;
+      if ($values->[0] == $values->[1] && $values->[0] == $args->[0]) {
+          return 1;
+      }
+      else {
+          return 0;
+      }
+    },
+    C4 => sub {
+      my ($value, $arg) = @_;
+      return defined $arg ? 1 : 0;
+    },
+    C5 => sub {
+      my ($value, $arg) = @_;
+      return [1, $arg];
+    },
+    C6 => sub {
+      my $self = $_[2];
+      return [1, $self];
+    }
+  );
+
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check({'C1' => [3, 4]})->message("k1Error1");
+  $rule->topic('k2')->check({'C2' => [3, 4]})->message("k2Error1");
+  $rule->topic('k3')->filter('TRIM_LEAD')->filter('TRIM_TRAIL');
+  $rule->topic('k4')->check('NO_ERROR');
+  $rule->topic(['k5', 'k6'])->check({'C3' => [5]})->message('k5 k6 Error');
+  $rule->topic('k7')->check({'C2' => [3, 4]});
+  $rule->topic('k11')->each(1)->check('C6');
+  
+  my $result= $vc->validate($data, $rule);
+  is_deeply($result->messages, 
+            ['k2Error1', 'Error message not specified',
+             'Error message not specified'
+            ], 'variouse options');
+  
+  is_deeply($result->invalid_rule_keys, [qw/k2 k4 k7/], 'invalid key');
+  
+  is_deeply($result->data->{k1},[1, [3, 4]], 'data');
+  ok(!$result->data->{k2}, 'data not exist in error case');
+  cmp_ok($result->data->{k3}, 'eq', 3, 'filter');
+  ok(!$result->data->{k4}, 'data not set in case error');
+
+  $data = {k5 => 5, k6 => 6};
+  $rule = [
     [qw/k5 k6/] => [
       [{'C3' => [5]}, 'k5 k6 Error']
-    ],
-    k7 => [
-      {'C2' => [3, 4]},
-    ],
-    k11 => [
-      '@C6'
     ]
   ];
   
-  {
-    my $vc = Validator::Custom->new;
-    $vc->register_constraint(
-      C1 => sub {
-        my ($value, $args) = @_;
-        
-        return [1, [$value, $args]];
-      },
-      
-      C2 => sub {
-        my ($value, $args) = @_;
-        
-        return [0, [$value, $args]];
-      },
-      
-      TRIM_LEAD => sub {
-        my $value = shift;
-        
-        $value =~ s/^ +//;
-        
-        return [1, $value];
-      },
-      
-      TRIM_TRAIL => sub {
-        my $value = shift;
-        
-        $value =~ s/ +$//;
-        
-        return [1, $value];
-      },
-      
-      NO_ERROR => sub {
-        return [0, 'a'];
-      },
-      
-      C3 => sub {
-        my ($values, $args) = @_;
-        if ($values->[0] == $values->[1] && $values->[0] == $args->[0]) {
-            return 1;
-        }
-        else {
-            return 0;
-        }
-      },
-      C4 => sub {
-        my ($value, $arg) = @_;
-        return defined $arg ? 1 : 0;
-      },
-      C5 => sub {
-        my ($value, $arg) = @_;
-        return [1, $arg];
-      },
-      C6 => sub {
-        my $self = $_[2];
-        return [1, $self];
-      }
-    );
-    my $result= $vc->validate($data, $rule);
-    is_deeply($result->messages, 
-              ['k2Error1', 'Error message not specified',
-               'Error message not specified'
-              ], 'variouse options');
-    
-    is_deeply($result->invalid_rule_keys, [qw/k2 k4 k7/], 'invalid key');
-    
-    is_deeply($result->data->{k1},[1, [3, 4]], 'data');
-    ok(!$result->data->{k2}, 'data not exist in error case');
-    cmp_ok($result->data->{k3}, 'eq', 3, 'filter');
-    ok(!$result->data->{k4}, 'data not set in case error');
-
-    $data = {k5 => 5, k6 => 6};
-    $rule = [
-      [qw/k5 k6/] => [
-        [{'C3' => [5]}, 'k5 k6 Error']
-      ]
-    ];
-    
-    $result= $vc->validate($data, $rule);
-    local $SIG{__WARN__} = sub {};
-    ok(!$result->is_valid, 'corelative invalid_rule_keys');
-    is(scalar @{$result->invalid_rule_keys}, 1, 'corelative invalid_rule_keys');
-  }
+  $result= $vc->validate($data, $rule);
+  local $SIG{__WARN__} = sub {};
+  ok(!$result->is_valid, 'corelative invalid_rule_keys');
+  is(scalar @{$result->invalid_rule_keys}, 1, 'corelative invalid_rule_keys');
 }
 
 {
