@@ -428,54 +428,6 @@ $vc_common->register_constraint(
   is_deeply($vc->validate($data, $rule)->invalid_rule_keys, [qw/k1_1 k2_1/], 'register_constraints object');
 }
 
-# or expression
-{
-  my $vc = $vc_common;
-  my $rule = [
-    key0 => [
-      ['Int', 'Error-key0']
-    ],
-    key1 => [
-      ['Int', 'Error-key1-0'],
-      'Int'
-    ],
-    key1 => [
-      ['aaa', 'Error-key1-1'],
-      'aaa'
-    ],
-    key1 => [
-      ['bbb', 'Error-key1-2']
-    ],
-    key2 => [
-      ['Int', 'Error-key2']
-    ]
-  ];
-
-  {
-    my $params = {key1 => 1, key0 => 1, key2 => 2};
-    my $vresult = $vc->validate($params, $rule);
-    ok($vresult->is_ok, "first key");
-  }
-
-  {
-    my $params = {key1 => 'aaa', key0 => 1, key2 => 2};
-    my $vresult = $vc->validate($params, $rule);
-    ok($vresult->is_ok, "second key");
-  }
-
-  {
-    my $params = {key1 => 'ccc', key0 => 1, key2 => 2};
-    my $vresult = $vc->validate($params, $rule);
-    ok(!$vresult->is_ok, "invalid");
-    is_deeply($vresult->invalid_rule_keys, ['key1'], "invalid_rule_keys");
-    is_deeply($vresult->messages, ['Error-key1-0'], "errors");
-    is_deeply($vresult->messages, ['Error-key1-0'], "messages");
-    is($vresult->message('key1'), 'Error-key1-0', "error");
-    eval{ $vresult->message };
-    like($@, qr/Parameter name must be specified/, 'error not Parameter name');
-  }
-}
-
 # Validator::Custom::Result raw_invalid_rule_keys'
 {
   my $vc = Validator::Custom->new;
@@ -489,17 +441,10 @@ $vc_common->register_constraint(
   });
   
   my $data = {k1 => 1, k2 => 2, k3 => 3, k4 => 1};
-  my $rule = [
-    {k12 => ['k1', 'k2']} => [
-      'p'
-    ],
-    k3 => [
-      'q'
-    ],
-    k4 => [
-      'q'
-    ]
-  ];
+  my $rule = $vc->create_rule;
+  $rule->topic(['k1', 'k2'])->check('p')->name('k12');
+  $rule->topic('k3')->check('q');
+  $rule->topic('k4')->check('q');
   my $vresult = $vc->validate($data, $rule);
 
   is_deeply($vresult->invalid_rule_keys, ['k12', 'k3'], 'invalid_rule_keys');
@@ -2383,54 +2328,26 @@ sub validate_exception {
 
 # trim_uni
 {
+  my $vc = Validator::Custom->new;
   my $data = {
     int_param => '　　123　　',
     collapse  => "　　\n a \r\n b\nc  \t　　",
     left      => '　　abc　　',
     right     => '　　def　　'
   };
+  my $rule = $vc->create_rule;
+  $rule->topic('int_param')->check('trim_uni');
+  $rule->topic('collapse')->check('trim_uni_collapse');
+  $rule->topic('left')->check('trim_uni_lead');
+  $rule->topic('right')->check('trim_uni_trail');
 
-  my $validation_rule = [
-    int_param => [
-      ['trim_uni']
-    ],
-    collapse  => [
-      ['trim_uni_collapse']
-    ],
-    left      => [
-      ['trim_uni_lead']
-    ],
-    right     => [
-      ['trim_uni_trail']
-    ]
-  ];
-
-  my $result_data= Validator::Custom->new->validate($data,$validation_rule)->data;
+  my $result_data= Validator::Custom->new->validate($data,$rule)->data;
 
   is_deeply(
     $result_data, 
     { int_param => '123', left => "abc　　", right => '　　def', collapse => "a b c"},
     'trim check'
   );
-}
-
-{
-  # Rule object
-  my $vc = Validator::Custom->new;
-  my $rule = [
-    k1 => [
-      ['int' => 'a']
-    ],
-    k2 => 'int'
-  ];
-  my $vresult = eval { $vc->validate({}, $rule) };
-  my $rule_obj = $vc->rule_obj;
-  
-  is($rule_obj->rule->[0]{key}, 'k1');
-  is($rule_obj->rule->[0]{constraints}[0]{original_constraint}, 'int');
-  is($rule_obj->rule->[0]{constraints}[0]{message}, 'a');
-  is($rule_obj->rule->[1]{constraints}{ERROR}{value}, 'int');
-  like($rule_obj->rule->[1]{constraints}{ERROR}{message}, qr/Constraints must be array reference/);
 }
 
 # Custom error message
@@ -2458,14 +2375,9 @@ sub validate_exception {
       }
     }
   );
-  my $rule = [
-    k1 => [
-      'c1'
-    ],
-    k2 => [
-      '@c2'
-    ]
-  ];
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('c1');
+  $rule->topic('k2')->each(1)->check('c2');
   my $vresult = $vc->validate({k1 => 'a', k2 => 'a'}, $rule);
   ok($vresult->is_ok);
   $vresult = $vc->validate({k1 => 'b', k2 => 'b'}, $rule);
@@ -2483,53 +2395,22 @@ sub validate_exception {
       return {result => 1, output => $value * 2};
     }
   );
-  my $rule = [
-    k1 => [
-      'c1'
-    ],
-    k2 => [
-      '@c1'
-    ]
-  ];
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('c1');
+  $rule->topic('k2')->each(1)->check('c1');
   my $vresult = $vc->validate({k1 => 1, k2 => [2, 3]}, $rule);
   ok($vresult->is_ok);
   is($vresult->data->{k1}, 2);
   is_deeply($vresult->data->{k2}, [4, 6]);
 }
 
-# Pass rule object to validate method
-{
-  my $vc = Validator::Custom->new;
-  my $rule = [
-    k1 => [
-      'not_blank'
-    ],
-    k2 => [
-      'not_blank'
-    ]
-  ];
-  my $rule_obj = $vc->create_rule;
-  $rule_obj->parse($rule);
-  
-  my $vresult = $vc->validate({k1 => 'a', k2 => ''}, $rule_obj);
-  ok($vresult->is_valid('k1'));
-  ok(!$vresult->is_valid('k2'));
-}
-
 # Use constraints function from $_
 {
   my $vc = Validator::Custom->new;
-  my $rule = [
-    k1 => [
-      sub { $_->blank(@_) || $_->regex($_[0], qr/[0-9]+/) }
-    ],
-    k2 => [
-      sub { $_->blank(@_) || $_->regex($_[0], qr/[0-9]+/) }
-    ],
-    k3 => [
-      sub { $_->blank(@_) || $_->regex($_[0], qr/[0-9]+/) }
-    ],
-  ];
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check(sub { $_->blank(@_) || $_->regex($_[0], qr/[0-9]+/) });
+  $rule->topic('k2')->check(sub { $_->blank(@_) || $_->regex($_[0], qr/[0-9]+/) });
+  $rule->topic('k3')->check(sub { $_->blank(@_) || $_->regex($_[0], qr/[0-9]+/) });
   
   my $vresult = $vc->validate({k1 => '', k2 => '123', k3 => 'abc'}, $rule);
   ok($vresult->is_valid('k1'));
@@ -2544,18 +2425,10 @@ sub validate_exception {
   # new rule syntax - basic
   {
     my $rule = $vc->create_rule;
-    $rule->topic('k1')->check(
-      'not_blank'
-    );
-    $rule->topic('k2')->check(
-      'not_blank'
-    );
-    $rule->topic('k3')->check(
-      ['not_blank' => 'k3 is empty']
-    );
-    $rule->topic('k4')->optional->check(
-      'not_blank'
-    )->default(5);
+    $rule->topic('k1')->check('not_blank');
+    $rule->topic('k2')->check('not_blank');
+    $rule->topic('k3')->check('not_blank')->message('k3 is empty');
+    $rule->topic('k4')->optional->check('not_blank')->default(5);
     my $vresult = $vc->validate({k1 => 'aaa', k2 => '', k3 => '', k4 => ''}, $rule);
     ok($vresult->is_valid('k1'));
     is($vresult->data->{k1}, 'aaa');
@@ -2568,25 +2441,11 @@ sub validate_exception {
   # new rule syntax - message option
   {
     my $rule = $vc->create_rule;
-    $rule->topic('k1')->check(
-      'not_blank'
-    )->message('k1 is invalid');
+    $rule->topic('k1')->check('not_blank')->message('k1 is invalid');
 
     my $vresult = $vc->validate({k1 => ''}, $rule);
     ok(!$vresult->is_valid('k1'));
     is($vresult->message('k1'), 'k1 is invalid');
-  }
-  
-  # new rule syntax - copy option
-  {
-    my $rule = $vc->create_rule;
-    $rule->topic('k1')->check(
-      'not_blank'
-    )->copy(0);
-
-    my $vresult = $vc->validate({k1 => 'aaa'}, $rule);
-    ok($vresult->is_valid('k1'));
-    ok(!defined $vresult->data->{'k1'});
   }
 }
 
