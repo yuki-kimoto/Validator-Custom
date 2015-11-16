@@ -831,150 +831,138 @@ $vc_common->register_constraint(
 }
 
 # exception
-my @exception_infos = (
-  [
-    'length need parameter',
-    {
+{
+  # exception - length need parameter
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
       k1 => 'a',
-    },
-    [
-      k1 => [
-        'length'
-      ]
-    ],
-    qr/\QConstraint 'length' needs one or two arguments/
-  ],
-  [
-    'greater_than target undef',
-    {
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check('length');
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\QConstraint 'length' needs one or two arguments/);
+  }
+  
+  # exception - greater_than target undef
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
       k1 => 1
-    },
-    [
-      k1 => [
-        'greater_than'
-      ]
-    ],
-    qr/\QConstraint 'greater_than' needs a numeric argument/
-  ],
-  [
-    'greater_than not number',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        {'greater_than' => 'a'}
-      ]
-    ],
-    qr/\QConstraint 'greater_than' needs a numeric argument/
-  ],
-  [
-    'less_than target undef',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        'less_than'
-      ]
-    ],
-    qr/\QConstraint 'less_than' needs a numeric argument/
-  ],
-  [
-    'less_than not number',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        {'less_than' => 'a'}
-      ]
-    ],
-    qr/\QConstraint 'less_than' needs a numeric argument/
-  ],
-  [
-    'equal_to target undef',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        'equal_to'
-      ]
-    ],
-    qr/\QConstraint 'equal_to' needs a numeric argument/
-  ],
-  [
-    'equal_to not number',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        {'equal_to' => 'a'}
-      ]
-    ],
-    qr/\QConstraint 'equal_to' needs a numeric argument/
-  ],
-  [
-    'between target undef',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        {'between' => [undef, 1]}
-      ]
-    ],
-    qr/\QConstraint 'between' needs two numeric arguments/
-  ],
-  [
-    'between target undef or not number1',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        {'between' => ['a', 1]}
-      ]
-    ],
-    qr/\QConstraint 'between' needs two numeric arguments/
-  ],
-  [
-    'between target undef or not number2',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        {'between' => [1, undef]}
-      ]
-    ],
-    qr/\QConstraint 'between' needs two numeric arguments/
-  ],
-  [
-    'between target undef or not number3',
-    {
-      k1 => 1
-    },
-    [
-      k1 => [
-        {'between' => [1, 'a']}
-      ]
-    ],
-    qr/\Qbetween' needs two numeric arguments/
-  ],
-);
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check('greater_than');
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\QConstraint 'greater_than' needs a numeric argument/);
+  }
 
-foreach my $exception_info (@exception_infos) {
-  validate_exception(@$exception_info)
-}
+  # exception - greater_than not number
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
+      k1 => 1
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check({'greater_than' => 'a'});
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\QConstraint 'greater_than' needs a numeric argument/);
+  }
 
-sub validate_exception {
-  my ($test_name, $data, $validation_rule, $error) = @_;
-  my $vc = Validator::Custom->new;
-  eval{$vc->validate($data, $validation_rule)};
-  like($@, $error, "$test_name exception");
+  # exception - less_than target undef
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
+      k1 => 1
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check('less_than');
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\QConstraint 'less_than' needs a numeric argument/);
+  }
+
+  # exception - less_than not number
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
+      k1 => 1
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check({'less_than' => 'a'});
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\QConstraint 'less_than' needs a numeric argument/);
+  }
+
+  # exception - equal_to target undef
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
+      k1 => 1
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check('equal_to');
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\QConstraint 'equal_to' needs a numeric argument/);
+  }
+
+  # exception - equal_to not number
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
+      k1 => 1
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check({'equal_to' => 'a'});
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\QConstraint 'equal_to' needs a numeric argument/);
+  }
+
+  # exception - between undef
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
+      k1 => 1
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check({'between' => [undef, 1]});
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\QConstraint 'between' needs two numeric arguments/);
+  }
+
+  # exception - between target undef or not number1
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
+      k1 => 1
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check({'between' => ['a', 1]});
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\QConstraint 'between' needs two numeric arguments/);
+  }
+
+  # exception - between target undef or not number2
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
+      k1 => 1
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check({'between' => [1, undef]});
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\QConstraint 'between' needs two numeric arguments/);
+  }
+
+  # exception - between target undef or not number3
+  {
+    my $vc = Validator::Custom->new;
+    my $data = {
+      k1 => 1
+    };
+    my $rule = $vc->create_rule;
+    $rule->topic('k1')->check({'between' => [1, 'a']});
+    eval { $vc->validate($data, $rule) };
+    like($@, qr/\Qbetween' needs two numeric arguments/);
+  }
 }
 
 # trim;
