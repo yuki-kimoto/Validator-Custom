@@ -6,7 +6,7 @@ use warnings;
 use Carp 'croak';
 
 sub date_to_timepiece {
-  my $value = shift;
+  my ($rule, $value) = @_;
   
   require Time::Piece;
   
@@ -51,7 +51,7 @@ sub date_to_timepiece {
 }
 
 sub datetime_to_timepiece {
-  my $value = shift;
+  my ($rule, $value) = @_;
   
   require Time::Piece;
   
@@ -101,7 +101,7 @@ sub datetime_to_timepiece {
 }
 
 sub merge {
-  my $values = shift;
+  my ($rule, $values) = @_;
   
   $values = [$values] unless ref $values eq 'ARRAY';
   
@@ -109,17 +109,15 @@ sub merge {
 }
 
 sub shift_array {
-  my $values = shift;
+  my ($rule, $values) = @_;
   
   $values = [$values] unless ref $values eq 'ARRAY';
   
   return shift @$values;
 }
 
-sub space { defined $_[0] && $_[0] =~ '^[ \t\n\r\f]*$' ? 1 : 0 }
-
 sub to_array {
-  my $value = shift;
+  my ($rule, $value) = @_;
   
   $value = [$value] unless ref $value eq 'ARRAY';
   
@@ -127,7 +125,7 @@ sub to_array {
 }
 
 sub to_array_remove_blank {
-  my $values = shift;
+  my ($rule, $values) = @_;
   
   $values = [$values] unless ref $values eq 'ARRAY';
   $values = [grep { defined $_ && CORE::length $_} @$values];
@@ -136,13 +134,13 @@ sub to_array_remove_blank {
 }
 
 sub trim {
-  my $value = shift;
+  my ($rule, $value) = @_;
   $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms if defined $value;
   return $value;
 }
 
 sub trim_collapse {
-  my $value = shift;
+  my ($rule, $value) = @_;
   if (defined $value) {
     $value =~ s/[ \t\n\r\f]+/ /g;
     $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
@@ -151,25 +149,25 @@ sub trim_collapse {
 }
 
 sub trim_lead {
-  my $value = shift;
+  my ($rule, $value) = @_;
   $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms if defined $value;
   return $value;
 }
 
 sub trim_trail {
-  my $value = shift;
+  my ($rule, $value) = @_;
   $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms if defined $value;
   return $value;
 }
 
 sub trim_uni {
-  my $value = shift;
+  my ($rule, $value) = @_;
   $value =~ s/^\s*(.*?)\s*$/$1/ms if defined $value;
   return $value;
 }
 
 sub trim_uni_collapse {
-  my $value = shift;
+  my ($rule, $value) = @_;
   if (defined $value) {
     $value =~ s/\s+/ /g;
     $value =~ s/^\s*(.*?)\s*$/$1/ms;
@@ -178,13 +176,13 @@ sub trim_uni_collapse {
 }
 
 sub trim_uni_lead {
-  my $value = shift;
+  my ($rule, $value) = @_;
   $value =~ s/^\s+(.*)$/$1/ms if defined $value;
   return $value;
 }
 
 sub trim_uni_trail {
-  my $value = shift;
+  my ($rule, $value) = @_;
   $value =~ s/^(.*?)\s+$/$1/ms if defined $value;
   return $value;
 }

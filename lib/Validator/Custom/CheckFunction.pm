@@ -7,10 +7,10 @@ use Carp 'croak';
 
 my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 
-sub ascii { defined $_[0] && $_[0] =~ /^[\x21-\x7E]+$/ ? 1 : 0 }
+sub ascii { defined $_[1] && $_[1] =~ /^[\x21-\x7E]+$/ ? 1 : 0 }
 
 sub between {
-  my ($value, $args) = @_;
+  my ($rule, $value, $args) = @_;
   my ($start, $end) = @$args;
 
     
@@ -21,7 +21,7 @@ sub between {
   return $value >= $start && $value <= $end ? 1 : 0;
 }
 
-sub blank { defined $_[0] && $_[0] eq '' }
+sub blank { defined $_[1] && $_[1] eq '' }
 
 sub date {
   my $value = shift;
@@ -69,7 +69,7 @@ sub date {
 }
 
 sub datetime {
-  my $value = shift;
+  my ($rule, $value) @_;
   
   require Time::Piece;
   
@@ -119,9 +119,7 @@ sub datetime {
 }
 
 sub decimal {
-  my ($value, $digits_tmp) = @_;
-  
-  $DB::single = 1;
+  my ($rule, $value, $digits_tmp) = @_;
   
   # Œ…”î•ñ‚ð®—
   my $digits;
@@ -162,14 +160,14 @@ sub decimal {
 }
 
 sub duplication {
-  my $values = shift;
+  my ($rule, $values) @_;
 
   return 0 unless defined $values->[0] && defined $values->[1];
   return $values->[0] eq $values->[1];
 }
 
 sub equal_to {
-  my ($value, $target) = @_;
+  my ($rule, $value, $target) = @_;
   
   croak "Constraint 'equal_to' needs a numeric argument"
     unless defined $target && $target =~ /$NUM_RE/;
@@ -179,7 +177,7 @@ sub equal_to {
 }
 
 sub greater_than {
-  my ($value, $target) = @_;
+  my ($rule, $value, $target) = @_;
   
   croak "Constraint 'greater_than' needs a numeric argument"
     unless defined $target && $target =~ /$NUM_RE/;
@@ -189,20 +187,20 @@ sub greater_than {
 }
 
 sub http_url {
-  return defined $_[0] && $_[0] =~ /^s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/ ? 1 : 0;
+  return defined $_[1] && $_[1] =~ /^s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/ ? 1 : 0;
 }
 
-sub int { defined $_[0] && $_[0] =~ /^\-?[0-9]+$/ ? 1 : 0 }
+sub int { defined $_[1] && $_[1] =~ /^\-?[0-9]+$/ ? 1 : 0 }
 
 sub in_array {
-  my ($value, $args) = @_;
+  my ($rule, $value, $args) = @_;
   $value = '' unless defined $value;
   my $match = grep { $_ eq $value } @$args;
   return $match > 0 ? 1 : 0;
 }
 
 sub length {
-  my ($value, $args) = @_;
+  my ($rule, $value, $args) = @_;
   
   return unless defined $value;
   
@@ -234,7 +232,7 @@ sub length {
 }
 
 sub less_than {
-  my ($value, $target) = @_;
+  my ($rule, $value, $target) = @_;
   
   croak "Constraint 'less_than' needs a numeric argument"
     unless defined $target && $target =~ /$NUM_RE/;
@@ -243,27 +241,27 @@ sub less_than {
   return $value < $target ? 1 : 0;
 }
 
-sub string { defined $_[0] && !ref $_[0] }
-sub not_blank   { defined $_[0] && $_[0] ne '' }
-sub not_defined { !defined $_[0] }
-sub not_space   { defined $_[0] && $_[0] !~ '^[ \t\n\r\f]*$' ? 1 : 0 }
+sub string { defined $_[1] && !ref $_[1] }
+sub not_blank   { defined $_[1] && $_[1] ne '' }
+sub not_defined { !defined $_[1] }
+sub not_space   { defined $_[1] && $_[1] !~ '^[ \t\n\r\f]*$' ? 1 : 0 }
 
-sub uint { defined $_[0] && $_[0] =~ /^[0-9]+$/ ? 1 : 0 }
+sub uint { defined $_[1] && $_[1] =~ /^[0-9]+$/ ? 1 : 0 }
 
 sub regex {
-  my ($value, $regex) = @_;
+  my ($rule, $value, $regex) = @_;
   defined $value && $value =~ /$regex/ ? 1 : 0;
 }
 
 sub selected_at_least {
-  my ($values, $num) = @_;
+  my ($rule, $values, $num) = @_;
   
   my $selected = ref $values ? $values : [$values];
   $num += 0;
   return scalar(@$selected) >= $num ? 1 : 0;
 }
 
-sub space { defined $_[0] && $_[0] =~ '^[ \t\n\r\f]*$' ? 1 : 0 }
+sub space { defined $_[1] && $_[1] =~ '^[ \t\n\r\f]*$' ? 1 : 0 }
 
 =head1 NAME
 
