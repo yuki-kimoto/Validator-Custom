@@ -14,8 +14,50 @@ sub create_rule { Validator::Custom::Rule->new(validator => shift) }
 sub new {
   my $self = shift->SUPER::new(@_);
   
+  # Add checks
+  $self->add_check(
+    ascii             => \&Validator::Custom::CheckFunction::ascii,
+    between           => \&Validator::Custom::CheckFunction::between,
+    blank             => \&Validator::Custom::CheckFunction::blank,
+    decimal           => \&Validator::Custom::CheckFunction::decimal,
+    defined           => sub { defined $_[0] },
+    duplication       => \&Validator::Custom::CheckFunction::duplication,
+    equal_to          => \&Validator::Custom::CheckFunction::equal_to,
+    greater_than      => \&Validator::Custom::CheckFunction::greater_than,
+    http_url          => \&Validator::Custom::CheckFunction::http_url,
+    int               => \&Validator::Custom::CheckFunction::int,
+    in_array          => \&Validator::Custom::CheckFunction::in_array,
+    length            => \&Validator::Custom::CheckFunction::length,
+    less_than         => \&Validator::Custom::CheckFunction::less_than,
+    not_defined       => \&Validator::Custom::CheckFunction::not_defined,
+    not_space         => \&Validator::Custom::CheckFunction::not_space,
+    not_blank         => \&Validator::Custom::CheckFunction::not_blank,
+    uint              => \&Validator::Custom::CheckFunction::uint,
+    regex             => \&Validator::Custom::CheckFunction::regex,
+    selected_at_least => \&Validator::Custom::CheckFunction::selected_at_least,
+    space             => \&Validator::Custom::CheckFunction::space,
+    string            => \&Validator::Custom::CheckFunction::string,
+    date              => \&Validator::Custom::CheckFunction::date_to_timepiece,
+    datetime          => \&Validator::Custom::CheckFunction::datetime_to_timepiece,
+  );
   
-  
+  # Add filters
+  $self->add_filter(
+    date_to_timepiece => \&Validator::Custom::FilterFunction::date_to_timepiece,
+    datetime_to_timepiece => \&Validator::Custom::FilterFunction::datetime_to_timepiece,
+    shift             => \&Validator::Custom::FilterFunction::shift_array,
+    merge             => \&Validator::Custom::FilterFunction::merge,
+    to_array          => \&Validator::Custom::FilterFunction::to_array,
+    to_array_remove_blank => \&Validator::Custom::FilterFunction::to_array_remove_blank,
+    trim              => \&Validator::Custom::FilterFunction::trim,
+    trim_collapse     => \&Validator::Custom::FilterFunction::trim_collapse,
+    trim_lead         => \&Validator::Custom::FilterFunction::trim_lead,
+    trim_trail        => \&Validator::Custom::FilterFunction::trim_trail,
+    trim_uni          => \&Validator::Custom::FilterFunction::trim_uni,
+    trim_uni_collapse => \&Validator::Custom::FilterFunction::trim_uni_collapse,
+    trim_uni_lead     => \&Validator::Custom::FilterFunction::trim_uni_lead,
+    trim_uni_trail    => \&Validator::Custom::FilterFunction::trim_uni_trail
+  );
   
   # Version 0 constraints
   $self->register_constraint(
@@ -1200,21 +1242,6 @@ If you set not string or number value, you should the value which surrounded by 
 
   {default => sub { [] }}
   
-=item 3. copy
-
-  {copy => 0}
-
-If this value is 0, The parameter value is not copied to result data. 
-
-Default to 1. Parameter value is copied to the data.
-
-=item 4. require
-
-If this value is 0 and parameter value is not found,
-the parameter is not added to missing parameter list.
-
-Default to 1.
-
 =back
 
 =head1 CONSTRAINTS
