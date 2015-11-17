@@ -21,6 +21,7 @@
     add Validator::Custom add_check method and
     add Validator::Custom add_filter method.
   - add Validator::Csutom add_filter method.
+  - add Validator::Custom::Rule topic method.
 0.28
   - improve decimal check. you can specify undef value which mean unlimit muximanu digits
     Example:
