@@ -82,7 +82,7 @@ sub validate {
       }
     }
     if ($found_missing_param) {
-      $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
+      $result->output->{$result_key} = ref $opts->{default} eq 'CODE'
           ? $opts->{default}->($self) : $opts->{default}
         if exists $opts->{default};
       next if $opts->{default} || !$require;
@@ -122,11 +122,7 @@ sub validate {
           
           # Constrint result
           my $v;
-          if (ref $cresult eq 'ARRAY') {
-            ($is_valid, $v) = @$cresult;
-            $value->[$k] = $v;
-          }
-          elsif (ref $cresult eq 'HASH') {
+          if (ref $cresult eq 'HASH') {
             $is_valid = $cresult->{result};
             $message = $cresult->{message} unless $is_valid;
             $value->[$k] = $cresult->{output} if exists $cresult->{output};
@@ -142,12 +138,7 @@ sub validate {
       else {      
         my $cresult = $cfunc->($value, $arg, $self);
         
-        if (ref $cresult eq 'ARRAY') {
-          my $v;
-          ($is_valid, $v) = @$cresult;
-          $value = $v if $is_valid;
-        }
-        elsif (ref $cresult eq 'HASH') {
+        if (ref $cresult eq 'HASH') {
           $is_valid = $cresult->{result};
           $message = $cresult->{message} unless $is_valid;
           $value = $cresult->{output} if exists $cresult->{output} && $is_valid;
@@ -159,7 +150,7 @@ sub validate {
       unless ($is_valid) {
         if (exists $opts->{default}) {
           # Set default value
-          $result->data->{$result_key} = ref $opts->{default} eq 'CODE'
+          $result->output->{$result_key} = ref $opts->{default} eq 'CODE'
                                        ? $opts->{default}->($self)
                                        : $opts->{default}
             if exists $opts->{default};
@@ -179,7 +170,7 @@ sub validate {
     }
     
     # Result data
-    $result->data->{$result_key} = $value;
+    $result->output->{$result_key} = $value;
     
     # Key is valid
     $valid_keys->{$result_key} = 1;

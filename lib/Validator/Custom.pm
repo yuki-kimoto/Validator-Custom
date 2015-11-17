@@ -102,16 +102,6 @@ sub new {
   return $self;
 }
 
-sub register_constraint {
-  my $self = shift;
-  
-  # Merge
-  my $constraints = ref $_[0] eq 'HASH' ? $_[0] : {@_};
-  $self->constraints({%{$self->constraints}, %$constraints});
-  
-  return $self;
-}
-
 sub add_check {
   my $self = shift;
   
@@ -221,6 +211,24 @@ sub _parse_constraint {
   return $cinfo;
 }
 
+# DEPRECATED!
+has shared_rule => sub { [] };
+# DEPRECATED!
+__PACKAGE__->dual_attr('constraints',
+  default => sub { {} }, inherit => 'hash_copy');
+
+# Version 0 method(Not used now)
+sub register_constraint {
+  my $self = shift;
+  
+  # Merge
+  my $constraints = ref $_[0] eq 'HASH' ? $_[0] : {@_};
+  $self->constraints({%{$self->constraints}, %$constraints});
+  
+  return $self;
+}
+
+# Version 0 method(Not used now)
 sub _parse_random_string_rule {
   my $self = shift;
   
@@ -287,12 +295,6 @@ sub _parse_random_string_rule {
   
   return $result;
 }
-
-# DEPRECATED!
-has shared_rule => sub { [] };
-# DEPRECATED!
-__PACKAGE__->dual_attr('constraints',
-  default => sub { {} }, inherit => 'hash_copy');
 
 # Version 0 method(Not used now)
 sub validate {
@@ -1146,105 +1148,7 @@ This is old syntax. I recommend hash reference.
     }
   );
 
-=head2 Old rule syntax
-
-This is rule old syntax. Plese use new rule syntax.
-
-=head3 Basic
-
-Rule has specified structure.
-
-Rule must be array reference. 
-
-  my $rule = [
-  
-  ];
-
-This is for keeping the order of
-parameter names.
-
-Rule has pairs of parameter name and check functions.
-
-  my $rule = [
-    age =>  [            # parameter name1
-      'not_blank',       #   check function1
-      'int'              #   check function2
-    ],                                                   
-                                                         
-    name => [              # parameter name2       
-      'not_blank',         #   check function1
-      {'length' => [1, 5]} #   check function2
-    ]
-  ];
-
-Check function can receive arguments using hash reference.
-
-  my $rule = [
-    name => [
-        {'length' => [1, 5]}
-    ]
-  ];
-
-You can set message for each check function
-
-  my $rule = [
-    name => [
-        ['not_blank', 'name must be not blank'],
-        [{length => [1, 5]}, 'name must be 1 to 5 length']
-    ]
-  ];
-
-You can pass subroutine reference as check.
-
-  # You original check(you can call check from $_)
-  my $blank_or_number = sub {
-    my $value = shift;
-    return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
-  };
-  my $rule = [
-    name => [
-      [$blank_or_number => 'name must be blank or number']
-    ]
-  ];
-
-=head3 Option
-
-You can set options for each parameter name.
-
-  my $rule = [
-           # Option
-    age => {message => 'age must be integer'} => [
-        'not_blank',
-    ]
-  ];
-
-Option is located after the parameter name,
-and option must be hash reference.
-
-The following options is available.
-
-=over 4
-
-=item 1. message
-
- {message => "This is invalid"}
-
-Message corresponding to the parameter name which value is invalid. 
-
-=item 2. default
-
-  {default => 5}
-
-Default value. This value is automatically set to result data
-if the parameter value is invalid or the parameter name specified in rule is missing in the data.
-
-If you set not string or number value, you should the value which surrounded by code reference
-
-  {default => sub { [] }}
-  
-=back
-
-=head1 CONSTRAINTS
+=head1 CHECKS
 
 =head2 ascii
 
@@ -1582,15 +1486,6 @@ Trim leading white space, which contain unicode space character.
 
 Trim trailing white space, which contain unicode space character.
 
-=head1 ATTRIBUTES
-
-=head2 checks
-
-  my $checks = $vc->checks;
-  $vc             = $vc->checks(\%checks);
-
-Check functions.
-
 =head1 METHODS
 
 L<Validator::Custom> inherits all methods from L<Object::Simple>
@@ -1624,13 +1519,13 @@ Register check function.
 
 You can add filter function.
 
-  $vc->add_check(
+  $vc->add_filter(
     trim => sub {
       my $value = shift;
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
       
-      return {result => 1, output => $value];
+      return $value;
     }
   );
 
