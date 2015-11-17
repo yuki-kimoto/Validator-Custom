@@ -124,8 +124,6 @@ sub datetime_to_timepiece {
 sub decimal {
   my ($value, $digits_tmp) = @_;
   
-  $DB::single = 1;
-  
   # 桁数情報を整理
   my $digits;
   if (defined $digits_tmp) {

@@ -11,123 +11,6 @@ use Validator::Custom::Constraints;
 
 sub create_rule { Validator::Custom::Rule->new(validator => shift) }
 
-sub js_fill_form_button {
-  my ($self, $rule) = @_;
-  
-  my $r = $self->_parse_random_string_rule($rule);
-  
-  require JSON;
-  my $r_json = JSON->new->encode($r);
-  
-  my $javascript = << "EOS";
-(function () {
-
-  var rule = $r_json;
-
-  var create_random_value = function (rule, name) {
-    var patterns = rule[name];
-    if (patterns === undefined) {
-      return "";
-    }
-    
-    var value = "";
-    for (var i = 0; i < patterns.length; i++) {
-      var pattern = patterns[i];
-      var num = Math.floor(Math.random() * pattern.length);
-      value = value + pattern[num];
-    }
-    
-    return value;
-  };
-  
-  var addEvent = (function(){
-    if(document.addEventListener) {
-      return function(node,type,handler){
-        node.addEventListener(type,handler,false);
-      };
-    } else if (document.attachEvent) {
-      return function(node,type,handler){
-        node.attachEvent('on' + type, function(evt){
-          handler.call(node, evt);
-        });
-      };
-    }
-  })();
-  
-  var button = document.createElement("input");
-  button.setAttribute("type","button");
-  button.value = "Fill Form";
-  document.body.insertBefore(button, document.body.firstChild)
-
-  addEvent(
-    button,
-    "click",
-    function () {
-      
-      var input_elems = document.getElementsByTagName('input');
-      var radio_names = {};
-      var checkbox_names = {};
-      for (var i = 0; i < input_elems.length; i++) {
-        var e = input_elems[i];
-
-        var name = e.getAttribute("name");
-        var type = e.getAttribute("type");
-        if (type === "text" || type === "hidden" || type === "password") {
-          var value = create_random_value(rule, name);
-          e.value = value;
-        }
-        else if (type === "checkbox") {
-          e.checked = Math.floor(Math.random() * 2) ? true : false;
-        }
-        else if (type === "radio") {
-          radio_names[name] = 1;
-        }
-      }
-      
-      for (name in radio_names) {
-        var elems = document.getElementsByName(name);
-        var num = Math.floor(Math.random() * elems.length);
-        elems[num].checked = true;
-      }
-      
-      var textarea_elems = document.getElementsByTagName("textarea");
-      for (var i = 0; i < textarea_elems.length; i++) {
-        var e = textarea_elems[i];
-        
-        var name = e.getAttribute("name");
-        var value = create_random_value(rule, name);
-        
-        var text = document.createTextNode(value);
-        
-        if (e.firstChild) {
-          e.removeChild(e.firstChild);
-        }
-        
-        e.appendChild(text);
-      }
-      
-      var select_elems = document.getElementsByTagName("select");
-      for (var i = 0; i < select_elems.length; i++) {
-        var e = select_elems[i];
-        var options = e.options;
-        if (e.multiple) {
-          for (var k = 0; k < options.length; k++) {
-            options[k].selected = Math.floor(Math.random() * 2) ? true : false;
-          }
-        }
-        else {
-          var num = Math.floor(Math.random() * options.length);
-          e.selectedIndex = num;
-        }
-      }
-    }
-  );
-})();
-EOS
-
-  return $javascript;
-}
-
 sub new {
   my $self = shift->SUPER::new(@_);
 
@@ -627,6 +510,124 @@ has 'data_filter';
 has 'rule';
 has 'rule_obj';
 has error_stock => 1;
+
+# Version 0 method(Not used now)
+sub js_fill_form_button {
+  my ($self, $rule) = @_;
+  
+  my $r = $self->_parse_random_string_rule($rule);
+  
+  require JSON;
+  my $r_json = JSON->new->encode($r);
+  
+  my $javascript = << "EOS";
+(function () {
+
+  var rule = $r_json;
+
+  var create_random_value = function (rule, name) {
+    var patterns = rule[name];
+    if (patterns === undefined) {
+      return "";
+    }
+    
+    var value = "";
+    for (var i = 0; i < patterns.length; i++) {
+      var pattern = patterns[i];
+      var num = Math.floor(Math.random() * pattern.length);
+      value = value + pattern[num];
+    }
+    
+    return value;
+  };
+  
+  var addEvent = (function(){
+    if(document.addEventListener) {
+      return function(node,type,handler){
+        node.addEventListener(type,handler,false);
+      };
+    } else if (document.attachEvent) {
+      return function(node,type,handler){
+        node.attachEvent('on' + type, function(evt){
+          handler.call(node, evt);
+        });
+      };
+    }
+  })();
+  
+  var button = document.createElement("input");
+  button.setAttribute("type","button");
+  button.value = "Fill Form";
+  document.body.insertBefore(button, document.body.firstChild)
+
+  addEvent(
+    button,
+    "click",
+    function () {
+      
+      var input_elems = document.getElementsByTagName('input');
+      var radio_names = {};
+      var checkbox_names = {};
+      for (var i = 0; i < input_elems.length; i++) {
+        var e = input_elems[i];
+
+        var name = e.getAttribute("name");
+        var type = e.getAttribute("type");
+        if (type === "text" || type === "hidden" || type === "password") {
+          var value = create_random_value(rule, name);
+          e.value = value;
+        }
+        else if (type === "checkbox") {
+          e.checked = Math.floor(Math.random() * 2) ? true : false;
+        }
+        else if (type === "radio") {
+          radio_names[name] = 1;
+        }
+      }
+      
+      for (name in radio_names) {
+        var elems = document.getElementsByName(name);
+        var num = Math.floor(Math.random() * elems.length);
+        elems[num].checked = true;
+      }
+      
+      var textarea_elems = document.getElementsByTagName("textarea");
+      for (var i = 0; i < textarea_elems.length; i++) {
+        var e = textarea_elems[i];
+        
+        var name = e.getAttribute("name");
+        var value = create_random_value(rule, name);
+        
+        var text = document.createTextNode(value);
+        
+        if (e.firstChild) {
+          e.removeChild(e.firstChild);
+        }
+        
+        e.appendChild(text);
+      }
+      
+      var select_elems = document.getElementsByTagName("select");
+      for (var i = 0; i < select_elems.length; i++) {
+        var e = select_elems[i];
+        var options = e.options;
+        if (e.multiple) {
+          for (var k = 0; k < options.length; k++) {
+            options[k].selected = Math.floor(Math.random() * 2) ? true : false;
+          }
+        }
+        else {
+          var num = Math.floor(Math.random() * options.length);
+          e.selectedIndex = num;
+        }
+      }
+    }
+  );
+})();
+EOS
+
+  return $javascript;
+}
 
 1;
 
