@@ -9,6 +9,9 @@ has 'validator';
 sub validate {
   my ($self, $input) = @_;
   
+  # Set version
+  $self->{version} = 1;
+  
   # Class
   my $class = ref $self;
   
@@ -196,30 +199,66 @@ sub each {
   return $self;
 }
 
-sub filter { shift->check(@_) }
+sub filter {
+  my $self = shift;
+  
+  my $version = $self->{version};
+  if ($version && $version == 1) {
+    my $filter_func = shift;
+    my $filter = [$filter_func];
+    if (@_) {
+      push @$filter, shift;
+    }
+    $self->topic_info->{filters} ||= [];
+    push @{$self->topic_fino->{filters}}, $filter;
+    
+    return $self;
+  }
+  # Version 0(Not used now)
+  else {
+    return $self->check(@_)
+  }
+}
 
 sub check {
-  my ($self, @constraints) = @_;
-
-  my $constraints_h = [];
-  for my $constraint (@constraints) {
-    my $constraint_h = {};
-    if (ref $constraint eq 'ARRAY') {
-      $constraint_h->{constraint} = $constraint->[0];
-      $constraint_h->{message} = $constraint->[1];
-    }
-    else {
-      $constraint_h->{constraint} = $constraint;
-    }
-    my $cinfo = $self->validator->_parse_constraint($constraint_h);
-    $cinfo->{each} = $self->topic_info->{each};
-    push @$constraints_h, $cinfo;
-  }
-
-  $self->topic_info->{constraints} ||= [];
-  $self->topic_info->{constraints} = [@{$self->topic_info->{constraints}}, @{$constraints_h}];
+  my $self = shift;
   
-  return $self;
+  my $version = $self->{version};
+  if ($version && $version == 1) {
+    my $check_func = shift;
+    my $check = [$check_func];
+    if (@_) {
+      push @$check, shift;
+    }
+    $self->topic_info->{checks} ||= [];
+    push @{$self->topic_fino->{checks}}, $check;
+    
+    return $self;
+  }
+  # Version 0(Not used now)
+  else {
+    my @constraints = @_;
+
+    my $constraints_h = [];
+    for my $constraint (@constraints) {
+      my $constraint_h = {};
+      if (ref $constraint eq 'ARRAY') {
+        $constraint_h->{constraint} = $constraint->[0];
+        $constraint_h->{message} = $constraint->[1];
+      }
+      else {
+        $constraint_h->{constraint} = $constraint;
+      }
+      my $cinfo = $self->validator->_parse_constraint($constraint_h);
+      $cinfo->{each} = $self->topic_info->{each};
+      push @$constraints_h, $cinfo;
+    }
+
+    $self->topic_info->{constraints} ||= [];
+    $self->topic_info->{constraints} = [@{$self->topic_info->{constraints}}, @{$constraints_h}];
+    
+    return $self;
+  }
 }
 
 sub default {
