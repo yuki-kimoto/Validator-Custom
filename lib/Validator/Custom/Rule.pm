@@ -204,13 +204,14 @@ sub filter {
   
   my $version = $self->{version};
   if ($version && $version == 1) {
-    my $filter_func = shift;
-    my $filter = [$filter_func];
+    my $func_info = {};
+    $func_info->{type} = 'filter';
+    $func_info->{name} = shift;
     if (@_) {
-      push @$filter, shift;
+      $func_info->{args} = shift;
     }
-    $self->topic_info->{filters} ||= [];
-    push @{$self->topic_fino->{filters}}, $filter;
+    $self->topic_info->{func_infos} ||= [];
+    push @{$self->topic_fino->{func_infos}}, $func_info;
     
     return $self;
   }
@@ -225,13 +226,14 @@ sub check {
   
   my $version = $self->{version};
   if ($version && $version == 1) {
-    my $check_func = shift;
-    my $check = [$check_func];
+    my $func_info = {};
+    $func_info->{type} = 'check';
+    $func_info->{name} = shift;
     if (@_) {
-      push @$check, shift;
+      $func_info->{args} = shift;
     }
-    $self->topic_info->{checks} ||= [];
-    push @{$self->topic_fino->{checks}}, $check;
+    $self->topic_info->{func_infos} ||= [];
+    push @{$self->topic_fino->{func_infos}}, $func_info;
     
     return $self;
   }
