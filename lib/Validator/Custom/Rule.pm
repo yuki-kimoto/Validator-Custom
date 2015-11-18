@@ -199,6 +199,38 @@ sub each {
   return $self;
 }
 
+sub filter_each {
+  my $self = shift;
+  
+  my $func_info = {};
+  $func_info->{type} = 'filter';
+  $func_info->{name} = shift;
+  if (@_) {
+    $func_info->{args} = shift;
+  }
+  $func_info->{each} = 1;
+  $self->topic_info->{func_infos} ||= [];
+  push @{$self->topic_fino->{func_infos}}, $func_info;
+  
+  return $self;
+}
+
+sub check_each {
+  my $self = shift;
+  
+  my $func_info = {};
+  $func_info->{type} = 'check';
+  $func_info->{name} = shift;
+  if (@_) {
+    $func_info->{args} = shift;
+  }
+  $func_info->{each} = 1;
+  $self->topic_info->{func_infos} ||= [];
+  push @{$self->topic_fino->{func_infos}}, $func_info;
+  
+  return $self;
+}
+
 sub filter {
   my $self = shift;
   
