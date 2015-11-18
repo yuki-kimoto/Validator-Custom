@@ -185,20 +185,6 @@ sub validate {
   return $result;
 }
 
-sub each {
-  my $self = shift;
-  
-  if (@_) {
-    $self->topic_info->{each} = $_[0];
-    return $self;
-  }
-  else {
-    return $self->topic_info->{each};
-  }
-  
-  return $self;
-}
-
 sub filter_each {
   my $self = shift;
   
@@ -339,14 +325,30 @@ sub topic {
 
 sub optional {
   my ($self, $key) = @_;
-
-  # Create topic
+  
+  # Version 0 logica(Not used now)
   if (defined $key) {
+    # Create topic
     $self->topic($key);
   }
   
   # Value is optional
   $self->content->[-1]{option}{require} = 0;
+  
+  return $self;
+}
+
+# Version 0 method(Not used now)
+sub each {
+  my $self = shift;
+  
+  if (@_) {
+    $self->topic_info->{each} = $_[0];
+    return $self;
+  }
+  else {
+    return $self->topic_info->{each};
+  }
   
   return $self;
 }
