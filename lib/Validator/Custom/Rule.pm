@@ -475,19 +475,16 @@ Validator::Custom::Rule - Rule object
   
   # Create rule object
   my $rule = $vc->create_rule;
-  $rule->topic('id')->check('ascii');
-  $rule->topic('name')->optional->check('not_blank');
+  $rule->topic('id')->check('ascii')->message('Error');
+  $rule->topic('name')->optional->check('not_blank')->default(4);
   
   # Validate
   my $data = {id => '001', name => 'kimoto'};
-  my $result = $vc->validate($data, $rule);
-  
-  # Option
-  $rule->topic('id')->check('not_blank')->message('Error')->default(4);
+  my $result = $rule->validate($data);
 
 =head1 DESCRIPTION
 
-Validator::Custom::Rule is the class to parse rule and store it as object.
+Validator::Custom::Rule - Rule of validation
 
 =head1 ATTRIBUTES
 
@@ -500,17 +497,17 @@ Content of rule object.
 
 =head1 METHODS
 
-=head2 each
-
-  $rule->each(1);
-
-Tell check each element.
-
 =head2 check
 
-  $rule->check('not_blank')->check('ascii');
+  $rule->check('not_blank');
 
-Add check to current topic.
+Add a check to current topic.
+
+=head2 check_each
+
+  $rule->check_each('not_blank');
+
+Add a check for each value to current topic.
 
 =head2 default
 
@@ -523,7 +520,13 @@ Set default value.
 
   $rule->filter('trim');
 
-Add filter to current topic.
+Add a filter to current topic.
+
+=head2 filter_each
+
+  $rule->filter_each('trim');
+
+Add a filter for each value to current topic.
 
 =head2 message
 
@@ -550,4 +553,4 @@ Set result key name
 
   $rule->optional;
 
-topic become optional.
+The topic becomes optional.
