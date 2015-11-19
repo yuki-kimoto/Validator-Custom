@@ -327,7 +327,7 @@ sub optional {
   }
   
   # Value is optional
-  $self->content->[-1]{option}{require} = 0;
+  $self->content->[-1]{option}{optional} = 1;
   
   return $self;
 }

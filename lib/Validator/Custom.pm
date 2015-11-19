@@ -155,7 +155,7 @@ sub add_filter {
   return $self;
 }
 
-our %VALID_OPTIONS = map {$_ => 1} qw/message default copy require/;
+our %VALID_OPTIONS = map {$_ => 1} qw/message default copy require optional/;
 
 sub _parse_constraint {
   my ($self, $c) = @_;
@@ -427,8 +427,11 @@ sub validate {
     
     
     # Check option
-    if (exists $opts->{required}) {
-      $opts->{require} = delete $opts->{required};
+    if (exists $opts->{optional}) {
+      if ($opts->{optional}) {
+        $opts->{require} = 0;
+      }
+      delete $opts->{optional};
     }
     for my $oname (keys %$opts) {
       croak qq{Option "$oname" of "$result_key" is invalid name}
