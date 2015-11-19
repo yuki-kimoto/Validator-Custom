@@ -23,12 +23,10 @@ sub validate {
   # Output
   my $output = {};
   
-  # Invalid params
-  my $invalid_params = {};
-  
   # Error position
   my $pos = 0;
   
+  # Is invalid
   my $is_invalid;
   
   # Process each param
