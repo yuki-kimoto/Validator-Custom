@@ -424,8 +424,6 @@ sub validate {
     }
     else { $keys = [$key] }
     
-    
-    
     # Check option
     if (exists $opts->{optional}) {
       if ($opts->{optional}) {

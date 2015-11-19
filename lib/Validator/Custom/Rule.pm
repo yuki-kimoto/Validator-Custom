@@ -12,169 +12,187 @@ sub validate {
   # Set version
   $self->{version} = 1;
   
-  # Class
-  my $class = ref $self;
-  
   # Check data
-  croak "Input must be hash reference"
+  croak "Input must be hash reference."
     unless ref $input eq 'HASH';
   
   # Result
   my $result = Validator::Custom::Result->new;
   $result->{_error_infos} = {};
   
-  # Valid keys
-  my $valid_keys = {};
+  # Output
+  my $output = {};
+  
+  # Invalid params
+  my $invalid_params = {};
   
   # Error position
   my $pos = 0;
   
-  # Found missing parameters
-  my $found_missing_params = {};
-
-  # Process each key
-  OUTER_LOOP:
-  for (my $i = 0; $i < @{$self->content}; $i++) {
+  my $is_invalid;
+  
+  # Process each param
+  for my $r (@{$self->content}) {
     
-    my $r = $self->content->[$i];
-    
-    # Increment position
-    $pos++;
-    
-    # Key, options, and constraints
+    # Key
     my $key = $r->{key};
+    
+    # Option
     my $opts = $r->{option};
+    my $optional = $opts->{optional};
+    my $name;
+    if ($opts->{name}) {
+      $name = $opts->{name};
+    }
+    else {
+      $name = $key;
+    }
+    
+    # Function information
     my $func_infos = $r->{func_infos} || [];
     
-    # Check constraints
-    croak "Invalid rule structure"
-      unless ref $func_infos eq 'ARRAY';
-
-    # Arrange key
-    my $result_key = $key;
-    if (ref $key eq 'HASH') {
-      my $first_key = (keys %$key)[0];
-      $result_key = $first_key;
-      $key         = $key->{$first_key};
-    }
-    
-    # Real keys
-    my $keys;
-    
-    if (ref $key eq 'ARRAY') { $keys = $key }
-    else { $keys = [$key] }
-    
-    # Check missing parameters
-    my $require = exists $opts->{require} ? $opts->{require} : 1;
-    my $found_missing_param;
-    my $missing_params = $result->missing_params;
-    for my $key (@$keys) {
-      unless (exists $input->{$key}) {
-        if ($require && !exists $opts->{default}) {
-          push @$missing_params, $key
-            unless $found_missing_params->{$key};
-          $found_missing_params->{$key}++;
-        }
-        $found_missing_param = 1;
+    # Process funcs
+    my $current_key = $key;
+    my $current_value;
+    if (ref $current_key eq 'ARRAY') {
+      $current_value = [];
+      for my $key (@$current_key) {
+        push @$current_value, $input->{$key}; 
       }
     }
-    if ($found_missing_param) {
-      $result->output->{$result_key} = ref $opts->{default} eq 'CODE'
-          ? $opts->{default}->($self) : $opts->{default}
-        if exists $opts->{default};
-      next if $opts->{default} || !$require;
+    else {
+      $current_value = $input->{$key};
     }
     
-    # Already valid
-    next if $valid_keys->{$result_key};
-    
-    # Validation
-    my $value = @$keys > 1
-      ? [map { $input->{$_} } @$keys]
-      : $input->{$keys->[0]};
-    
+    my $message;
     for my $func_info (@$func_infos) {
       
       # Constraint information
-      my $cfunc = $func_info->{funcs}[0];
-      my $arg = $func_info->{args}[0];
-      my $message = $func_info->{message};
+      my $func_name = $func_info->{name};
+      my $func;
+      if (ref $func_name eq 'CODE') {
+        $func = $func_name;
+      }
+      else {
+        if ($func_info->{type} eq 'check') {
+          $func = $self->validator->{checks}{$func_name};
+          croak "Can't find $func_name check"
+            unless $func;
+        }
+        elsif ($func_info->{type} eq 'filter') {
+          $func = $self->validator->{filters}{$func_name};
+          croak "Can't find $func_name filter"
+            unless $func;
+        }
+      }
       
-      # Is valid?
+      my $arg = $func_info->{args};
+      my $message = $func_info->{message};
+      my $each = $func_info->{each};
+      
+      my $output_to;
+      if (exists $func_info->{output_to}) {
+        $output_to = $func_info->{output_to};
+      }
+      else {
+        $output_to = $key;
+      }
+
+      # Is valid
       my $is_valid;
       
-      # Data is array
-      if($func_info->{each}) {
+      # Each value
+      if($func_info->{each} && ref $current_value eq 'ARRAY') {
+        # Check
+        if ($func_info->{type} eq 'check') {
           
-        # To array
-        $value = [$value] unless ref $value eq 'ARRAY';
-        
-        # Validation loop
-        for (my $k = 0; $k < @$value; $k++) {
-          my $input = $value->[$k];
-          
-          # Validate
-          my $cresult;
-          $cresult= $cfunc->($self, $input, $arg);
-          
-          # Constrint result
-          my $v;
-          if (ref $cresult eq 'HASH') {
-            $is_valid = $cresult->{result};
-            $message = $cresult->{message} unless $is_valid;
-            $value->[$k] = $cresult->{output} if exists $cresult->{output};
+          # Validation loop
+          for (my $k = 0; $k < @$current_value; $k++) {
+            my $value = $current_value->[$k];
+            
+            # Validate
+            my $is_valid= $func->($self->validator, $value, $arg);
+            
+            # Constrint result
+            if (ref $is_valid eq 'HASH') {
+              $is_invalid = 1;
+              $message = $is_valid->{message};
+            }
+            else { $is_invalid = !$is_valid }
+            
+            # Validation failed
+            last if $is_invalid;
           }
-          else { $is_valid = $cresult }
-          
-          # Validation failed
-          last unless $is_valid;
+        }
+        # Filter
+        elsif ($func_info->{type} eq 'filter') {
+          # Validation loop
+          my $new_current_value = [];
+          for (my $k = 0; $k < @$current_value; $k++) {
+            my $value = $current_value->[$k];
+            my $new_value = $func->($self->validator, $value, $arg);
+            push @$new_current_value, $new_value;
+          }
+          $current_value = $new_current_value;
+          $current_key = $output_to;
         }
       }
       
-      # Data is scalar
+      # Single value
       else {      
-        my $cresult = $cfunc->($value, $arg, $self);
-        
-        if (ref $cresult eq 'HASH') {
-          $is_valid = $cresult->{result};
-          $message = $cresult->{message} unless $is_valid;
-          $value = $cresult->{output} if exists $cresult->{output} && $is_valid;
+        if ($func_info->{type} eq 'check') {
+          my $is_valid = $func->($self->validator, $current_value, $arg);
+          
+          if (ref $is_valid eq 'HASH') {
+            $is_invalid = 1;
+            $message = $is_valid->{message};
+          }
+          else { $is_invalid = !$is_valid }
         }
-        else { $is_valid = $cresult }
+        elsif ($func_info->{type} eq 'filter') {
+          my $new_value = $func->($self->validator, $current_value, $arg);
+          $current_value = $new_value;
+          $current_key = $output_to;
+        }
+      }
+      last if $is_invalid;
+    }
+    
+    # Set output
+    if (!$is_invalid || ($is_invalid && $opts->{default})) {
+      # Set default value
+      if ($is_invalid) {
+        $current_value = ref $opts->{default} eq 'CODE'
+          ? $opts->{default}->($self->validator)
+          : $opts->{default};
       }
       
-      # Add error if it is invalid
-      unless ($is_valid) {
-        if (exists $opts->{default}) {
-          # Set default value
-          $result->output->{$result_key} = ref $opts->{default} eq 'CODE'
-                                       ? $opts->{default}->($self)
-                                       : $opts->{default}
-            if exists $opts->{default};
-          $valid_keys->{$result_key} = 1
+      # Set output
+      if (ref $current_key eq 'ARRAY') {
+        for(my $i = 0; $i < @$current_key; $i++) {
+          my $key = $current_key->[$i];
+          my $value = $current_value->[$i];
+          $output->{$key} = $value;
         }
-        else {
-          # Resister error info
-          $message = $opts->{message} unless defined $message;
-          $result->{_error_infos}->{$result_key} = {
-            message      => $message,
-            position     => $pos,
-            original_key => $key
-          } unless exists $result->{_error_infos}->{$result_key};
-        }
-        next OUTER_LOOP;
+      }
+      else {
+        $output->{$current_key} = $current_value;
       }
     }
     
-    # Result data
-    $result->output->{$result_key} = $value;
+    # Add result information
+    if ($is_invalid) {
+      $result->{_error_infos}->{$name} = {
+        message      => $message,
+        position     => $pos,
+      };
+    }
     
-    # Key is valid
-    $valid_keys->{$result_key} = 1;
-    
-    # Remove invalid key
-    delete $result->{_error_infos}->{$key};
+    # Increment position
+    $pos++;
   }
+  
+  $result->output($output);
   
   return $result;
 }
@@ -286,19 +304,22 @@ sub default {
 sub message {
   my ($self, $message) = @_;
   
-  my $constraints = $self->topic_info->{constraints} || [];
-  for my $constraint (@$constraints) {
-    $constraint->{message} ||= $message;
+  my $version = $self->{version};
+  if ($version && $version == 1) {
+    my $func_infos = $self->topic_info->{func_infos} || [];
+    for my $func_info (@$func_infos) {
+      unless (defined $func_info->{message}) {
+        $func_info->{message} = $message;
+      }
+    }
   }
-  
-  return $self;
-}
-
-sub name {
-  my ($self, $result_key) = @_;
-  
-  my $key = $self->topic_info->{key};
-  $self->topic_info->{key} = {$result_key => $key};
+  # Version 0 logica(Not used now)
+  else {
+    my $constraints = $self->topic_info->{constraints} || [];
+    for my $constraint (@$constraints) {
+      $constraint->{message} ||= $message;
+    }
+  }
   
   return $self;
 }
@@ -328,6 +349,23 @@ sub optional {
   
   # Value is optional
   $self->content->[-1]{option}{optional} = 1;
+  
+  return $self;
+}
+
+sub output_to {
+  my ($self, $key) = @_;
+  
+  # Value is optional
+  $self->content->[-1]{func_infos}[-1]{output_to} = $key;
+}
+
+# Version 0 method(Not used now)
+sub name {
+  my ($self, $result_key) = @_;
+  
+  my $key = $self->topic_info->{key};
+  $self->topic_info->{key} = {$result_key => $key};
   
   return $self;
 }
