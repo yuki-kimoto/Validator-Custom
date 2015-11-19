@@ -44,11 +44,11 @@ sub validate {
     # Key, options, and constraints
     my $key = $r->{key};
     my $opts = $r->{option};
-    my $cinfos = $r->{constraints} || [];
+    my $func_infos = $r->{func_infos} || [];
     
     # Check constraints
     croak "Invalid rule structure"
-      unless ref $cinfos eq 'ARRAY';
+      unless ref $func_infos eq 'ARRAY';
 
     # Arrange key
     my $result_key = $key;
@@ -62,12 +62,6 @@ sub validate {
     my $keys;
     
     if (ref $key eq 'ARRAY') { $keys = $key }
-    elsif (ref $key eq 'Regexp') {
-      $keys = [];
-      for my $k (keys %$input) {
-         push @$keys, $k if $k =~ /$key/;
-      }
-    }
     else { $keys = [$key] }
     
     # Check missing parameters
@@ -99,18 +93,18 @@ sub validate {
       ? [map { $input->{$_} } @$keys]
       : $input->{$keys->[0]};
     
-    for my $cinfo (@$cinfos) {
+    for my $func_info (@$func_infos) {
       
       # Constraint information
-      my $cfunc = $cinfo->{funcs}[0];
-      my $arg = $cinfo->{args}[0];
-      my $message = $cinfo->{message};
+      my $cfunc = $func_info->{funcs}[0];
+      my $arg = $func_info->{args}[0];
+      my $message = $func_info->{message};
       
       # Is valid?
       my $is_valid;
       
       # Data is array
-      if($cinfo->{each}) {
+      if($func_info->{each}) {
           
         # To array
         $value = [$value] unless ref $value eq 'ARRAY';

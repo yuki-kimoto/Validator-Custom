@@ -112,6 +112,39 @@ sub add_check {
   return $self;
 }
 
+sub run_check {
+  my ($self, $name, $values, $args) = @_;
+  
+  my $checks = $self->{checks} || {};
+  my $check = $checks->{$name};
+  unless ($check) {
+    croak "Can't call $name check";
+  }
+  
+  my $ret = $check->($values, $args);
+  
+  if (ref $ret eq 'HASH') {
+    return 0;
+  }
+  else {
+    return $ret ? 1: 0;
+  }
+}
+
+sub run_filter {
+  my ($self, $name, $values, $args) = @_;
+  
+  my $filters = $self->{filters} || {};
+  my $filter = $filters->{$name};
+  unless ($filter) {
+    croak "Can't call $name filter";
+  }
+  
+  my $new_value = $filter->($values, $args);
+  
+  return $new_value;
+}
+
 sub add_filter {
   my $self = shift;
   
@@ -1506,21 +1539,47 @@ Register check function.
   
   $vc->add_check(
     int => sub {
-      my $value    = shift;
+      my ($vc, $value, $args) = @_;
+      
       my $is_valid = $value =~ /^\-?[\d]+$/;
+      
       return $is_valid;
     },
     ascii => sub {
-      my $value    = shift;
+      my ($vc, $value, $args) = @_;
+      
       my $is_valid = $value =~ /^[\x21-\x7E]+$/;
+      
       return $is_valid;
     }
   );
+
+You can return a error message when the validation fail.
+Return hash reference which constains C<message>.
+
+  $vc->add_check(
+    foo => sub {
+      my $is_valid;
+      
+      ...
+      
+      if ($is_valid) {
+        return 1;
+      }
+      else {
+        return {message => "Validation fail"};
+      }
+    }
+  );
+
+=head2 add_filter
 
 You can add filter function.
 
   $vc->add_filter(
     trim => sub {
+      my ($vc, $value, $args) = @_;
+      
       my $value = shift;
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
@@ -1529,9 +1588,24 @@ You can add filter function.
     }
   );
 
-Filter function return array reference,
-first element is the value if the value is valid or not,
-second element is the converted value by filter function.
+Filter function should be new value.
+
+=head2 run_check
+
+You can execute check fucntion.
+
+  my $is_valid = $vc->run_check('int', $value);
+  my $is_valid = $vc->run_check('length', $value, $args);
+
+if return value is hash reference or false value, C<run_check> method return false value.
+In other cases, C<run_check> method return true value.
+
+=head2 run_filter
+
+You can execute filter function.
+
+  my $new_value = $vc->run_filter('trim', $value);
+  my $new_value = $vc->run_filter('foo', $value, $args);
 
 =head1 FAQ
 
@@ -1549,9 +1623,8 @@ You can do the following way.
 
   $rule->topic('feature')
     ->filter('to_array')
-    ->check({selected_at_least => 1})->message('feature should select at least 1')
-    ->each(1)
-    ->check('int')->message('features should be integer');
+    ->check(selected_at_least => 1)->message('feature should select at least 1')
+    ->check_each('int')->message('features should be integer');
 
 =head1 AUTHOR
 
