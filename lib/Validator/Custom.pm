@@ -760,20 +760,24 @@ Validator::Custom - HTML form Validation, easy and flexibly
   $rule->topic('age')->optional->filter('trim')->check('int')->default(20);
   
   # Validation
-  my $result = $vc->validate($input, $rule);
+  my $result = $rule->validate($input);
   if ($result->is_ok) {
-    # Safety data
-    my $safe_data = $vresult->output;
+    # Output
+    my $output = $vresult->output;
   }
   else {
     # Error messgaes
-    my $errors = $vresult->messages;
+    my $messages = $vresult->messages;
   }
   
-  # You original check(you can call check from $_)
+  # You can create your original check
   my $blank_or_number = sub {
-    my $value = shift;
-    return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
+    my ($vc, $value, $arg) = @_;
+    
+    my $is_valid
+      = $vc->run_check('blank', $value) || $vc->run_check('regex', $value, qr/[0-9]+/);
+    
+    return $is_valid;
   };
   $rule->topic('age')
     ->check($blank_or_number)->message('age must be blank or number')
@@ -1022,7 +1026,7 @@ you can call checks from $_ in subroutine.
 Multiple parameters validation is available.
 
   Data: {password1 => 'xxx', password2 => 'xxx'}
-  Rule: $rule->topic([qw/password1 password2/])->name('password_check)
+  Rule: $rule->topic(['password1', 'password2'])->name('password_check)
           ->check('duplication')
 
 In this example, We check if 'password1' and 'password2' is same.
@@ -1033,57 +1037,19 @@ The following value is passed to check function C<duplication>.
 You must specify new key, such as C<password_check>.
 This is used by L<Validator::Result> object.
 
-You can also use the reference of regular expression if you need.
-
-  Data: {person1 => 'Taro', person2 => 'Rika', person3 => 'Ken'}
-  Rule: $rule->topic(qr/^person/)->name('merged_person')
-          ->check('merge') # TaroRikaKen
-
 All matched value is passed to check function as array reference.
 In this example, the following value is passed.
 
   ['Taro', 'Rika', 'Ken']
 
-=head3 Negative check function
-
-You can negative a check function
-
-  Rule: $rule->topic('age')->check('!int')
-
-"!" is added to the head of the check name
-if you negative a check function.
-'!int' means not 'int'.
-
-In this example, 
-
-=head3 "OR" condition
-
-You can create "OR" condition by using C<check_or> method.
-
-  Rule: $rule->topic('email')->check_or('blank', 'email');
-
-Check is ok if email value is blank or email.
-
-The folloing way is old syntax. Please use above syntax.
-
-  Rule: $rule->topic('email')->check('blank || email')
-
 =head3 Array validation
 
-You can check if all the elements of array is valid.
-
-  Data: {nums => [1, 2, 3]}
-  Rule: $rule->topic('nums')->array(1)->check('int')
-
-If nums is one value, this is automatically convert to array.
+You can C<check_each> method if all the elements of array is valid.
 
 The following is old syntax. Please use above syntax.
 
   Data: {nums => [1, 2, 3]}
-  Rule: $rule->topic('nums')->check('@int')
-
-"@" is added to the head of check function name
-to validate all the elements of array.
+  Rule: $rule->topic('nums')->check_each('int')
 
 =head2 4. Check functions
 
@@ -1117,67 +1083,23 @@ and L<Validator::Custom> object as third argument.
 
   $vc->add_check(
     telephone => sub {
-      my ($value, $arg, $vc) = @_;
+      my ($vc, $value, $args) = @_;
       
       return $is_valid;
     }
   );
 
-If you know the implementations of check functions,
-see the source of L<Validator::Custom::Check>.
-
-If you want to return custom message, you can use hash reference as return value.
-
-  $vc->add_check(
-    telephone => sub {
-      my ($value, $arg, $vc) = @_;
-      
-      # Process
-      my $is_valid = ...;
-      
-      if ($is_valid) {
-        return 1;
-      }
-      else {
-        return {result => 0, message => 'Custom error message'};
-      }
-    }
-  );
-
 =head3 Register filter function
 
-C<add_check()> is also used to add filter function.
+Filter function is registered by C<add_filter> method.
 
-Filter function is same as check function except for return value;
-
-  $vc->add_check(
+  $vc->add_filter(
     to_upper_case => sub {
-      my $value = shift;
+      my ($vc, $value, $args) = @_;
       
       $value = uc $value;
                   
-      return {result => 1, output => $value};
-    }
-  );
-
-Return value of filter function must be array reference.
-First element is boolean value which check if the value is valid.
-Second element is filtered value.
-
-In this example, First element of array reference is set to 1
-because this function is intended to filter only.
-
-You can also use array reference representation.
-This is old syntax. I recommend hash reference.
-  
-  # This is old syntax
-  $vc->add_check(
-    to_upper_case => sub {
-      my $value = shift;
-      
-      $value = uc $value;
-                  
-      return [1, $value];
+      return $value;
     }
   );
 
@@ -1536,6 +1458,7 @@ Create a new L<Validator::Custom> object.
   $vc->add_check(\%check);
 
 Register check function.
+It receives Validator::Custom object, value, and arguments.
   
   $vc->add_check(
     int => sub {
@@ -1545,12 +1468,15 @@ Register check function.
       
       return $is_valid;
     },
-    ascii => sub {
-      my ($vc, $value, $args) = @_;
+    greater_than => sub {
+      my ($rule, $value, $arg_value) = @_;
       
-      my $is_valid = $value =~ /^[\x21-\x7E]+$/;
-      
-      return $is_valid;
+      if ($value > $arg_value) {
+        return 1;
+      }
+      else {
+        return 0;
+      }
     }
   );
 
@@ -1574,7 +1500,9 @@ Return hash reference which constains C<message>.
 
 =head2 add_filter
 
-You can add filter function.
+You can add filter function. 
+It receives Validator::Custom object, value, and arguments.
+Filter function should be new value.
 
   $vc->add_filter(
     trim => sub {
@@ -1587,8 +1515,6 @@ You can add filter function.
       return $value;
     }
   );
-
-Filter function should be new value.
 
 =head2 run_check
 
