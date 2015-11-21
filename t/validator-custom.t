@@ -6,6 +6,38 @@ use utf8;
 use Validator::Custom;
 use Validator::Custom::Rule;
 
+my $vc_common = Validator::Custom->new;
+$vc_common->add_check(
+  Int => sub { $_[1] =~ /^\d+$/ },
+  Num => sub {
+    require Scalar::Util;
+    return Scalar::Util::looks_like_number($_[1]);
+  },
+  aaa => sub {$_[1] eq 'aaa'},
+  bbb => sub {$_[1] eq 'bbb'}
+);
+$vc_common->add_filter(
+  C1 => sub {
+    my ($self, $value, $args) = @_;
+    return $value * 2;
+  }
+);
+
+# Cuastom validator
+{
+  my $vc = $vc_common;
+  my $input = {k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a'};
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('Int')->message("k1Error1");
+  $rule->topic('k2')->check('Int')->message("k2Error1");
+  $rule->topic('k3')->check('Num')->message("k3Error1");
+  $rule->topic('k4')->check('Num')->message("k4Error1");
+  my $result= $rule->validate($input);
+  is_deeply($result->messages, [qw/k2Error1 k4Error1/]);
+  is_deeply($result->invalid_rule_keys, [qw/k2 k4/]);
+  ok(!$result->is_ok);
+}
+
 # int
 {
   my $vc = Validator::Custom->new;
@@ -25,37 +57,7 @@ use Validator::Custom::Rule;
   is_deeply($result->invalid_rule_keys, ['k3', 'k4']);
 }
 
-my $vc_common = Validator::Custom->new;
-$vc_common->add_check(
-  Int => sub { $_[1] =~ /^\d+$/ },
-  Num => sub {
-    require Scalar::Util;
-    return Scalar::Util::looks_like_number($_[1]);
-  },
-  aaa => sub {$_[1] eq 'aaa'},
-  bbb => sub {$_[1] eq 'bbb'}
-);
-$vc_common->add_filter(
-  C1 => sub {
-    my ($self, $value, $args) = @_;
-    return $value * 2;
-  }
-);
 
-{
-  my $vc = $vc_common;
-  my $input = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
-  my $rule = $vc->create_rule;
-  $rule->topic('k1')->check('Int')->message("k1Error1");
-  $rule->topic('k2')->check('Int')->message("k2Error1");
-  $rule->topic('k3')->check('Num')->message("k3Error1");
-  $rule->topic('k4')->check('Num')->message("k4Error1");
-  my $result= $rule->validate($input);
-  is_deeply($result->messages, [qw/k2Error1 k4Error1/], 'Custom validator');
-  is_deeply($result->invalid_rule_keys, [qw/k2 k4/], 'invalid keys hash');
-  ok(!$result->is_ok, 'is_ok');
-
-}
 
 # to_array_remove_blank filter
 {

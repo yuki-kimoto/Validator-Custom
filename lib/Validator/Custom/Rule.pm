@@ -23,12 +23,11 @@ sub validate {
   # Error position
   my $pos = 0;
   
-  # Is invalid
-  my $is_invalid;
-  
   # Process each param
   for my $r (@{$self->content}) {
     
+    $DB::single = 1;
+  
     # Key
     my $key = $r->{key};
     
@@ -59,7 +58,12 @@ sub validate {
       $current_value = $input->{$key};
     }
     
+    # Is invalid
+    my $is_invalid;
+    
+    # Message
     my $message;
+    
     my $is_exists_check;
     for my $func_info (@$func_infos) {
       
@@ -86,7 +90,7 @@ sub validate {
       }
       
       my $arg = $func_info->{args};
-      my $message = $func_info->{message};
+      my $func_info_message = $func_info->{message};
       my $each = $func_info->{each};
       
       my $output_to;
@@ -119,8 +123,18 @@ sub validate {
               if (ref $is_valid eq 'HASH') {
                 $is_invalid = 1;
                 $message = $is_valid->{message};
+                warn "$name message is empty(Validator::Custom::Rule::validate)"
+                  unless defined $is_valid->{message};              
               }
-              else { $is_invalid = !$is_valid }
+              elsif (!$is_valid) {
+                $is_invalid = 1;
+                if (defined $func_info_message) {
+                  $message = $func_info_message;
+                }
+                else {
+                  $message = "$name is invalid";
+                }
+              }
               
               # Validation failed
               last if $is_invalid;
@@ -158,8 +172,18 @@ sub validate {
             if (ref $is_valid eq 'HASH') {
               $is_invalid = 1;
               $message = $is_valid->{message};
+              warn "$name message is empty(Validator::Custom::Rule::validate)"
+                unless defined $is_valid->{message};              
             }
-            else { $is_invalid = !$is_valid }
+            elsif (!$is_valid) {
+              $is_invalid = 1;
+              if (defined $func_info_message) {
+                $message = $func_info_message;
+              }
+              else {
+                $message = "$name is invalid";
+              }
+            }
           }
         }
         elsif ($func_info->{type} eq 'filter') {
