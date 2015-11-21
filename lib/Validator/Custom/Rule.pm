@@ -6,6 +6,14 @@ has 'topic_info' => sub { {} };
 has 'content' => sub { [] };
 has 'validator';
 
+sub fallback {
+  my ($self, $fallback) = @_;
+  
+  $self->topic_info->{fallback} = $fallback;
+  
+  return $self;
+}
+
 sub name {
   my ($self, $name) = @_;
   
@@ -188,12 +196,12 @@ sub validate {
     }
     
     # Set output
-    if (!$is_invalid || ($is_invalid && exists $r->{default})) {
-      # Set default value
+    if (!$is_invalid || ($is_invalid && exists $r->{fallback})) {
+      # Set fallback value
       if ($is_invalid) {
-        $current_value = ref $r->{default} eq 'CODE'
-          ? $r->{default}->($self->validator)
-          : $r->{default};
+        $current_value = ref $r->{fallback} eq 'CODE'
+          ? $r->{fallback}->($self->validator)
+          : $r->{fallback};
       }
       
       # Set output
@@ -322,14 +330,6 @@ sub check {
   }
 }
 
-sub default {
-  my ($self, $default) = @_;
-  
-  $self->topic_info->{default} = $default;
-  
-  return $self;
-}
-
 sub message {
   my ($self, $message) = @_;
   
@@ -369,6 +369,15 @@ sub topic {
 
   # Add topic to rule
   push @{$self->content}, $self->topic_info;
+  
+  return $self;
+}
+
+# Version 0 method(Not used now)
+sub default {
+  my ($self, $default) = @_;
+  
+  $self->topic_info->{default} = $default;
   
   return $self;
 }
