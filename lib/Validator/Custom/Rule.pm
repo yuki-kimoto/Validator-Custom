@@ -39,12 +39,16 @@ sub validate {
     # Key
     my $key = $r->{key};
     
-    # Option
-    my $opts = $r->{option};
-    my $optional = $opts->{optional};
+    # Optional
+    my $optional = $r->{optional};
+    
+    # Name
     my $name;
-    if ($opts->{name}) {
-      $name = $opts->{name};
+    if (ref $key eq 'ARRAY' && !defined $r->{name}) {
+      croak "name is needed for multiple topic values";
+    }
+    if ($r->{name}) {
+      $name = $r->{name};
     }
     else {
       $name = $key;
@@ -204,12 +208,12 @@ sub validate {
     }
     
     # Set output
-    if (!$is_invalid || ($is_invalid && $opts->{default})) {
+    if (!$is_invalid || ($is_invalid && $r->{default})) {
       # Set default value
       if ($is_invalid) {
-        $current_value = ref $opts->{default} eq 'CODE'
-          ? $opts->{default}->($self->validator)
-          : $opts->{default};
+        $current_value = ref $r->{default} eq 'CODE'
+          ? $r->{default}->($self->validator)
+          : $r->{default};
       }
       
       # Set output

@@ -24,7 +24,7 @@ sub new {
     between           => \&Validator::Custom::CheckFunction::between,
     blank             => \&Validator::Custom::CheckFunction::blank,
     decimal           => \&Validator::Custom::CheckFunction::decimal,
-    defined           => sub { defined $_[0] },
+    defined           => \&Validator::Custom::CheckFunction::defined,
     duplication       => \&Validator::Custom::CheckFunction::duplication,
     equal_to          => \&Validator::Custom::CheckFunction::equal_to,
     greater_than      => \&Validator::Custom::CheckFunction::greater_than,

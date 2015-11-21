@@ -16,20 +16,6 @@ sub has_invalid {
 
 sub has_missing { @{shift->missing_params} ? 1 : 0 }
 
-sub invalid_params {
-  my $self = shift;
-  
-  # Invalid parameter names
-  my @invalid_params;
-  foreach my $name (@{$self->invalid_rule_keys}) {
-      my $param = $self->{_error_infos}->{$name}{original_key};
-      $param = [$param] unless ref $param eq 'ARRAY';
-      push @invalid_params, @$param;
-  }
-  
-  return \@invalid_params;
-}
-
 sub invalid_rule_keys {
   my $self = shift;
   
@@ -120,7 +106,22 @@ sub to_hash {
   return $result;
 }
 
-# Version 0 attributes
+# Version 0 method(Not used now)
+sub invalid_params {
+  my $self = shift;
+  
+  # Invalid parameter names
+  my @invalid_params;
+  foreach my $name (@{$self->invalid_rule_keys}) {
+      my $param = $self->{_error_infos}->{$name}{original_key};
+      $param = [$param] unless ref $param eq 'ARRAY';
+      push @invalid_params, @$param;
+  }
+  
+  return \@invalid_params;
+}
+
+# Version 0 attributes(Not used now)
 sub data {
   my $self = shift;
   
@@ -276,12 +277,6 @@ C<has_invalid()> return true value.
 If at least one of parameter names specified in the rule
 is not found in the data,
 C<has_missing()> return true value.
-
-=head2 invalid_params
-
-  my $invalid_params = $result->invalid_params;
-
-Invalid raw data parameter names.
 
 =head2 invalid_rule_keys
 

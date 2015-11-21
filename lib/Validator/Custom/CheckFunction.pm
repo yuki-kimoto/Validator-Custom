@@ -7,6 +7,8 @@ use Carp 'croak';
 
 my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 
+sub defined { defined $_[1] ? 1 : 0 }
+
 sub ascii { defined $_[1] && $_[1] =~ /^[\x21-\x7E]+$/ ? 1 : 0 }
 
 sub between {

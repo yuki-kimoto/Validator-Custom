@@ -23,28 +23,6 @@ $vc_common->add_filter(
   }
 );
 
-# topic
-{
-  my $vc = Validator::Custom->new;
-  my $rule = $vc->create_rule;
-  
-  # topic - allow a string;
-  eval { $rule->topic('key1') };
-  ok(!$@);
-  
-  # topic - allow array refernce
-  eval { $rule->topic(['key1', 'key2']) };
-  ok(!$@);
-  
-  # topic - deny undef
-  eval { $rule->topic(undef) };
-  like($@, qr/topic must be a string or array reference/);
-  
-  # topic - deny hash refernce
-  eval { $rule->topic({}) };
-  like($@, qr/topic must be a string or array reference/);
-}
-
 # check - code reference
 {
   my $vc = Validator::Custom->new;
@@ -58,6 +36,80 @@ $vc_common->add_filter(
   $rule->topic(['k1', 'k2'])->name('k1_2')->check($check)->message('error_k1_2');
   my $messages = $rule->validate($input)->messages;
   is_deeply($messages, ['error_k1_2']);
+}
+
+# validate exception
+{
+  my $vc = Validator::Custom->new;
+
+  # validate exception - allow a key
+  {
+    my $rule = $vc->create_rule;
+    my $input = {key1 => 'a'};
+    $rule->topic('key1')->check('not_blank');
+    eval { $rule->validate($input) };
+    ok(!$@);
+  }
+  
+  # validate exception - allow a key and name
+  {
+    my $rule = $vc->create_rule;
+    my $input = {key1 => 'a'};
+    $rule->topic('key1')->name('k2')->check('not_blank');
+    eval { $rule->validate($input) };
+    ok(!$@);
+  }
+  
+  # validate exception - allow multiple keys and name
+  {
+    my $rule = $vc->create_rule;
+    my $input = {key1 => 'a', key2 => 'b'};
+    $rule->topic(['key1', 'key2'])->name('key12')->check('not_blank');
+    eval { $rule->validate($input) };
+    ok(!$@);  
+  }
+  
+  # validate exception - deny only multiple keys
+  {
+    my $rule = $vc->create_rule;
+    my $input = {key1 => 'a', key2 => 'b'};
+    $rule->topic(['key1', 'key2'])->check('not_blank');
+    eval { $rule->validate($input) };
+    like($@, qr/name is needed for multiple topic values/);
+  }
+}
+
+# topic exception
+{
+  my $vc = Validator::Custom->new;
+  
+  # topic exception - allow a string;
+  {
+    my $rule = $vc->create_rule;
+    eval { $rule->topic('key1') };
+    ok(!$@);
+  }
+  
+  # topic exception - allow array refernce
+  {
+    my $rule = $vc->create_rule;
+    eval { $rule->topic(['key1', 'key2']) };
+    ok(!$@);
+  }
+  
+  # topic exception - deny undef
+  {
+    my $rule = $vc->create_rule;
+    eval { $rule->topic(undef) };
+    like($@, qr/topic must be a string or array reference/);
+  }
+  
+  # topic exception - deny hash refernce
+  {
+    my $rule = $vc->create_rule;
+    eval { $rule->topic({}) };
+    like($@, qr/topic must be a string or array reference/);
+  }
 }
 
 # Cuastom validator
@@ -278,7 +330,7 @@ $vc_common->add_filter(
   
   my $vresult = $rule->validate($input);
   my $invalid_rule_keys = $vresult->invalid_rule_keys;
-  is_deeply($invalid_rule_keys, ['name'], 'check argument first');
+  is_deeply($invalid_rule_keys, ['name']);
   
   my $messages_hash = $vresult->messages_to_hash;
   is_deeply($messages_hash, {name => 'name is invalid'});
@@ -340,8 +392,6 @@ $vc_common->add_filter(
   my $vresult = $rule->validate($input);
 
   is_deeply($vresult->invalid_rule_keys, ['k12', 'k3']);
-  is_deeply($vresult->invalid_params, ['k1', 'k2', 'k3'],
-          'invalid_params');
 }
 
 # check default;
@@ -876,7 +926,7 @@ $vc_common->add_filter(
     ->check_each('not_blank');
   
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_params, ['key2'], "multi values");
+  is_deeply($result->invalid_rule_keys, ['key2']);
 }
 
 # missing_params
