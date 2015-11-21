@@ -343,10 +343,6 @@ sub validate {
   # Validation rule
   $rule ||= $self->rule;
   
-  if ($rule->{version} && $rule->{version} == 1) {
-    croak "Can't call validate method(Validator::Custom). Use \$rule->validate(\$input) instead";
-  }
-  
   # Data filter
   my $filter = $self->data_filter;
   $input = $filter->($input) if $filter;
@@ -394,6 +390,10 @@ sub validate {
   }
   my $rule_obj = $self->rule_obj;
 
+  if ($rule_obj->{version} && $rule_obj->{version} == 1) {
+    croak "Can't call validate method(Validator::Custom). Use \$rule->validate(\$input) instead";
+  }
+  
   # Process each key
   OUTER_LOOP:
   for (my $i = 0; $i < @{$rule_obj->rule}; $i++) {
