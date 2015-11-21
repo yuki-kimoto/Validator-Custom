@@ -219,19 +219,17 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   my $rule = $vc->create_rule;
   eval{$rule->validate([])};
-  like($@, qr/First argument must be hash ref/, 'Data not hash ref');
+  like($@, qr/Input must be hash reference/);
 }
 
 {
   eval{Validator::Custom->new->rule({})->validate({})};
-  like($@, qr/Invalid rule structure/sm,
-           'Validation rule not array ref');
+  like($@, qr/Invalid rule structure/sm);
 }
 
 {
   eval{Validator::Custom->new->rule([key => 'Int'])->validate({})};
-  like($@, qr/Invalid rule structure/sm, 
-           'Constraints of key not array ref');
+  like($@, qr/Invalid rule structure/sm);
 }
 
 {
@@ -261,9 +259,9 @@ $vc_common->add_filter(
   is_deeply($invalid_rule_keys, ['name'], 'check argument first');
   
   my $messages_hash = $vresult->messages_to_hash;
-  is_deeply($messages_hash, {name => 'Error message not specified'});
+  is_deeply($messages_hash, {name => 'name is invalid'});
   
-  is($vresult->message('name'), 'Error message not specified');
+  is($vresult->message('name'), 'name is invalid');
   
   $invalid_rule_keys = $rule->validate($input)->invalid_rule_keys;
   is_deeply($invalid_rule_keys, ['name']);
