@@ -374,6 +374,10 @@ sub topic {
   
   $self->{version} = 1;
   
+  # Check
+  croak "topic must be a string or array reference"
+    unless defined $key && (!ref $key || ref $key eq 'ARRAY');
+  
   # Create topic
   my $topic_info = {};
   $topic_info->{key} = $key;

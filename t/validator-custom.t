@@ -23,6 +23,28 @@ $vc_common->add_filter(
   }
 );
 
+# topic
+{
+  my $vc = Validator::Custom->new;
+  my $rule = $vc->create_rule;
+  
+  # topic - allow a string;
+  eval { $rule->topic('key1') };
+  ok(!$@);
+  
+  # topic - allow array refernce
+  eval { $rule->topic(['key1', 'key2']) };
+  ok(!$@);
+  
+  # topic - deny undef
+  eval { $rule->topic(undef) };
+  like($@, qr/topic must be a string or array reference/);
+  
+  # topic - deny hash refernce
+  eval { $rule->topic({}) };
+  like($@, qr/topic must be a string or array reference/);
+}
+
 # check - code reference
 {
   my $vc = Validator::Custom->new;
@@ -312,7 +334,7 @@ $vc_common->add_filter(
   
   my $input = {k1 => 1, k2 => 2, k3 => 3, k4 => 1};
   my $rule = $vc->create_rule;
-  $rule->topic(['k1', 'k2'])->check('p')->name('k12');
+  $rule->topic(['k1', 'k2'])->name('k12')->check('p');
   $rule->topic('k3')->check('q');
   $rule->topic('k4')->check('q');
   my $vresult = $rule->validate($input);
