@@ -377,7 +377,7 @@ sub validate {
   
   # Shared rule
   my $shared_rule = $self->shared_rule;
-  warn "DBIx::Custom::shared_rule is DEPRECATED!"
+  warn "Validator::Custom::shared_rule is DEPRECATED!"
     if @$shared_rule;
   
   if (ref $rule eq 'Validator::Custom::Rule') {
@@ -418,6 +418,9 @@ sub validate {
       my $first_key = (keys %$key)[0];
       $result_key = $first_key;
       $key         = $key->{$first_key};
+    }
+    elsif (defined $r->{name}) {
+      $result_key = $r->{name};
     }
     
     # Real keys

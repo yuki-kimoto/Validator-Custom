@@ -6,6 +6,14 @@ has 'topic_info' => sub { {} };
 has 'content' => sub { [] };
 has 'validator';
 
+sub name {
+  my ($self, $name) = @_;
+  
+  $self->topic_info->{name} = $name;
+  
+  return $self;
+}
+
 sub validate {
   my ($self, $input) = @_;
   
@@ -397,16 +405,6 @@ sub output_to {
   
   # Value is optional
   $self->content->[-1]{func_infos}[-1]{output_to} = $key;
-}
-
-# Version 0 method(Not used now)
-sub name {
-  my ($self, $result_key) = @_;
-  
-  my $key = $self->topic_info->{key};
-  $self->topic_info->{key} = {$result_key => $key};
-  
-  return $self;
 }
 
 # Version 0 method(Not used now)

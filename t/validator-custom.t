@@ -23,6 +23,21 @@ $vc_common->add_filter(
   }
 );
 
+# check - code reference
+{
+  my $vc = Validator::Custom->new;
+  my $input = { k1 => 1, k2 => 2};
+  my $check = sub {
+    my ($self, $values) = @_;
+    return $values->[0] eq $values->[1];
+  };
+  
+  my $rule = $vc->create_rule;
+  $rule->topic(['k1', 'k2'])->name('k1_2')->check($check)->message('error_k1_2');
+  my $messages = $rule->validate($input)->messages;
+  is_deeply($messages, ['error_k1_2']);
+}
+
 # Cuastom validator
 {
   my $vc = $vc_common;
@@ -198,116 +213,6 @@ $vc_common->add_filter(
   $rule->topic('k1')->check('Int')->message("k1Error1");
   my $messages = $rule->validate($input)->messages;
   is(scalar @$messages, 0);
-}
-
-{
-  my $vc = Validator::Custom->new;
-  $vc->add_check(
-    C3 => sub {
-      my ($self, $values, $args) = @_;
-      if ($values->[0] == $values->[1] && $values->[0] == $args->[0]) {
-          return 1;
-      }
-      else {
-          return 0;
-      }
-    },
-    C4 => sub {
-      my ($self, $value, $arg) = @_;
-      return defined $arg ? 1 : 0;
-    },
-  );
-  $vc->add_filter(
-    C1 => sub {
-      my ($self, $value, $args) = @_;
-      
-      return [$value, $args];
-    },
-    
-    C2 => sub {
-      my ($self, $value, $args) = @_;
-      
-      return [$value, $args];
-    },
-    
-    TRIM_LEAD => sub {
-      my ($self, $value) = @_;
-      
-      $value =~ s/^ +//;
-      
-      return $value;
-    },
-    
-    TRIM_TRAIL => sub {
-      my ($self, $value) = @_;
-      
-      $value =~ s/ +$//;
-      
-      return $value;
-    },
-    
-    NO_ERROR => sub {
-      return 'a';
-    },
-    C5 => sub {
-      my ($self, $value, $arg) = @_;
-      return $arg;
-    },
-    C6 => sub {
-      my $self = shift;
-      
-      return $self;
-    }
-  );
-
-  my $input = { k1 => 1, k2 => 'a', k3 => '  3  ', k4 => 4, k5 => 5, k6 => 5, k7 => 'a', k11 => [1,2]};
-  my $rule = $vc->create_rule;
-  $rule->topic('k1')->filter('C1' => [3, 4])->message("k1Error1");
-  $rule->topic('k2')->filter('C2' => [3, 4])->message("k2Error1");
-  $rule->topic('k3')->filter('TRIM_LEAD')->filter('TRIM_TRAIL');
-  $rule->topic('k4')->filter('NO_ERROR');
-  $rule->topic(['k5', 'k6'])->check('C3' => [5])->message('k5 k6 Error');
-  $rule->topic('k7')->filter('C2' => [3, 4]);
-  $rule->topic('k11')->filter_each('C6');
-  
-  {
-    my $result= $rule->validate($input);
-    is_deeply($result->messages, 
-              ['k2Error1', 'Error message not specified',
-               'Error message not specified'
-              ]);
-    
-    is_deeply($result->invalid_rule_keys, [qw/k2 k4 k7/]);
-    
-    is_deeply($result->output->{k1},[1, [3, 4]]);
-    ok(!$result->output->{k2});
-    cmp_ok($result->output->{k3}, 'eq', 3, 'filter');
-    ok(!$result->output->{k4}, 'data not set in case error');
-  }
-  {
-    my $input = {k5 => 5, k6 => 6};
-    my $rule = $vc->create_rule;
-    $rule->topic(['k5', 'k6'])->check('C3' => [5])->message('k5 k6 Error');
-    
-    my $result = $rule->validate($input);
-    local $SIG{__WARN__} = sub {};
-    ok(!$result->is_valid);
-    is(scalar @{$result->invalid_rule_keys}, 1);
-  }
-}
-
-{
-  my $vc = Validator::Custom->new;
-  my $input = { k1 => 1, k2 => 2};
-  my $check = sub {
-    my ($self, $values) = @_;
-    return $values->[0] eq $values->[1];
-  };
-  
-  my $rule = $vc->create_rule;
-  $rule->topic([qw/k1 k2/])->name('k1_2')->check($check)->message('error_k1_2');
-  my $messages = $rule->validate($input)->messages;
-  is_deeply($messages, ['error_k1_2']);
 }
 
 {
