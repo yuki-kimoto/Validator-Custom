@@ -69,7 +69,7 @@ sub date {
 }
 
 sub datetime {
-  my ($rule, $value) @_;
+  my ($rule, $value) = @_;
   
   require Time::Piece;
   
@@ -160,7 +160,7 @@ sub decimal {
 }
 
 sub duplication {
-  my ($rule, $values) @_;
+  my ($rule, $values) = @_;
 
   return 0 unless defined $values->[0] && defined $values->[1];
   return $values->[0] eq $values->[1];
@@ -263,8 +263,8 @@ sub selected_at_least {
 
 sub space { defined $_[1] && $_[1] =~ '^[ \t\n\r\f]*$' ? 1 : 0 }
 
+1;
+
 =head1 NAME
 
 Validator::Custom::CheckFunction - Checking functions
-
-1;

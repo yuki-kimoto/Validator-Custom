@@ -4,10 +4,14 @@ use 5.008001;
 our $VERSION = '1.00';
 
 use Carp 'croak';
-use Validator::Custom::Constraint;
 use Validator::Custom::Result;
 use Validator::Custom::Rule;
+use Validator::Custom::FilterFunction;
+use Validator::Custom::CheckFunction;
+
+# Version 0 modules(Not used now)
 use Validator::Custom::Constraints;
+use Validator::Custom::Constraint;
 
 sub create_rule { Validator::Custom::Rule->new(validator => shift) }
 
@@ -338,6 +342,10 @@ sub validate {
   
   # Validation rule
   $rule ||= $self->rule;
+  
+  if ($rule->{version} && $rule->{version} == 1) {
+    croak "Can't call validate method(Validator::Custom). Use \$rule->validate(\$input) instead";
+  }
   
   # Data filter
   my $filter = $self->data_filter;

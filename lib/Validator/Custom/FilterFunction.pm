@@ -16,7 +16,7 @@ sub date_to_timepiece {
     my $mon  = $value->[1];
     my $mday = $value->[2];
     
-    return undef;
+    return undef
       unless defined $year && defined $mon && defined $mday;
     
     unless ($year =~ /^[0-9]{1,4}$/ && $mon =~ /^[0-9]{1,2}$/
@@ -186,6 +186,8 @@ sub trim_uni_trail {
   $value =~ s/^(.*?)\s+$/$1/ms if defined $value;
   return $value;
 }
+
+1;
 
 =head1 NAME
 

@@ -6,9 +6,28 @@ use utf8;
 use Validator::Custom;
 use Validator::Custom::Rule;
 
+# int
 {
   my $vc = Validator::Custom->new;
-  $vc->register_constraint(Int => sub{$_[0] =~ /^\d+$/});
+  my $input = {
+    k1  => '19',
+    k2  => '-10',
+    k3 => 'a',
+    k4 => '10.0',
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('int');
+  $rule->topic('k2')->check('int');
+  $rule->topic('k3')->check('int');
+  $rule->topic('k4')->check('int');
+
+  my $result = $rule->validate($input);
+  is_deeply($result->invalid_rule_keys, ['k3', 'k4']);
+}
+
+{
+  my $vc = Validator::Custom->new;
+  $vc->add_check(Int => sub{$_[1] =~ /^\d+$/});
   my $input = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a'};
   my $rule = $vc->create_rule;
   $rule->topic('k1')->each(1)->check('Int')->message("k1Error1");
@@ -16,7 +35,7 @@ use Validator::Custom::Rule;
   $rule->topic('k3')->each(1)->check('Int')->message("k3Error1");
   $rule->topic('k4')->each(1)->check('Int')->message("k4Error1");
 
-  my $messages = $vc->validate($input, $rule)->messages;
+  my $messages = $rule->validate($input)->messages;
 
   is_deeply($messages, [qw/k3Error1 k4Error1/], 'array validate');
 }
@@ -493,25 +512,6 @@ $vc_common->register_constraint(
 
   my $result = $vc->validate($input, $rule);
   is_deeply($result->invalid_rule_keys, ['k2', 'k3']);
-}
-
-# int
-{
-  my $vc = Validator::Custom->new;
-  my $input = {
-    k1  => '19',
-    k2  => '-10',
-    k3 => 'a',
-    k4 => '10.0',
-  };
-  my $rule = $vc->create_rule;
-  $rule->topic('k1')->check('int');
-  $rule->topic('k2')->check('int');
-  $rule->topic('k3')->check('int');
-  $rule->topic('k4')->check('int');
-
-  my $result = $vc->validate($input, $rule);
-  is_deeply($result->invalid_rule_keys, ['k3', 'k4']);
 }
 
 # uint

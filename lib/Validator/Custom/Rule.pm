@@ -9,8 +9,7 @@ has 'validator';
 sub validate {
   my ($self, $input) = @_;
   
-  # Set version
-  $self->{version} = 1;
+  $DB::single = 1;
   
   # Check data
   croak "Input must be hash reference."
@@ -206,7 +205,7 @@ sub filter_each {
   }
   $func_info->{each} = 1;
   $self->topic_info->{func_infos} ||= [];
-  push @{$self->topic_fino->{func_infos}}, $func_info;
+  push @{$self->topic_info->{func_infos}}, $func_info;
   
   return $self;
 }
@@ -222,7 +221,7 @@ sub check_each {
   }
   $func_info->{each} = 1;
   $self->topic_info->{func_infos} ||= [];
-  push @{$self->topic_fino->{func_infos}}, $func_info;
+  push @{$self->topic_info->{func_infos}}, $func_info;
   
   return $self;
 }
@@ -239,7 +238,7 @@ sub filter {
       $func_info->{args} = shift;
     }
     $self->topic_info->{func_infos} ||= [];
-    push @{$self->topic_fino->{func_infos}}, $func_info;
+    push @{$self->topic_info->{func_infos}}, $func_info;
     
     return $self;
   }
@@ -261,7 +260,7 @@ sub check {
       $func_info->{args} = shift;
     }
     $self->topic_info->{func_infos} ||= [];
-    push @{$self->topic_fino->{func_infos}}, $func_info;
+    push @{$self->topic_info->{func_infos}}, $func_info;
     
     return $self;
   }
@@ -325,6 +324,8 @@ sub message {
 sub topic {
   my ($self, $key) = @_;
   
+  $self->{version} = 1;
+  
   # Create topic
   my $topic_info = {};
   $topic_info->{key} = $key;
@@ -336,13 +337,23 @@ sub topic {
   return $self;
 }
 
+sub topic_v0 {
+  my $self = shift;
+  
+  $self->topic(@_);
+
+  delete $self->{version};
+  
+  return $self;
+}
+
 sub optional {
   my ($self, $key) = @_;
   
   # Version 0 logica(Not used now)
   if (defined $key) {
     # Create topic
-    $self->topic($key);
+    $self->topic_v0($key);
   }
   
   # Value is optional
@@ -389,7 +400,7 @@ sub require {
   
   # Create topic
   if (defined $key) {
-    $self->topic($key);
+    $self->topic_v0($key);
   }
   
   return $self;
