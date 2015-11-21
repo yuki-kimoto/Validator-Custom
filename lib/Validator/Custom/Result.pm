@@ -5,16 +5,6 @@ use Carp 'croak';
 
 # Attrbutes
 has output => sub { {} };
-has missing_params => sub { [] };
-
-sub has_invalid {
-  my $self = shift;
-  
-  # Has invalid parameter?
-  return keys %{$self->{_error_infos}} ? 1 : 0;
-}
-
-sub has_missing { @{shift->missing_params} ? 1 : 0 }
 
 sub invalid_rule_keys {
   my $self = shift;
@@ -45,11 +35,6 @@ sub is_ok {
   
   # Is ok?
   return !$self->has_invalid && !$self->has_missing ? 1 : 0;
-}
-
-sub loose_data {
-  my $self = shift;
-  return {%{$self->raw_data}, %{$self->output}};
 }
 
 sub message {
@@ -107,6 +92,23 @@ sub to_hash {
 }
 
 # Version 0 method(Not used now)
+sub has_missing { @{shift->missing_params} ? 1 : 0 }
+
+# Version 0 method(Not used now)
+sub has_invalid {
+  my $self = shift;
+  
+  # Has invalid parameter?
+  return keys %{$self->{_error_infos}} ? 1 : 0;
+}
+
+# Version 0 method(Not used now)
+sub loose_data {
+  my $self = shift;
+  return {%{$self->raw_data}, %{$self->output}};
+}
+
+# Version 0 method(Not used now)
 sub invalid_params {
   my $self = shift;
   
@@ -133,6 +135,7 @@ sub data {
   }
 }
 has raw_data  => sub { {} };
+has missing_params => sub { [] };
 
 # DEPRECATED!
 sub error_reason {
@@ -202,27 +205,17 @@ Validator::Custom::Result - Result of validation
 =head1 SYNOPSYS
     
   # Result
-  my $result = $vc->validate($input, $rule);
+  my $result = $rule->validate($input);
 
   # Output
   my $output = $result->output;
 
   # Chacke if the result is valid.
-  # (this means result have neither missing nor invalid parameter)
   my $is_ok = $result->is_ok;
 
-  # Check the existence of missing parameter
-  my $has_missing_param = $result->has_missing;
-  
   # Check if one parameter is valid
   my $title_is_valid = $result->is_valid('title');
 
-  # Missing parameters(this is original keys)
-  my $missing_params = $result->missing_params;
-  
-  # Invalid parameter names(this is original keys)
-  my $invalid_params = $result->invalid_params;
-  
   # Invalid rule keys
   my $invalid_rule_keys = $result->invalid_rule_keys;
 
@@ -250,33 +243,10 @@ if you need.
 Input is passed to C<validate()> method, and after validation the input is converted to output by filter.
 You can get filtered output using C<output>.
 
-=head2 missing_params
-
-  my $missing_params = $result->missing_params;
-  $result            = $result->missing_params($missing_params);
-
-You can get missing parameter names using C<missing_params()>.
-In this example, return value is the following one.
-
 =head1 METHODS
 
 L<Validator::Custom::Result> inherits all methods from L<Object::Simple>
 and implements the following new ones.
-
-=head2 has_invalid
-
-  my $has_invalid = $result->has_invalid;
-
-If at least one of parameter value is invalid,
-C<has_invalid()> return true value.
-
-=head2 has_missing
-
-  my $has_missing_param = $result->has_missing;
-
-If at least one of parameter names specified in the rule
-is not found in the data,
-C<has_missing()> return true value.
 
 =head2 invalid_rule_keys
 
@@ -328,9 +298,6 @@ The following keys is set.
 
   {
     ok =>      $result->is_ok,
-    missing => $result->has_missing,
-    invalid => $result->has_invalid,
-    missing_params => $result->missing_params,
     messages => $result->messages_to_hash
   }
 

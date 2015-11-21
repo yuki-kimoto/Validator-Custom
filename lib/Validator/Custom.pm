@@ -447,6 +447,11 @@ sub validate {
         unless $VALID_OPTIONS{$oname};
     }
     
+    # Default
+    if (exists $opts->{default}) {
+      $r->{default} = $opts->{default};
+    }
+    
     # Is data copy?
     my $copy = 1;
     $copy = $opts->{copy} if exists $opts->{copy};
@@ -457,7 +462,7 @@ sub validate {
     my $missing_params = $result->missing_params;
     for my $key (@$keys) {
       unless (exists $input->{$key}) {
-        if ($require && !exists $opts->{default}) {
+        if ($require && !exists $r->{default}) {
           push @$missing_params, $key
             unless $found_missing_params->{$key};
           $found_missing_params->{$key}++;
@@ -466,10 +471,10 @@ sub validate {
       }
     }
     if ($found_missing_param) {
-      $result->output->{$result_key} = ref $opts->{default} eq 'CODE'
-          ? $opts->{default}->($self) : $opts->{default}
-        if exists $opts->{default} && $copy;
-      next if $opts->{default} || !$require;
+      $result->output->{$result_key} = ref $r->{default} eq 'CODE'
+          ? $r->{default}->($self) : $r->{default}
+        if exists $r->{default} && $copy;
+      next if $r->{default} || !$require;
     }
     
     # Already valid
@@ -570,12 +575,12 @@ sub validate {
       
       # Add error if it is invalid
       unless ($is_valid) {
-        if (exists $opts->{default}) {
+        if (exists $r->{default}) {
           # Set default value
-          $result->output->{$result_key} = ref $opts->{default} eq 'CODE'
-                                       ? $opts->{default}->($self)
-                                       : $opts->{default}
-            if exists $opts->{default} && $copy;
+          $result->output->{$result_key} = ref $r->{default} eq 'CODE'
+                                       ? $r->{default}->($self)
+                                       : $r->{default}
+            if exists $r->{default} && $copy;
           $valid_keys->{$result_key} = 1
         }
         else {
@@ -869,33 +874,16 @@ use C<validate()> to validate the data applying the rule.
 C<validate()> return L<Validator::Custom::Result> object.
 
 B<5. Manipulate the validation result>
-
-  unless ($result->is_ok) {
-    if ($result->has_missing) {
-      my $missing_params = $result->missing_params;
-    }
-    
-    if ($result->has_invalid) {
-      my $messages = $result->messages_to_hash;
-    }
+  
+  if ($result->is_ok) {
+    my $output = $result->output;
+  }
+  else {
+    # Handle error
   }
 
 If you check the data is completely valid, use C<is_ok()>.
 C<is_ok()> return true value
-if invalid parameter values is not found and all parameter
-names specified in the rule is found in the data.
-
-If at least one of parameter names specified in the rule
-is not found in the data,
-C<has_missing()> return true value.
-
-You can get missing parameter names using C<missing_params()>.
-In this example, return value is the following one.
-
-  ['price']
-
-If at least one of parameter value is invalid,
-C<has_invalid()> return true value.
 
 You can get the pairs of invalid parameter name and message
 using C<messages_to_hash()>.
@@ -913,7 +901,7 @@ in L</"2. Validation result">.
 C<validate()> return L<Validator::Custom::Result> object.
 You can manipulate the result by various methods.
 
-C<is_ok()>, C<has_missing()>, C<has_invalid()>, C<missing_params()>,
+C<is_ok()>, C<has_invalid()>
 C<messages_to_hash()> is already explained in L</"1. Basic">
 
 The following ones is often used methods.
@@ -992,8 +980,9 @@ Message corresponding to the parameter name which value is invalid.
 
   $rule->topic('age')->default(5)
 
-Default value. This value is automatically set to result data
-if the parameter value is invalid or the parameter name specified in rule is missing in the data.
+Default value. 
+If the parameter value is invalid,
+This value is set to output.
 
 If you set not string or number value, you should the value which surrounded by code reference
 

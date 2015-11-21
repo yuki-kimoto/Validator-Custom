@@ -6,6 +6,13 @@ use utf8;
 use Validator::Custom;
 use Validator::Custom::Rule;
 
+# TODO
+# run_filter
+# run_check
+# check exists
+# check_each exists
+# optional exists
+
 my $vc_common = Validator::Custom->new;
 $vc_common->add_check(
   Int => sub { $_[1] =~ /^\d+$/ },
@@ -22,6 +29,18 @@ $vc_common->add_filter(
     return $value * 2;
   }
 );
+
+# default option
+{
+  my $vc = Validator::Custom->new;
+  my $input = {};
+  my $rule = $vc->create_rule;
+  $rule->topic('key1')->check('int')->default(2);
+
+  my $result = $rule->validate($input);
+  ok(!$result->is_ok);
+  is_deeply($result->output, {key1 => 2});
+}
 
 # check_each
 {
@@ -928,50 +947,15 @@ $vc_common->add_filter(
   );
 }
 
-# missing_params
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => 1};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->check('int');
-  $rule->topic('key2')->check('int');
-  $rule->topic(['key2', 'key3'])->check('duplication')->name('rkey1');
-
-  my $result = $rule->validate($input);
-  ok(!$result->is_ok);
-  is_deeply($result->missing_params, ['key2', 'key3']);
-}
-
-# has_missing
-{
-  my $input = {};
-  my $vc = Validator::Custom->new;
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->check('int');
-
-  my $result = $rule->validate($input);
-  ok($result->has_missing);
-}
-
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => 'a'};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->check('int');
-
-  my $result = $rule->validate($input);
-  ok(!$result->has_missing);
-}
-
 # duplication result value
 {
   my $vc = Validator::Custom->new;
   my $input = {key1 => 'a', key2 => 'a'};
   my $rule = $vc->create_rule;
-  $rule->topic(['key1', 'key2'])->check('duplication')->name('key3');
+  $rule->topic(['key1', 'key2'])->name('key3')->check('duplication');
   
   my $result = $rule->validate($input);
-  is($result->output->{key3}, 'a');
+  is_deeply($result->output, {key1 => 'a', 'key2' => 'a'});
 }
 
 # message option
@@ -983,18 +967,6 @@ $vc_common->add_filter(
 
   my $result = $rule->validate($input);
   is($result->message('key1'), 'error');
-}
-
-# default option
-{
-  my $vc = Validator::Custom->new;
-  my $input = {};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->check('int')->default(2);
-
-  my $result = $rule->validate($input);
-  ok($result->is_ok);
-  is($result->output->{key1}, 2);
 }
 
 {
@@ -1089,14 +1061,10 @@ $vc_common->add_filter(
   my $result = $rule->validate($input);
   is_deeply($result->to_hash, {
     ok => $result->is_ok, invalid => $result->has_invalid,
-    missing => $result->has_missing,
-    missing_params => $result->missing_params,
     messages => $result->messages_to_hash
   });
   is_deeply($result->to_hash, {
     ok => 0, invalid => 1,
-    missing => 1,
-    missing_params => ['key4', 'key5'],
     messages => {key2 => 'a', key3 => 'b', key4 => 'key4 must be int', key5 => 'key5 must be int'}
   });
 }
@@ -1111,7 +1079,6 @@ $vc_common->add_filter(
   $rule->topic('key3')->optional->check('int');
 
   my $result = $rule->validate($input);
-  is_deeply($result->missing_params, ['key2']);
   ok(!$result->is_ok);
 }
 
@@ -1411,7 +1378,6 @@ $vc_common->add_filter(
   $rule->topic('key1')->check('defined')->message('key1 is undefined');
 
   my $result = $rule->validate($input);
-  is_deeply($result->missing_params, ['key1']);
   is_deeply($result->messages, ['key1 is undefined']);
   ok(!$result->is_valid('key1'));
 }
