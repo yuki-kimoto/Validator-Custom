@@ -9,8 +9,6 @@ has 'validator';
 sub validate {
   my ($self, $input) = @_;
   
-  $DB::single = 1;
-  
   # Check data
   croak "Input must be hash reference."
     unless ref $input eq 'HASH';
@@ -62,6 +60,7 @@ sub validate {
     }
     
     my $message;
+    my $is_exists_check;
     for my $func_info (@$func_infos) {
       
       # Constraint information
@@ -71,7 +70,10 @@ sub validate {
         $func = $func_name;
       }
       else {
-        if ($func_info->{type} eq 'check') {
+        if ($func_info->{name} eq 'exists') {
+          $is_exists_check = 1;
+        }
+        elsif ($func_info->{type} eq 'check') {
           $func = $self->validator->{checks}{$func_name};
           croak "Can't find $func_name check"
             unless $func;
@@ -102,23 +104,27 @@ sub validate {
       if($func_info->{each} && ref $current_value eq 'ARRAY') {
         # Check
         if ($func_info->{type} eq 'check') {
-          
-          # Validation loop
-          for (my $k = 0; $k < @$current_value; $k++) {
-            my $value = $current_value->[$k];
-            
-            # Validate
-            my $is_valid= $func->($self->validator, $value, $arg);
-            
-            # Constrint result
-            if (ref $is_valid eq 'HASH') {
-              $is_invalid = 1;
-              $message = $is_valid->{message};
+          if ($is_exists_check) {
+            croak "Can't call exists check from check_each";
+          }
+          else {          
+            # Validation loop
+            for (my $k = 0; $k < @$current_value; $k++) {
+              my $value = $current_value->[$k];
+              
+              # Validate
+              my $is_valid= $func->($self->validator, $value, $arg);
+              
+              # Constrint result
+              if (ref $is_valid eq 'HASH') {
+                $is_invalid = 1;
+                $message = $is_valid->{message};
+              }
+              else { $is_invalid = !$is_valid }
+              
+              # Validation failed
+              last if $is_invalid;
             }
-            else { $is_invalid = !$is_valid }
-            
-            # Validation failed
-            last if $is_invalid;
           }
         }
         # Filter
@@ -138,13 +144,23 @@ sub validate {
       # Single value
       else {      
         if ($func_info->{type} eq 'check') {
-          my $is_valid = $func->($self->validator, $current_value, $arg);
-          
-          if (ref $is_valid eq 'HASH') {
-            $is_invalid = 1;
-            $message = $is_valid->{message};
+          if ($is_exists_check) {
+            if (exists $input->{$key}) {
+              $is_invalid = 1;
+            }
+            else {
+              $is_invalid = 0;
+            }
           }
-          else { $is_invalid = !$is_valid }
+          else {
+            my $is_valid = $func->($self->validator, $current_value, $arg);
+            
+            if (ref $is_valid eq 'HASH') {
+              $is_invalid = 1;
+              $message = $is_valid->{message};
+            }
+            else { $is_invalid = !$is_valid }
+          }
         }
         elsif ($func_info->{type} eq 'filter') {
           my $new_value = $func->($self->validator, $current_value, $arg);
@@ -337,16 +353,6 @@ sub topic {
   return $self;
 }
 
-sub topic_v0 {
-  my $self = shift;
-  
-  $self->topic(@_);
-
-  delete $self->{version};
-  
-  return $self;
-}
-
 sub optional {
   my ($self, $key) = @_;
   
@@ -383,6 +389,10 @@ sub name {
 sub each {
   my $self = shift;
   
+  if ($self->{version} && $self->{version} == 1) {
+    croak "Can't call each method(Validator::Custom::Rule)";
+  }
+  
   if (@_) {
     $self->topic_info->{each} = $_[0];
     return $self;
@@ -397,7 +407,11 @@ sub each {
 # Version 0 method(Not used now)
 sub require {
   my ($self, $key) = @_;
-  
+
+  if ($self->{version} && $self->{version} == 1) {
+    croak "Can't call require method(Validator::Custom::Rule)";
+  }
+    
   # Create topic
   if (defined $key) {
     $self->topic_v0($key);
@@ -466,9 +480,24 @@ sub parse {
 }
 
 # Version 0 method(Not used now)
+sub topic_v0 {
+  my $self = shift;
+  
+  $self->topic(@_);
+
+  delete $self->{version};
+  
+  return $self;
+}
+
+# Version 0 method(Not used now)
 sub copy {
   my ($self, $copy) = @_;
-  
+
+  if ($self->{version} && $self->{version} == 1) {
+    croak "Can't call copy method(Validator::Custom::Rule)";
+  }
+    
   $self->topic_info->{option}{copy} = $copy;
   
   return $self;
@@ -477,7 +506,11 @@ sub copy {
 # Version 0 method(Not used now)
 sub check_or {
   my ($self, @constraints) = @_;
-  
+
+  if ($self->{version} && $self->{version} == 1) {
+    croak "Can't call check_or method(Validator::Custom::Rule)";
+  }
+    
   my $constraint_h = {};
   $constraint_h->{constraint} = \@constraints;
   

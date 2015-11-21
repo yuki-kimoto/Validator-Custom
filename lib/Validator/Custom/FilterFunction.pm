@@ -108,7 +108,7 @@ sub merge {
   return join('', @$values);
 }
 
-sub shift_array {
+sub first {
   my ($rule, $values) = @_;
   
   $values = [$values] unless ref $values eq 'ARRAY';

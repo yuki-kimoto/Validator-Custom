@@ -49,7 +49,7 @@ sub new {
   $self->add_filter(
     date_to_timepiece => \&Validator::Custom::FilterFunction::date_to_timepiece,
     datetime_to_timepiece => \&Validator::Custom::FilterFunction::datetime_to_timepiece,
-    shift             => \&Validator::Custom::FilterFunction::shift_array,
+    first             => \&Validator::Custom::FilterFunction::first,
     merge             => \&Validator::Custom::FilterFunction::merge,
     to_array          => \&Validator::Custom::FilterFunction::to_array,
     to_array_remove_blank => \&Validator::Custom::FilterFunction::to_array_remove_blank,
@@ -763,7 +763,7 @@ Validator::Custom - HTML form Validation, easy and flexibly
   $rule->topic('name')
     ->check('string')->message('name should be string')
     ->check('not_blank')->message('name should be not blank')
-    ->check({length => [1, 5]})->message('name is too long');
+    ->check(length => [1, 5])->message('name is too long');
   
   # Rule syntax - value is optional, default is 20
   $rule->topic('age')->optional->filter('trim')->check('int')->default(20);
@@ -847,7 +847,7 @@ B<3. Prepare a rule for validation>
   
   $rule->topic('name')
     ->check('not_blank')->message('name is empty')
-    ->check({length => [1, 5]})->message('name must be length 1 to 5');
+    ->check(length => [1, 5])->message('name must be length 1 to 5');
 
 Please see L<Validator::Custom/"RULE"> about rule syntax.
 
@@ -951,7 +951,7 @@ in the POD of L<Validator::Custom::Result>
   # Rule syntax - not blank, length is 1 to 5, have error messages
   $rule->topic('name')
     ->check('not_blank')->message('name is emtpy')
-    ->check({length => [1, 5]})->message('name is too long');
+    ->check(length => [1, 5])->message('name is too long');
   
   # Rule syntax - value is optional, default is 20
   $rule->topic('age')->optional->check('int')->default(20);
@@ -1007,13 +1007,13 @@ Default to 1. Parameter value is copied to the data.
 
 You set checks by C<check> method.
 
-  $rule->topic('age')->check({'length' => [1, 5]});
+  $rule->topic('age')->check('length' => [1, 5]);
 
 You can set message for each check function
 
   $rule->topic('name')
     ->check('not_blank')->message('name must be not blank')
-    ->check({length => [1, 5]})->message('name must be 1 to 5 length');
+    ->check(length => [1, 5])->message('name must be 1 to 5 length');
 
 You can create original check function using
 original checks.
@@ -1125,7 +1125,7 @@ Ascii graphic characters(hex 21-7e).
 
   # Check (1, 2, .. 19, 20)
   Data: {age => 19}
-  Rule: $rule->topic('age')->check({between => [1, 20]})
+  Rule: $rule->topic('age')->check(between => [1, 20])
 
 Between A and B.
 
@@ -1139,8 +1139,8 @@ Blank.
 =head2 decimal
   
   Data: {num1 => '123', num2 => '1.45'}
-  Rule: $rule->topic('num1')->check({'decimal' => 3})
-        $rule->topic('num2')->check({'decimal' => [1, 2]})
+  Rule: $rule->topic('num1')->check('decimal' => 3)
+        $rule->topic('num2')->check('decimal' => [1, 2])
 
 Decimal. You can specify maximum digits number at before
 and after '.'.
@@ -1149,8 +1149,8 @@ If you set undef value or don't set any value, that means there is no maximum li
   
   Data: {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'}
   Rule: $rule->topic('num1')->check('decimal')
-        $rule->topic('num2')->check({'decimal' => [undef, 2]})
-        $rule->topic('num2')->check({'decimal' => [2, undef]})
+        $rule->topic('num2')->check('decimal' => [undef, 2])
+        $rule->topic('num2')->check('decimal' => [2, undef])
 
 =head2 defined
 
@@ -1176,14 +1176,14 @@ result of validation is false.
 =head2 equal_to
 
   Data: {price => 1000}
-  Rule: $rule->topic('price')->check({'equal_to' => 1000})
+  Rule: $rule->topic('price')->check('equal_to' => 1000)
 
 Numeric equal comparison.
 
 =head2 greater_than
 
   Data: {price => 1000}
-  Rule: $rule->topic('price')->check({'greater_than' => 900})
+  Rule: $rule->topic('price')->check('greater_than' => 900)
 
 Numeric "greater than" comparison
 
@@ -1204,7 +1204,7 @@ Integer.
 =head2 in_array
 
   Data: {food => 'sushi'};
-  Rule: $rule->topic('food')->check({'in_array' => [qw/sushi bread apple/]})
+  Rule: $rule->topic('food')->check('in_array' => [qw/sushi bread apple/])
 
 Check if the values is in array.
 
@@ -1212,15 +1212,15 @@ Check if the values is in array.
 
   Data: {value1 => 'aaa', value2 => 'bbbbb'};
   Rule: # length is equal to 3
-        $rule->topic('value1')->check({'length' => 3}) 
+        $rule->topic('value1')->check('length' => 3) 
         # length is greater than or equal to 2 and lower than or equeal to 5
-        $rule->topic('value2')->check({'length' => [2, 5]}) 
+        $rule->topic('value2')->check('length' => [2, 5]) 
         # length is greater than or equal to 2 and lower than or equeal to 5
-        $rule->topic('value3')->check({'length' => {min => 2, max => 5}}) 
+        $rule->topic('value3')->check('length' => {min => 2, max => 5}) 
         # greater than or equal to 2
-        $rule->topic('value4')->check({'length' => {min => 2}}) 
+        $rule->topic('value4')->check('length' => {min => 2}) 
         # lower than or equal to 5
-        $rule->topic('value5')->check({'length' => {max => 5}}) 
+        $rule->topic('value5')->check('length' => {max => 5}) 
 
 Length of the value.
 
@@ -1230,7 +1230,7 @@ if value is byte string, length is byte length.
 =head2 less_than
 
   Data: {num => 20}
-  Rule: $rule->topic('num')->check({'less_than' => 25});
+  Rule: $rule->topic('num')->check('less_than' => 25);
 
 Numeric "less than" comparison.
 
@@ -1284,14 +1284,14 @@ Unsigned integer(contain zero).
 =head2 regex
 
   Data: {num => '123'}
-  Rule: $rule->topic('num')->check({'regex' => qr/\d{0,3}/})
+  Rule: $rule->topic('num')->check('regex' => qr/\d{0,3}/)
 
 Match a regular expression.
 
 =head2 selected_at_least
 
   Data: {hobby => ['music', 'movie' ]}
-  Rule: $rule->topic('hobby')->check({selected_at_least => 1})
+  Rule: $rule->topic('hobby')->check(selected_at_least => 1)
 
 Selected at least specified count item.
 In other word, the array contains at least specified count element.
@@ -1370,12 +1370,12 @@ You can get result value.
 
 Note that if one value is not defined, merged value become undefined.
 
-=head2 shift
+=head2 first
 
   Data: {names => ['Ken', 'Taro']}
-  Rule: $rule->topic('names')->filter('shift') # 'Ken'
+  Rule: $rule->topic('names')->filter('first') # 'Ken'
 
-Shift the head element of array.
+Get fisrt element of array.
 
 =head2 to_array
 
