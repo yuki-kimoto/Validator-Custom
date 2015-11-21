@@ -33,7 +33,6 @@ sub validate {
   
   # Process each param
   for my $r (@{$self->content}) {
-      $DB::single = 1;
     
     # Key
     my $key = $r->{key};

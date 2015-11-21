@@ -1014,7 +1014,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   my $input = {key1 => 'a', key2 => 'b', key3 => 'c'};
   my $rule = $vc->create_rule;
-  $rule->topic( ['key1', 'key2', 'key3'])->filter('merge')->name('key');
+  $rule->topic( ['key1', 'key2', 'key3'])->name('key123')->filter('merge')->output_to('key');
 
   my $result = $rule->validate($input);
   is($result->output->{key}, 'abc');
