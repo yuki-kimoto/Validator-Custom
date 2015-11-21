@@ -77,6 +77,7 @@ sub messages_to_hash {
   return $messages;
 }
 
+# Version 0 method(Not used now)
 sub to_hash {
   my $self = shift;
   

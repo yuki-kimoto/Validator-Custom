@@ -74,7 +74,6 @@ sub validate {
     # Message
     my $message;
     
-    my $is_exists_check;
     for my $func_info (@$func_infos) {
       
       # Constraint information
@@ -84,10 +83,7 @@ sub validate {
         $func = $func_name;
       }
       else {
-        if ($func_info->{name} eq 'exists') {
-          $is_exists_check = 1;
-        }
-        elsif ($func_info->{type} eq 'check') {
+        if ($func_info->{type} eq 'check') {
           $func = $self->validator->{checks}{$func_name};
           croak "Can't find \"$func_name\" check"
             unless $func;
@@ -119,37 +115,32 @@ sub validate {
         
         # Check
         if ($func_info->{type} eq 'check') {
-          if ($is_exists_check) {
-            croak "Can't call exists check from check_each";
-          }
-          else {          
-            # Validation loop
-            for (my $k = 0; $k < @$current_value; $k++) {
-              my $value = $current_value->[$k];
-              
-              # Validate
-              my $is_valid= $func->($self->validator, $value, $arg);
-              
-              # Constrint result
-              if (ref $is_valid eq 'HASH') {
-                $is_invalid = 1;
-                $message = $is_valid->{message};
-                warn "$name message is empty(Validator::Custom::Rule::validate)"
-                  unless defined $is_valid->{message};              
-              }
-              elsif (!$is_valid) {
-                $is_invalid = 1;
-                if (defined $func_info_message) {
-                  $message = $func_info_message;
-                }
-                else {
-                  $message = "$name is invalid";
-                }
-              }
-              
-              # Validation failed
-              last if $is_invalid;
+          # Validation loop
+          for (my $k = 0; $k < @$current_value; $k++) {
+            my $value = $current_value->[$k];
+            
+            # Validate
+            my $is_valid= $func->($self->validator, $value, $arg);
+            
+            # Constrint result
+            if (ref $is_valid eq 'HASH') {
+              $is_invalid = 1;
+              $message = $is_valid->{message};
+              warn "$name message is empty(Validator::Custom::Rule::validate)"
+                unless defined $is_valid->{message};              
             }
+            elsif (!$is_valid) {
+              $is_invalid = 1;
+              if (defined $func_info_message) {
+                $message = $func_info_message;
+              }
+              else {
+                $message = "$name is invalid";
+              }
+            }
+            
+            # Validation failed
+            last if $is_invalid;
           }
         }
         # Filter
@@ -169,31 +160,21 @@ sub validate {
       # Single value
       else {      
         if ($func_info->{type} eq 'check') {
-          if ($is_exists_check) {
-            if (exists $input->{$key}) {
-              $is_invalid = 1;
+          my $is_valid = $func->($self->validator, $current_value, $arg);
+          
+          if (ref $is_valid eq 'HASH') {
+            $is_invalid = 1;
+            $message = $is_valid->{message};
+            warn "$name message is empty(Validator::Custom::Rule::validate)"
+              unless defined $is_valid->{message};              
+          }
+          elsif (!$is_valid) {
+            $is_invalid = 1;
+            if (defined $func_info_message) {
+              $message = $func_info_message;
             }
             else {
-              $is_invalid = 0;
-            }
-          }
-          else {
-            my $is_valid = $func->($self->validator, $current_value, $arg);
-            
-            if (ref $is_valid eq 'HASH') {
-              $is_invalid = 1;
-              $message = $is_valid->{message};
-              warn "$name message is empty(Validator::Custom::Rule::validate)"
-                unless defined $is_valid->{message};              
-            }
-            elsif (!$is_valid) {
-              $is_invalid = 1;
-              if (defined $func_info_message) {
-                $message = $func_info_message;
-              }
-              else {
-                $message = "$name is invalid";
-              }
+              $message = "$name is invalid";
             }
           }
         }
@@ -392,10 +373,11 @@ sub topic {
   return $self;
 }
 
+# Version 0 method(Not used now)
 sub optional {
   my ($self, $key) = @_;
   
-  # Version 0 logica(Not used now)
+  # Version 0 logic(Not used now)
   if (defined $key) {
     # Create topic
     $self->topic_v0($key);

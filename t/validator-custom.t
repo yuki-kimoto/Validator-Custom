@@ -9,9 +9,6 @@ use Validator::Custom::Rule;
 # TODO
 # run_filter
 # run_check
-# check exists
-# check_each exists
-# optional exists
 
 my $vc_common = Validator::Custom->new;
 $vc_common->add_check(
@@ -969,31 +966,6 @@ $vc_common->add_filter(
   is($result->message('key1'), 'error');
 }
 
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => 'a'};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->check('int')->default(2);
-
-  my $result = $rule->validate($input);
-  ok($result->is_ok);
-  is($result->output->{key1}, 2);
-}
-
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => 'a', key3 => 'b'};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->check('int')->default(sub { return $_[1] });
-  $rule->topic('key2')->check('int')->default(sub { return 5 });
-  $rule->topic('key3')->check('int')->default(undef);
-  
-  my $result = $rule->validate($input);
-  is($result->output->{key1}, $vc);
-  is($result->output->{key2}, 5);
-  ok(exists $result->output->{key3} && !defined $result->output->{key3});
-}
-
 # is_valid
 {
   my $vc = Validator::Custom->new;
@@ -1033,68 +1005,6 @@ $vc_common->add_filter(
   is_deeply($result->invalid_rule_keys, ['key3']);
 }
 
-# exists
-{
-  my $vc = Validator::Custom->new;
-  my $input = {
-    key1 => undef, key2 => 1
-  };
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->check('exists');
-  $rule->topic('key2')->check('exists');
-
-  my $result = $rule->validate($input);
-  ok($result->is_ok);
-}
-
-# to_hash
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => 1, key2 => 'a', key3 => 'a'};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->check('int');
-  $rule->topic('key2')->check('int')->message('a');
-  $rule->topic('key3')->check('int')->message('b');
-  $rule->topic('key4')->check('int')->message('key4 must be int');
-  $rule->topic('key5')->check('int')->message('key5 must be int');
-  
-  my $result = $rule->validate($input);
-  is_deeply($result->to_hash, {
-    ok => $result->is_ok, invalid => $result->has_invalid,
-    messages => $result->messages_to_hash
-  });
-  is_deeply($result->to_hash, {
-    ok => 0, invalid => 1,
-    messages => {key2 => 'a', key3 => 'b', key4 => 'key4 must be int', key5 => 'key5 must be int'}
-  });
-}
-
-# optional
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => 1};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->check('int');
-  $rule->topic('key2')->check('int')->message('a');
-  $rule->topic('key3')->optional->check('int');
-
-  my $result = $rule->validate($input);
-  ok(!$result->is_ok);
-}
-
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => 1};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->optional->check('int');
-  $rule->topic('key2')->optional->check('int');
-  $rule->topic('key3')->optional->check('int');
-
-  my $result = $rule->validate($input);
-  ok($result->is_ok);
-  ok(!$result->has_invalid);
-}
-
 # to_array filter
 {
   my $vc = Validator::Custom->new;
@@ -1106,18 +1016,6 @@ $vc_common->add_filter(
   my $result = $rule->validate($input);
   is_deeply($result->output->{key1}, [1]);
   is_deeply($result->output->{key2}, [1, 2]);
-}
-
-# loose_data
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => 1, key2 => 2};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')->filter('to_array');
-
-  my $result = $rule->validate($input);
-  is_deeply($result->loose_data->{key1}, [1]);
-  is_deeply($result->loose_data->{key2}, 2);
 }
 
 {
@@ -1598,7 +1496,7 @@ $vc_common->add_filter(
       my ($self, $value) = @_;
       
       if ($value eq 'a') {
-        return {result => 1};
+        return 1;
       }
       else {
         return {message => 'error2'};
@@ -1719,7 +1617,7 @@ $vc_common->add_filter(
     $rule->topic('k1');
     $rule->topic('k2');
     my $vresult = $rule->validate($input);
-    ok(!$vresult->is_ok);
+    ok($vresult->is_ok);
   }
 }
 
@@ -1787,4 +1685,32 @@ $vc_common->add_filter(
   my $messages = $rule->validate($input)->messages;
 
   is_deeply($messages, [qw/k3Error1 k4Error1/]);
+}
+
+# default
+{
+  {
+    my $vc = Validator::Custom->new;
+    my $input = {key1 => 'a'};
+    my $rule = $vc->create_rule;
+    $rule->topic('key1')->check('int')->default(2);
+
+    my $result = $rule->validate($input);
+    ok($result->is_ok);
+    is($result->output->{key1}, 2);
+  }
+
+  {
+    my $vc = Validator::Custom->new;
+    my $input = {key1 => 'a', key3 => 'b'};
+    my $rule = $vc->create_rule;
+    $rule->topic('key1')->check('int')->default(sub { return $_[1] });
+    $rule->topic('key2')->check('int')->default(sub { return 5 });
+    $rule->topic('key3')->check('int')->default(undef);
+    
+    my $result = $rule->validate($input);
+    is($result->output->{key1}, $vc);
+    is($result->output->{key2}, 5);
+    ok(exists $result->output->{key3} && !defined $result->output->{key3});
+  }
 }
