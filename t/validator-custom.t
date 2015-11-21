@@ -103,7 +103,7 @@ $vc_common->add_filter(
   
   my $messages = $rule->validate($input)->messages;
 
-  is_deeply($messages, [qw/k3Error1 k4Error1 k5Error1/], 'array validate');
+  is_deeply($messages, [qw/k3Error1 k4Error1 k5Error1/]);
 }
 
 {
@@ -123,24 +123,24 @@ $vc_common->add_filter(
   my $messages      = $vresult->messages;
   my $messages_hash = $vresult->messages_to_hash;
   
-  is_deeply($messages, [qw/k1Error2 k2Error2/], 'rule');
-  is_deeply($messages_hash, {k1 => 'k1Error2', k2 => 'k2Error2'}, 'rule errors hash');
+  is_deeply($messages, [qw/k1Error2 k2Error2/]);
+  is_deeply($messages_hash, {k1 => 'k1Error2', k2 => 'k2Error2'});
   
   my $messages_hash2 = $vresult->messages_to_hash;
-  is_deeply($messages_hash2, {k1 => 'k1Error2', k2 => 'k2Error2'}, 'rule errors hash');
+  is_deeply($messages_hash2, {k1 => 'k1Error2', k2 => 'k2Error2'});
   
   $messages = $rule->validate($input)->messages;
-  is_deeply($messages, [qw/k1Error2 k2Error2/], 'rule');
+  is_deeply($messages, [qw/k1Error2 k2Error2/]);
 }
 
 {
-  ok(!Validator::Custom->new->rule, 'rule default');
+  ok(!Validator::Custom->new->rule);
 }
 
 {
   my $result = Validator::Custom::Result->new;
   $result->output({k => 1});
-  is_deeply($result->output, {k => 1}, 'data attribute');
+  is_deeply($result->output, {k => 1});
 }
 
 {
@@ -153,10 +153,10 @@ $vc_common->add_filter(
   $rule->topic('k4')->check('Num')->message("k4Error1");
   
   my $messages = $rule->validate($input)->messages;
-  is_deeply($messages, [qw/k2Error1 k4Error1/], 'Custom validator one');
+  is_deeply($messages, [qw/k2Error1 k4Error1/]);
   
   $messages = $rule->validate($input)->messages;
-  is_deeply($messages, [qw/k2Error1 k4Error1/], 'Custom validator two');
+  is_deeply($messages, [qw/k2Error1 k4Error1/]);
 }
 
 {
@@ -164,7 +164,7 @@ $vc_common->add_filter(
   my $input = {k1 => 1};
   my $rule = $vc->create_rule;
   eval { $rule->topic('k1')->check('No')->message("k1Error1") };
-  like($@, qr/"No" is not registered/, 'no custom type');
+  like($@, qr/"No" is not registered/);
 }
 
 {
@@ -175,9 +175,9 @@ $vc_common->add_filter(
     ->filter('C1')->message("k1Error1");
 
   my $result= $rule->validate($input);
-  is_deeply(scalar $result->messages, [], 'no error');
+  is_deeply(scalar $result->messages, []);
   
-  is_deeply(scalar $result->output, {k1 => [4,8]}, 'array validate2');
+  is_deeply(scalar $result->output, {k1 => [4,8]});
 }
 
 
@@ -187,7 +187,7 @@ $vc_common->add_filter(
   my $rule = $vc->create_rule;
   $rule->topic('k1')->check('Int')->message("k1Error1");
   my $messages = $rule->validate($input)->messages;
-  is(scalar @$messages, 0, 'no error');
+  is(scalar @$messages, 0);
 }
 
 {
@@ -265,12 +265,12 @@ $vc_common->add_filter(
     is_deeply($result->messages, 
               ['k2Error1', 'Error message not specified',
                'Error message not specified'
-              ], 'variouse options');
+              ]);
     
-    is_deeply($result->invalid_rule_keys, [qw/k2 k4 k7/], 'invalid key');
+    is_deeply($result->invalid_rule_keys, [qw/k2 k4 k7/]);
     
-    is_deeply($result->output->{k1},[1, [3, 4]], 'data');
-    ok(!$result->output->{k2}, 'data not exist in error case');
+    is_deeply($result->output->{k1},[1, [3, 4]]);
+    ok(!$result->output->{k2});
     cmp_ok($result->output->{k3}, 'eq', 3, 'filter');
     ok(!$result->output->{k4}, 'data not set in case error');
   }
@@ -281,8 +281,8 @@ $vc_common->add_filter(
     
     my $result = $rule->validate($input);
     local $SIG{__WARN__} = sub {};
-    ok(!$result->is_valid, 'corelative invalid_rule_keys');
-    is(scalar @{$result->invalid_rule_keys}, 1, 'corelative invalid_rule_keys');
+    ok(!$result->is_valid);
+    is(scalar @{$result->invalid_rule_keys}, 1);
   }
 }
 
@@ -297,7 +297,7 @@ $vc_common->add_filter(
   my $rule = $vc->create_rule;
   $rule->topic([qw/k1 k2/])->name('k1_2')->check($check)->message('error_k1_2');
   my $messages = $rule->validate($input)->messages;
-  is_deeply($messages, ['error_k1_2'], 'specify key');
+  is_deeply($messages, ['error_k1_2']);
 }
 
 {
@@ -346,20 +346,19 @@ $vc_common->add_filter(
   is_deeply($invalid_rule_keys, ['name'], 'check argument first');
   
   my $messages_hash = $vresult->messages_to_hash;
-  is_deeply($messages_hash, {name => 'Error message not specified'},
-            'errors_to_hash message not specified');
+  is_deeply($messages_hash, {name => 'Error message not specified'});
   
-  is($vresult->message('name'), 'Error message not specified', 'error default message');
+  is($vresult->message('name'), 'Error message not specified');
   
   $invalid_rule_keys = $rule->validate($input)->invalid_rule_keys;
-  is_deeply($invalid_rule_keys, ['name'], 'check argument second');
+  is_deeply($invalid_rule_keys, ['name']);
 }
 
 {
   my $vc = Validator::Custom->new;
   my $rule = $vc->create_rule;
   my $result = $rule->validate({key => 1});
-  ok($result->is_ok, 'is_ok ok');
+  ok($result->is_ok);
 }
 
 {
@@ -383,7 +382,7 @@ $vc_common->add_filter(
   $rule->topic('k2_1')->check('C2');
   $rule->topic('k2_2')->check('C2');
   
-  is_deeply($rule->validate($input)->invalid_rule_keys, [qw/k1_1 k2_1/], 'add_check object');
+  is_deeply($rule->validate($input)->invalid_rule_keys, [qw/k1_1 k2_1/]);
 }
 
 # Validator::Custom::Result raw_invalid_rule_keys'
@@ -405,7 +404,7 @@ $vc_common->add_filter(
   $rule->topic('k4')->check('q');
   my $vresult = $rule->validate($input);
 
-  is_deeply($vresult->invalid_rule_keys, ['k12', 'k3'], 'invalid_rule_keys');
+  is_deeply($vresult->invalid_rule_keys, ['k12', 'k3']);
   is_deeply($vresult->invalid_params, ['k1', 'k2', 'k3'],
           'invalid_params');
 }
@@ -925,7 +924,6 @@ $vc_common->add_filter(
   is_deeply(
     $result_data, 
     { int_param => '123', left => "abc  ", right => '  def', collapse => "a b c"},
-    'trim check'
   );
 }
 
@@ -957,7 +955,7 @@ $vc_common->add_filter(
 
   my $result = $rule->validate($input);
   ok(!$result->is_ok, "invalid");
-  is_deeply($result->missing_params, ['key2', 'key3'], "names");
+  is_deeply($result->missing_params, ['key2', 'key3']);
 }
 
 # has_missing
@@ -968,7 +966,7 @@ $vc_common->add_filter(
   $rule->topic('key1')->check('int');
 
   my $result = $rule->validate($input);
-  ok($result->has_missing, "missing");
+  ok($result->has_missing);
 }
 
 {
@@ -978,7 +976,7 @@ $vc_common->add_filter(
   $rule->topic('key1')->check('int');
 
   my $result = $rule->validate($input);
-  ok(!$result->has_missing, "missing");
+  ok(!$result->has_missing);
 }
 
 # duplication result value
@@ -1012,7 +1010,7 @@ $vc_common->add_filter(
 
   my $result = $rule->validate($input);
   ok($result->is_ok);
-  is($result->output->{key1}, 2, "data value");
+  is($result->output->{key1}, 2);
 }
 
 {
@@ -1023,7 +1021,7 @@ $vc_common->add_filter(
 
   my $result = $rule->validate($input);
   ok($result->is_ok);
-  is($result->output->{key1}, 2, "invalid : data value");
+  is($result->output->{key1}, 2);
 }
 
 {
@@ -1035,8 +1033,8 @@ $vc_common->add_filter(
   $rule->topic('key3')->check('int')->default(undef);
   
   my $result = $rule->validate($input);
-  is($result->output->{key1}, $vc, "data value");
-  is($result->output->{key2}, 5, "data value");
+  is($result->output->{key1}, $vc);
+  is($result->output->{key2}, 5);
   ok(exists $result->output->{key3} && !defined $result->output->{key3});
 }
 
@@ -1629,7 +1627,6 @@ $vc_common->add_filter(
   is_deeply(
     $result_data, 
     { int_param => '123', left => "abc　　", right => '　　def', collapse => "a b c"},
-    'trim check'
   );
 }
 
@@ -1839,5 +1836,5 @@ $vc_common->add_filter(
 
   my $messages = $rule->validate($input)->messages;
 
-  is_deeply($messages, [qw/k3Error1 k4Error1/], 'array validate');
+  is_deeply($messages, [qw/k3Error1 k4Error1/]);
 }
