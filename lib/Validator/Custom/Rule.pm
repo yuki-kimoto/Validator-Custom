@@ -34,8 +34,6 @@ sub validate {
   # Process each param
   for my $r (@{$self->content}) {
     
-    $DB::single = 1;
-  
     # Key
     my $key = $r->{key};
     
@@ -118,6 +116,9 @@ sub validate {
       
       # Each value
       if($func_info->{each} && ref $current_value eq 'ARRAY') {
+        
+        $DB::single = 1;
+        
         # Check
         if ($func_info->{type} eq 'check') {
           if ($is_exists_check) {

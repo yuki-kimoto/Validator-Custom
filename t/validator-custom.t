@@ -23,6 +23,22 @@ $vc_common->add_filter(
   }
 );
 
+# check_each
+{
+  my $vc = Validator::Custom->new;
+  my $input = {key1 => ['a', 'a'], key2 => [1, 1]};
+  my $rule = $vc->create_rule;
+  $rule->topic('key1')
+    ->check_each('not_blank')
+    ->check_each(sub { !shift->run_check('int', shift) });
+  $rule->topic('key2')
+    ->check_each('not_blank')
+    ->check_each(sub { !shift->run_check('int', shift) });
+  
+  my $result = $rule->validate($input);
+  is_deeply($result->invalid_rule_keys, ['key2']);
+}
+
 # check - code reference
 {
   my $vc = Validator::Custom->new;
@@ -912,23 +928,6 @@ $vc_common->add_filter(
   );
 }
 
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => ['a', 'a'], key2 => [1, 1]};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')
-    ->check_each('not_blank')
-    ->check_each(sub { !shift->run_check('int', shift) })
-    ->check_each('not_blank');
-  $rule->topic('key2')
-    ->check_each('not_blank')
-    ->check_each(sub { !shift->run_check('int', shift) })
-    ->check_each('not_blank');
-  
-  my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['key2']);
-}
-
 # missing_params
 {
   my $vc = Validator::Custom->new;
@@ -939,7 +938,7 @@ $vc_common->add_filter(
   $rule->topic(['key2', 'key3'])->check('duplication')->name('rkey1');
 
   my $result = $rule->validate($input);
-  ok(!$result->is_ok, "invalid");
+  ok(!$result->is_ok);
   is_deeply($result->missing_params, ['key2', 'key3']);
 }
 

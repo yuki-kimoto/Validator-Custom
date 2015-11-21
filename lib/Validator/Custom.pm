@@ -125,7 +125,7 @@ sub run_check {
     croak "Can't call $name check";
   }
   
-  my $ret = $check->($values, $args);
+  my $ret = $check->($self, $values, $args);
   
   if (ref $ret eq 'HASH') {
     return 0;
@@ -144,7 +144,7 @@ sub run_filter {
     croak "Can't call $name filter";
   }
   
-  my $new_value = $filter->($values, $args);
+  my $new_value = $filter->($self, $values, $args);
   
   return $new_value;
 }
