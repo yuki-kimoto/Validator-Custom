@@ -79,12 +79,12 @@ sub validate {
         }
         elsif ($func_info->{type} eq 'check') {
           $func = $self->validator->{checks}{$func_name};
-          croak "Can't find $func_name check"
+          croak "Can't find \"$func_name\" check"
             unless $func;
         }
         elsif ($func_info->{type} eq 'filter') {
           $func = $self->validator->{filters}{$func_name};
-          croak "Can't find $func_name filter"
+          croak "Can't find \"$func_name\" filter"
             unless $func;
         }
       }

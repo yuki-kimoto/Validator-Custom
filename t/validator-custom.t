@@ -159,25 +159,35 @@ $vc_common->add_filter(
   is_deeply($messages, [qw/k2Error1 k4Error1/]);
 }
 
+# Check function not found
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $input = {k1 => 1};
   my $rule = $vc->create_rule;
-  eval { $rule->topic('k1')->check('No')->message("k1Error1") };
-  like($@, qr/"No" is not registered/);
+  $rule->topic('k1')->check('No')->message("k1Error1");
+  eval { $rule->validate($input) };
+  like($@, qr/Can't find "No" check/);
+}
+
+# Filter function not found
+{
+  my $vc = Validator::Custom->new;
+  my $input = {k1 => 1};
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->filter('No')->message("k1Error1");
+  eval { $rule->validate($input) };
+  like($@, qr/Can't find "No" filter/);
 }
 
 {
   my $vc = $vc_common;
   my $input = {k1 => [1,2]};
   my $rule = $vc->create_rule;
-  $rule->topic('k1')->filter_each('C1')->message("k1Error1")
-    ->filter('C1')->message("k1Error1");
+  $rule->topic('k1')->filter_each('C1')->filter_each('C1');
 
   my $result= $rule->validate($input);
-  is_deeply(scalar $result->messages, []);
-  
-  is_deeply(scalar $result->output, {k1 => [4,8]});
+  is_deeply($result->messages, []);
+  is_deeply($result->output, {k1 => [4,8]});
 }
 
 
