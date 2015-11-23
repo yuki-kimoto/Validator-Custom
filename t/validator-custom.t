@@ -10,6 +10,7 @@ use Validator::Custom::Rule;
 # run_filter
 # run_check
 # to_array
+# fallback
 
 my $vc_common = Validator::Custom->new;
 $vc_common->add_check(
@@ -1775,19 +1776,19 @@ $vc_common->add_filter(
     my $result = $rule->validate($input);
     ok(!$result->is_valid);
     is_deeply($result->failed, ['key2']);
-    is($result->output, {key1 => 2});
+    is_deeply($result->output, {key1 => 2});
   }
 
   {
     my $vc = Validator::Custom->new;
     my $input = {key1 => 'a', key3 => 'b'};
     my $rule = $vc->create_rule;
-    $rule->topic('key1')->check('int')->fallback(sub { return $_[1] });
+    $rule->topic('key1')->check('int')->fallback(sub { return $_[0] });
     $rule->topic('key2')->check('int')->fallback(sub { return 5 });
     $rule->topic('key3')->check('int')->fallback(undef);
     
     my $result = $rule->validate($input);
-    is($result->output->{key1}, $vc);
+    is($result->output->{key1}, $rule);
     is($result->output->{key2}, 5);
     ok(exists $result->output->{key3} && !defined $result->output->{key3});
   }

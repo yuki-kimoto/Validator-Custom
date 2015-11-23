@@ -282,15 +282,15 @@ sub validate {
           my $fallback = $r->{fallback}[$i];
           $output->{$key} =
             ref $fallback eq 'CODE'
-            ? $fallback->($self->validator)
+            ? $fallback->($self)
             : $fallback;
         }
       }
       else {
         $output->{$current_key}
           = ref $r->{fallback} eq 'CODE'
-          ? $r->{fallback}->($self->validator)
-          : $r->{fallback};;
+          ? $r->{fallback}->($self)
+          : $r->{fallback};
       }
       
       $is_invalid = 0;
