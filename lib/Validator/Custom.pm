@@ -1484,23 +1484,6 @@ Filter function should be new value.
     }
   );
 
-=head2 run_check
-
-You can execute check fucntion.
-
-  my $is_valid = $vc->run_check('int', $value);
-  my $is_valid = $vc->run_check('length', $value, $args);
-
-if return value is hash reference or false value, C<run_check> method return false value.
-In other cases, C<run_check> method return true value.
-
-=head2 run_filter
-
-You can execute filter function.
-
-  my $new_value = $vc->run_filter('trim', $value);
-  my $new_value = $vc->run_filter('foo', $value, $args);
-
 =head1 FAQ
 
 =head2 How to do check box validation?

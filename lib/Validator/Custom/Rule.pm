@@ -690,3 +690,26 @@ Set result key name
   $rule->optional;
 
 The topic becomes optional.
+
+=head2 run_check
+
+Execute check fucntion.
+
+  my $is_valid = $rule->run_check('int');
+  my $is_valid = $rule->run_check('length', $args);
+  my $is_valid = $rule->run_check('length', $args, $key, $params);
+
+if return value is hash reference or false value, C<run_check> method return false value.
+In other cases, C<run_check> method return true value.
+
+if key and parameters is omitted, current key and parameters is used.
+
+=head2 run_filter
+
+Execute filter function.
+
+  my $new_params = $rule->run_filter('trim');
+  my $new_params = $rule->run_filter('foo', $args);
+  my $new_params = $vc->run_check('length', $args, $key, $params);
+
+if key and parameters is omitted, current key and parameters is used.

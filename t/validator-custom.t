@@ -55,18 +55,37 @@ $vc_common->add_filter(
 
 # check_each
 {
-  my $vc = Validator::Custom->new;
-  my $rule = $vc->create_rule;
-  my $input = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a', k5 => []};
-  $rule->topic('k1')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k1Error1');
-  $rule->topic('k2')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k2Error1');
-  $rule->topic('k3')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k3Error1');
-  $rule->topic('k4')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k4Error1');
-  $rule->topic('k5')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k5Error1');
-  
-  my $messages = $rule->validate($input)->messages;
+  # check_each - basic
+  {
+    my $vc = Validator::Custom->new;
+    my $rule = $vc->create_rule;
+    my $input = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a', k5 => []};
+    $rule->topic('k1')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k1Error1');
+    $rule->topic('k2')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k2Error1');
+    $rule->topic('k3')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k3Error1');
+    $rule->topic('k4')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k4Error1');
+    $rule->topic('k5')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k5Error1');
+    
+    my $messages = $rule->validate($input)->messages;
 
-  is_deeply($messages, [qw/k3Error1 k4Error1 k5Error1/]);
+    is_deeply($messages, [qw/k3Error1 k4Error1 k5Error1/]);
+  }
+
+  # check_each - repeat
+  {
+    my $vc = Validator::Custom->new;
+    my $input = {key1 => ['a', 'a'], key2 => [1, 1]};
+    my $rule = $vc->create_rule;
+    $rule->topic('key1')
+      ->check_each('not_blank')
+      ->check_each(sub { !shift->run_check('int') });
+    $rule->topic('key2')
+      ->check_each('not_blank')
+      ->check_each(sub { !shift->run_check('int') });
+    
+    my $result = $rule->validate($input);
+    is_deeply($result->failed, ['key2']);
+  }
 }
 
 # filter_each
@@ -79,22 +98,6 @@ $vc_common->add_filter(
   my $result= $rule->validate($input);
   is_deeply($result->messages, []);
   is_deeply($result->output, {k1 => [4,8]});
-}
-
-# check_each
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => ['a', 'a'], key2 => [1, 1]};
-  my $rule = $vc->create_rule;
-  $rule->topic('key1')
-    ->check_each('not_blank')
-    ->check_each(sub { !shift->run_check('int') });
-  $rule->topic('key2')
-    ->check_each('not_blank')
-    ->check_each(sub { !shift->run_check('int') });
-  
-  my $result = $rule->validate($input);
-  is_deeply($result->failed, ['key2']);
 }
 
 # check - code reference
