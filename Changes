@@ -1,27 +1,54 @@
 1.00 2015-xx-xx
-  -------- 1.00 is major version up -----------------
-  Keep backword compatibilyty of 0.xx completely.
-  Validator::Custom 0.xx work well after major version up,
-  but Version 1.00 usages is drastically changed and simplified.
-  Version 0.xx has increased the complexity after a lot of challenge.
-  It is important to decrese it for Validator::Csutom future.
-  I list the changes in the version 1.00 bellow.
-  If you want to know the all features, it is good to see t/validator-custom.t.
-  ---------------------------------------------------
+  --- Version 1.00 is major version up -------------
+  Version 1.00 is major version up.
+  Version 1.00 usages is drastically changed
+  in order to simplify Validator::Custom and increase its flexibility.
   
-  - remove Validator::Custom validate method, and
-    add Validator::Custom::Result validate method.
-  - remove Validator::Custom error_stock attribute.
-  - remove Validator::Custom js_fill_form_button method.
-  - Validator::Custom data attribute is renamed to output.
-  - remove Validator::Custom data_filter.
-  - remove Validator::Custom loose_data.
-  - Constraints is separated to check and filter, so
-    remove Validator::Custom register_constraint method,
-    add Validator::Custom add_check method and
-    add Validator::Custom add_filter method.
-  - add Validator::Csutom add_filter method.
-  - add Validator::Custom::Rule topic method.
+  Version 0.xx has increased the complexity after a lot of change,
+  and many problems has been found.
+  It is important to change some syntax for Validator::Csutom future.
+  
+  I keep backword compatibilyty of 0.xx completely.
+  Validator::Custom 0.xx work well after major version up.
+  You can rewrite your code guradually.
+  
+  I list the changes in the version 1.00 bellow.
+  If you want to know all features, it is good to see t/validator-custom.t.
+  
+  --- Changes --------------------------------------
+  - $vc->validate($param, $rule) is removed. You must use $rule->validate($params).
+  - $vc->register_constraint(...) is removed.
+    You must use $vc->add_check(...) and $vc->add_filter(...).
+  - $rule->require($key) and $rule->optional($key) are removed.
+    You must use $rule->topic($key).
+  - $vresult->is_ok is removed. You must use $vresult->is_valid.
+  - $vresult->data is removed. You must use $vresult->output.
+  - check function arguments is changed
+    from ($value, $args, $vc) to ($rule, $key, $params, $args).
+  - check function return value change. If the value is invalid, you must return 1.
+    If the value is invalid, you must 0 or {message => "some error occur}.
+  - filter function must return new parameters, for example, {title => $new_value}.
+  
+  - Many methods is removed.
+      Validator::Custom
+        error_stock
+        js_fill_form_button
+        data_filter
+      Validator::Custom::Rule
+        require
+        optional
+      Validator::Custom::Result
+        is_ok
+        data
+        loose_data
+
+  --- Why version up is needed? ---------------------
+  - Constraint function is mixed with check function and filter function.
+    It should be separated each features.
+  - 0.xx can't process not existing value properly.
+  - 0.xx can't create output properly.
+  - $rule->check(...) method can't receive function arguments properly.
+  
 0.28
   - improve decimal check. you can specify undef value which mean unlimit muximanu digits
     Example:
