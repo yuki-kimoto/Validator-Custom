@@ -65,15 +65,15 @@ sub validate {
     
     # Process funcs
     my $current_key = $key;
-    my $current_value;
+    my $current_params;
     if (ref $current_key eq 'ARRAY') {
-      $current_value = [];
+      $current_params = {};
       for my $key (@$current_key) {
-        push @$current_value, $input->{$key}; 
+        $current_params->{$key} = $input->{$key};
       }
     }
     else {
-      $current_value = $input->{$key};
+      $current_params->{$key} = $input->{$key};
     }
     
     # Is invalid
@@ -107,28 +107,22 @@ sub validate {
       my $func_info_message = $func_info->{message};
       my $each = $func_info->{each};
       
-      my $output_to;
-      if (exists $func_info->{output_to}) {
-        $output_to = $func_info->{output_to};
-      }
-      else {
-        $output_to = $key;
-      }
-
       # Is valid
       my $is_valid;
       
       # Each value
-      if($func_info->{each} && ref $current_value eq 'ARRAY') {
+      if ($func_info->{each}) {
         
         # Check
         if ($func_info->{type} eq 'check') {
+          my $values = $current_params->{$current_key};
+          
           # Validation loop
-          for (my $k = 0; $k < @$current_value; $k++) {
-            my $value = $current_value->[$k];
+          for (my $k = 0; $k < @$values; $k++) {
+            my $value = $values->[$k];
             
             # Validate
-            my $is_valid= $func->($self->validator, $value, $arg);
+            my $is_valid = $func->($self->validator, $current_key, {$current_key => $value}, $arg);
             
             # Constrint result
             if (ref $is_valid eq 'HASH') {
@@ -153,22 +147,25 @@ sub validate {
         }
         # Filter
         elsif ($func_info->{type} eq 'filter') {
+          my $values = $current_params->{$current_key};
+          
+          my $new_values = [];
+          
           # Validation loop
           my $new_current_value = [];
-          for (my $k = 0; $k < @$current_value; $k++) {
-            my $value = $current_value->[$k];
-            my $new_value = $func->($self->validator, $value, $arg);
-            push @$new_current_value, $new_value;
+          for (my $k = 0; $k < @$values; $k++) {
+            my $value = $values->[$k];
+            my $new_params = $func->($self->validator, $current_key, {$current_key => $value}, $arg);
+            push @$new_values, $new_params->{$current_key};
           }
-          $current_value = $new_current_value;
-          $current_key = $output_to;
+          $current_params->{$current_key} = $new_values;
         }
       }
       
       # Single value
       else {      
         if ($func_info->{type} eq 'check') {
-          my $is_valid = $func->($self->validator, $current_value, $arg);
+          my $is_valid = $func->($self->validator, $current_key, $current_params, $arg);
           
           if (ref $is_valid eq 'HASH') {
             $is_invalid = 1;
@@ -187,42 +184,45 @@ sub validate {
           }
         }
         elsif ($func_info->{type} eq 'filter') {
-          my $new_value = $func->($self->validator, $current_value, $arg);
-          $current_value = $new_value;
-          $current_key = $output_to;
+          my $new_params = $func->($self->validator, $current_key, $current_params, $arg);
+          $current_params = $new_params;
         }
       }
       last if $is_invalid;
     }
     
-    if (!$is_invalid && exists $r->{fallback}) {
-      $current_value = ref $r->{fallback} eq 'CODE'
-        ? $r->{fallback}->($self->validator)
-        : $r->{fallback};
-      
-      $is_invalid = 0;
-    }
-    
     # Set output
-    if (!$is_invalid || ($is_invalid && exists $r->{fallback})) {
-      # Set fallback value
-      if ($is_invalid) {
-        $current_value = ref $r->{fallback} eq 'CODE'
-          ? $r->{fallback}->($self->validator)
-          : $r->{fallback};
-      }
-      
+    if (!$is_invalid) {
       # Set output
       if (ref $current_key eq 'ARRAY') {
         for(my $i = 0; $i < @$current_key; $i++) {
           my $key = $current_key->[$i];
-          my $value = $current_value->[$i];
-          $output->{$key} = $value;
+          $output->{$key} = $current_params->{$key};
         }
       }
       else {
-        $output->{$current_key} = $current_value;
+        $output->{$current_key} = $current_params->{$current_key};
       }
+    }
+    elsif ($is_invalid && exists $r->{fallback}) {
+      if (ref $current_key eq 'ARRAY') {
+        for (my $i = 0; $i < @$current_key; $i++) {
+          my $key = $current_key->[$i];
+          my $fallback = $r->{fallback}[$i];
+          $output->{$key} =
+            ref $fallback eq 'CODE'
+            ? $fallback->($self->validator)
+            : $fallback;
+        }
+      }
+      else {
+        $output->{$current_key}
+          = ref $r->{fallback} eq 'CODE'
+          ? $r->{fallback}->($self->validator)
+          : $r->{fallback};;
+      }
+      
+      $is_invalid = 0;
     }
     
     # Add result information
@@ -404,13 +404,6 @@ sub optional {
   $self->content->[-1]{option}{optional} = 1;
   
   return $self;
-}
-
-sub output_to {
-  my ($self, $key) = @_;
-  
-  # Value is optional
-  $self->content->[-1]{func_infos}[-1]{output_to} = $key;
 }
 
 # Version 0 method(Not used now)
