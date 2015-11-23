@@ -238,7 +238,21 @@ $vc_common->add_filter(
   is_deeply($result->failed, ['k3', 'k4']);
 }
 
+# exists
+{
+  my $vc = Validator::Custom->new;
+  my $input = {
+    k1  => 1,
+    k2  => undef
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check('exists');
+  $rule->topic('k2')->check('exists');
+  $rule->topic('k3')->check('exists');
 
+  my $result = $rule->validate($input);
+  is_deeply($result->failed, ['k3']);
+}
 
 # remove_blank filter
 {

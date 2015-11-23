@@ -20,6 +20,7 @@ sub new {
   
   # Add checks
   $self->add_check(
+    exists            => \&Validator::Custom::CheckFunction::exists,
     ascii             => \&Validator::Custom::CheckFunction::ascii,
     between           => \&Validator::Custom::CheckFunction::between,
     blank             => \&Validator::Custom::CheckFunction::blank,

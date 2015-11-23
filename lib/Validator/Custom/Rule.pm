@@ -113,11 +113,15 @@ sub validate {
     if (ref $current_key eq 'ARRAY') {
       $current_params = {};
       for my $key (@$current_key) {
-        $current_params->{$key} = $input->{$key};
+        if (exists $input->{$key}) {
+          $current_params->{$key} = $input->{$key};
+        }
       }
     }
     else {
-      $current_params->{$key} = $input->{$key};
+      if (exists $input->{$key}) {
+        $current_params->{$key} = $input->{$key};
+      }
     }
     
     # Is invalid
