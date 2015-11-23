@@ -15,6 +15,11 @@ sub run_check {
     croak "Can't call $name check";
   }
   
+  unless (defined $key) {
+    $key = $self->{current_key};
+    $params = $self->{current_params};
+  }
+  
   my $ret = $check->($self, $key, $params, $args);
   
   if (ref $ret eq 'HASH') {
@@ -109,6 +114,8 @@ sub validate {
     else {
       $current_params->{$key} = $input->{$key};
     }
+    $self->{current_key} = $current_key;
+    $self->{current_params} = $current_params;
     
     # Is invalid
     my $is_invalid;
@@ -116,7 +123,6 @@ sub validate {
     # Message
     my $message;
     
-  $DB::single = 1;
     for my $func_info (@$func_infos) {
       
       # Constraint information
