@@ -182,7 +182,7 @@ $vc_common->add_filter(
   my $result= $rule->validate($input);
   is_deeply($result->messages, [qw/k2Error1 k4Error1/]);
   is_deeply($result->invalid_rule_keys, [qw/k2 k4/]);
-  ok(!$result->is_ok);
+  ok(!$result->is_valid);
 }
 
 # int
@@ -393,7 +393,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   my $rule = $vc->create_rule;
   my $result = $rule->validate({key => 1});
-  ok($result->is_ok);
+  ok($result->is_valid);
 }
 
 {
@@ -1307,7 +1307,7 @@ $vc_common->add_filter(
   $rule->topic('key2')->check(between => [0, 9]);
 
   my $result = $rule->validate($input);
-  ok($result->is_ok);
+  ok($result->is_valid);
 }
 
 # between decimal
@@ -1529,9 +1529,9 @@ $vc_common->add_filter(
   $rule->topic('k1')->check('c1');
   $rule->topic('k2')->check_each('c2');
   my $vresult = $rule->validate({k1 => 'a', k2 => ['a']});
-  ok($vresult->is_ok);
+  ok($vresult->is_valid);
   $vresult = $rule->validate({k1 => 'b', k2 => ['b']});
-  ok(!$vresult->is_ok);
+  ok(!$vresult->is_valid);
   is_deeply($vresult->messages, ['error1', 'error2']);
 }
 
@@ -1629,7 +1629,7 @@ $vc_common->add_filter(
     $rule->topic('k1');
     $rule->topic('k2');
     my $vresult = $rule->validate($input);
-    ok($vresult->is_ok);
+    ok($vresult->is_valid);
   }
   
   # No check - invalid
@@ -1639,7 +1639,7 @@ $vc_common->add_filter(
     $rule->topic('k1');
     $rule->topic('k2');
     my $vresult = $rule->validate($input);
-    ok($vresult->is_ok);
+    ok($vresult->is_valid);
   }
 }
 
@@ -1727,7 +1727,7 @@ $vc_common->add_filter(
     $rule->topic('key1')->check('int')->fallback(2);
 
     my $result = $rule->validate($input);
-    ok($result->is_ok);
+    ok($result->is_valid);
     is_deeply($result->output, {key1 => 2});
   }
   
@@ -1740,7 +1740,7 @@ $vc_common->add_filter(
     $rule->topic('key2')->check('int');
     
     my $result = $rule->validate($input);
-    ok(!$result->is_ok);
+    ok(!$result->is_valid);
     is_deeply($result->invalid_rule_keys, ['key2']);
     is($result->output, {key1 => 2});
   }

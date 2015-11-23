@@ -43,9 +43,9 @@
         data
         loose_data
 
-  --- Why version up is needed? ---------------------
+  --- Why version up was needed? ---------------------
   - Constraint function is mixed with check function and filter function.
-    It should be separated each features.
+    It should be separated each feature.
   - 0.xx can't process not existing value properly.
   - 0.xx can't create output properly.
   - $rule->check(...) method can't receive function arguments properly.

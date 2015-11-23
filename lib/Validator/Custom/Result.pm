@@ -19,22 +19,13 @@ sub invalid_rule_keys {
 
 sub is_valid {
   my ($self, $name) = @_;
-  
-  # Deprecated
-  unless (defined $name) {
-    warn "Validator::Custom::Result is_valid() method without argument" .
-      " is deprecated. Use is_ok()";
-    return $self->is_ok;
+ 
+  if (defined $name) {
+    return exists $self->{_error_infos}->{$name} ? 0 : 1;
   }
-  
-  return exists $self->{_error_infos}->{$name} ? 0 : 1;
-}
-
-sub is_ok {
-  my $self = shift;
-  
-  # Is ok?
-  return !$self->has_invalid && !$self->has_missing ? 1 : 0;
+  else {
+    return !$self->has_invalid ? 1 : 0;
+  }
 }
 
 sub message {
@@ -75,6 +66,14 @@ sub messages_to_hash {
   }
   
   return $messages;
+}
+
+# Version 0 method(Not used now)
+sub is_ok {
+  my $self = shift;
+  
+  # Is ok?
+  return !$self->has_invalid && !$self->has_missing ? 1 : 0;
 }
 
 # Version 0 method(Not used now)
