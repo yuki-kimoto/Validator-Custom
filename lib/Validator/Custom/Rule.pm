@@ -72,6 +72,7 @@ sub validate {
   # Error position
   my $pos = 0;
   
+  
   # Process each param
   for my $r (@{$self->content}) {
     
@@ -115,6 +116,7 @@ sub validate {
     # Message
     my $message;
     
+  $DB::single = 1;
     for my $func_info (@$func_infos) {
       
       # Constraint information

@@ -52,7 +52,7 @@ sub new {
     first             => \&Validator::Custom::FilterFunction::first,
     merge             => \&Validator::Custom::FilterFunction::merge,
     to_array          => \&Validator::Custom::FilterFunction::to_array,
-    to_array_remove_blank => \&Validator::Custom::FilterFunction::to_array_remove_blank,
+    remove_blank      => \&Validator::Custom::FilterFunction::remove_blank,
     trim              => \&Validator::Custom::FilterFunction::trim,
     trim_collapse     => \&Validator::Custom::FilterFunction::trim_collapse,
     trim_lead         => \&Validator::Custom::FilterFunction::trim_lead,

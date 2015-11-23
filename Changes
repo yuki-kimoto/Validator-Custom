@@ -30,6 +30,7 @@
     If the value is invalid, you must 0 or {message => "some error occur}.
   - filter function must return new parameters, for example, {title => $new_value}.
   - $rule->default(...) is removed. You must use $rule->fallback(...).
+  - filter to_array_remove_blank is removed, and add remove_blank filter.
   - Many methods is removed.
       Validator::Custom
         error_stock

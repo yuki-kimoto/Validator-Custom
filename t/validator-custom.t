@@ -53,6 +53,22 @@ $vc_common->add_filter(
   }
 );
 
+# check_each
+{
+  my $vc = Validator::Custom->new;
+  my $rule = $vc->create_rule;
+  my $input = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a', k5 => []};
+  $rule->topic('k1')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k1Error1');
+  $rule->topic('k2')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k2Error1');
+  $rule->topic('k3')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k3Error1');
+  $rule->topic('k4')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k4Error1');
+  $rule->topic('k5')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k5Error1');
+  
+  my $messages = $rule->validate($input)->messages;
+
+  is_deeply($messages, [qw/k3Error1 k4Error1 k5Error1/]);
+}
+
 # filter_each
 {
   my $vc = $vc_common;
@@ -206,15 +222,15 @@ $vc_common->add_filter(
 
 
 
-# to_array_remove_blank filter
+# remove_blank filter
 {
   my $vc = Validator::Custom->new;
   my $input = {key1 => 1, key2 => [1, 2], key3 => '', key4 => [1, 3, '', '']};
   my $rule = $vc->create_rule;
-  $rule->topic('key1')->filter('to_array_remove_blank');
-  $rule->topic('key2')->filter('to_array_remove_blank');
-  $rule->topic('key3')->filter('to_array_remove_blank');
-  $rule->topic('key4')->filter('to_array_remove_blank');
+  $rule->topic('key1')->filter('to_array')->filter('remove_blank');
+  $rule->topic('key2')->filter('to_array')->filter('remove_blank');
+  $rule->topic('key3')->filter('to_array')->filter('remove_blank');
+  $rule->topic('key4')->filter('to_array')->filter('remove_blank');
   
   my $vresult = $rule->validate($input);
   is_deeply($vresult->output->{key1}, [1]);
@@ -235,22 +251,6 @@ $vc_common->add_filter(
   my $vresult= $rule->validate($input)->output;
 
   is_deeply($vresult, {k1 => '123'});
-}
-
-# array validation new syntax
-{
-  my $vc = Validator::Custom->new;
-  my $rule = $vc->create_rule;
-  my $input = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a', k5 => []};
-  $rule->topic('k1')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k1Error1');
-  $rule->topic('k2')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k2Error1');
-  $rule->topic('k3')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k3Error1');
-  $rule->topic('k4')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k4Error1');
-  $rule->topic('k5')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k5Error1');
-  
-  my $messages = $rule->validate($input)->messages;
-
-  is_deeply($messages, [qw/k3Error1 k4Error1 k5Error1/]);
 }
 
 {

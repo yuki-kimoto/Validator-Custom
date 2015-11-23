@@ -137,23 +137,25 @@ sub to_array {
   
   my $values;
   if (exists $params->{$key}) {
-    $values = [];
-  }
-  else {
     $values = $params->{$key};
     
     $values = [$values] unless ref $values eq 'ARRAY';
+  }
+  else {
+    $values = [];
   }
   
   return {$key => $values};
 }
 
-sub to_array_remove_blank {
+sub remove_blank {
   my ($rule, $key, $params) = @_;
   
   my $values = $params->{$key};
   
-  $values = [$values] unless ref $values eq 'ARRAY';
+  croak "filter \"remove_blank\" need array reference"
+    unless ref $values eq 'ARRAY';
+  
   $values = [grep { defined $_ && CORE::length $_} @$values];
   
   return {$key => $values};
