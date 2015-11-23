@@ -24,7 +24,7 @@ sub is_valid {
     return exists $self->{_error_infos}->{$name} ? 0 : 1;
   }
   else {
-    return !$self->has_invalid ? 1 : 0;
+    return !(keys %{$self->{_error_infos}}) ? 1 : 0;
   }
 }
 
