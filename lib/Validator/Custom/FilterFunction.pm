@@ -6,7 +6,9 @@ use warnings;
 use Carp 'croak';
 
 sub date_to_timepiece {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $value = $params->{$key};
   
   require Time::Piece;
   
@@ -51,7 +53,9 @@ sub date_to_timepiece {
 }
 
 sub datetime_to_timepiece {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $value = $params->{$key};
   
   require Time::Piece;
   
@@ -101,90 +105,142 @@ sub datetime_to_timepiece {
 }
 
 sub merge {
-  my ($rule, $values) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $values = $params->{$key};
   
   $values = [$values] unless ref $values eq 'ARRAY';
   
-  return join('', @$values);
+  return {$key => join('', @$values)};
 }
 
 sub first {
-  my ($rule, $values) = @_;
+  my ($vc, $key, $params) = @_;
   
-  $values = [$values] unless ref $values eq 'ARRAY';
+  my $values = $params->{$key};
   
-  return shift @$values;
+  my $new_value;
+  if (ref $values eq 'ARRAY') {
+    $new_value = shift @$values;
+  }
+  else {
+    $new_value = $values;
+  }
+  
+  return {$key => $new_value};
 }
 
 sub to_array {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
   
-  $value = [$value] unless ref $value eq 'ARRAY';
+  my $values;
+  if (exists $params->{$key}) {
+    $values = [];
+  }
+  else {
+    $values = $params->{$key};
+    
+    $values = [$values] unless ref $values eq 'ARRAY';
+  }
   
-  return $value;
+  return {$key => $values};
 }
 
 sub to_array_remove_blank {
-  my ($rule, $values) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $values = $params->{$key};
   
   $values = [$values] unless ref $values eq 'ARRAY';
   $values = [grep { defined $_ && CORE::length $_} @$values];
   
-  return $values;
+  return {$key => $values};
 }
 
 sub trim {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $value = $params->{$key};
+
   $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms if defined $value;
-  return $value;
+
+  return {$key => $value};
 }
 
 sub trim_collapse {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $value = $params->{$key};
+
   if (defined $value) {
     $value =~ s/[ \t\n\r\f]+/ /g;
     $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
   }
-  return $value;
+
+  return {$key => $value};
 }
 
 sub trim_lead {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $value = $params->{$key};
+
   $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms if defined $value;
-  return $value;
+
+  return {$key => $value};
 }
 
 sub trim_trail {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $value = $params->{$key};
+
   $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms if defined $value;
-  return $value;
+
+  return {$key => $value};
 }
 
 sub trim_uni {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $value = $params->{$key};
+
   $value =~ s/^\s*(.*?)\s*$/$1/ms if defined $value;
-  return $value;
+
+  return {$key => $value};
 }
 
 sub trim_uni_collapse {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $value = $params->{$key};
+
   if (defined $value) {
     $value =~ s/\s+/ /g;
     $value =~ s/^\s*(.*?)\s*$/$1/ms;
   }
-  return $value;
+
+  return {$key => $value};
 }
 
 sub trim_uni_lead {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $value = $params->{$key};
+  
   $value =~ s/^\s+(.*)$/$1/ms if defined $value;
-  return $value;
+  
+  return {$key => $value};
 }
 
 sub trim_uni_trail {
-  my ($rule, $value) = @_;
+  my ($vc, $key, $params) = @_;
+  
+  my $value = $params->{$key};
+  
   $value =~ s/^(.*?)\s+$/$1/ms if defined $value;
-  return $value;
+
+  return {$key => $value};
 }
 
 1;

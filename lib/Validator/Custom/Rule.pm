@@ -195,6 +195,14 @@ sub validate {
       last if $is_invalid;
     }
     
+    if (!$is_invalid && exists $r->{fallback}) {
+      $current_value = ref $r->{fallback} eq 'CODE'
+        ? $r->{fallback}->($self->validator)
+        : $r->{fallback};
+      
+      $is_invalid = 0;
+    }
+    
     # Set output
     if (!$is_invalid || ($is_invalid && exists $r->{fallback})) {
       # Set fallback value
