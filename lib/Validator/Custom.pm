@@ -1504,6 +1504,22 @@ You can do the following way.
     ->check(selected_at_least => 1)->message('feature should select at least 1')
     ->check_each('int')->message('features should be integer');
 
+=head2 How to do validation of "or" condition
+
+You create your check code using code reference.
+You can call check function by C<run_check> method.
+
+  # Data
+  my $input = {age => ''};
+  my $input = {age => 3};
+  
+  # Check blank or int
+  $rule->topic('age')->check(sub {
+    my ($rule, $arg) = @_;
+    
+    return $rule->run_check('blank') || $rule->run_check('int');
+  });
+
 =head1 AUTHOR
 
 Yuki Kimoto, C<< <kimoto.yuki at gmail.com> >>
