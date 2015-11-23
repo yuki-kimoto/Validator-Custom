@@ -116,39 +116,6 @@ sub add_check {
   return $self;
 }
 
-sub run_check {
-  my ($self, $name, $values, $args) = @_;
-  
-  my $checks = $self->{checks} || {};
-  my $check = $checks->{$name};
-  unless ($check) {
-    croak "Can't call $name check";
-  }
-  
-  my $ret = $check->($self, $values, $args);
-  
-  if (ref $ret eq 'HASH') {
-    return 0;
-  }
-  else {
-    return $ret ? 1: 0;
-  }
-}
-
-sub run_filter {
-  my ($self, $name, $values, $args) = @_;
-  
-  my $filters = $self->{filters} || {};
-  my $filter = $filters->{$name};
-  unless ($filter) {
-    croak "Can't call $name filter";
-  }
-  
-  my $new_value = $filter->($self, $values, $args);
-  
-  return $new_value;
-}
-
 sub add_filter {
   my $self = shift;
   

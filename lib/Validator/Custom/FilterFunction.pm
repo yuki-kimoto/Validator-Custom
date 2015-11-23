@@ -6,7 +6,7 @@ use warnings;
 use Carp 'croak';
 
 sub date_to_timepiece {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -53,7 +53,7 @@ sub date_to_timepiece {
 }
 
 sub datetime_to_timepiece {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -105,17 +105,19 @@ sub datetime_to_timepiece {
 }
 
 sub merge {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params, $args) = @_;
   
   my $values = $params->{$key};
   
   $values = [$values] unless ref $values eq 'ARRAY';
   
-  return {$key => join('', @$values)};
+  my $new_key = $args->[0];
+  
+  return {$new_key => join('', @$values)};
 }
 
 sub first {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $values = $params->{$key};
   
@@ -131,7 +133,7 @@ sub first {
 }
 
 sub to_array {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $values;
   if (exists $params->{$key}) {
@@ -147,7 +149,7 @@ sub to_array {
 }
 
 sub to_array_remove_blank {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $values = $params->{$key};
   
@@ -158,7 +160,7 @@ sub to_array_remove_blank {
 }
 
 sub trim {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -168,7 +170,7 @@ sub trim {
 }
 
 sub trim_collapse {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -181,7 +183,7 @@ sub trim_collapse {
 }
 
 sub trim_lead {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -191,7 +193,7 @@ sub trim_lead {
 }
 
 sub trim_trail {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -201,7 +203,7 @@ sub trim_trail {
 }
 
 sub trim_uni {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -211,7 +213,7 @@ sub trim_uni {
 }
 
 sub trim_uni_collapse {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -224,7 +226,7 @@ sub trim_uni_collapse {
 }
 
 sub trim_uni_lead {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -234,7 +236,7 @@ sub trim_uni_lead {
 }
 
 sub trim_uni_trail {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
   

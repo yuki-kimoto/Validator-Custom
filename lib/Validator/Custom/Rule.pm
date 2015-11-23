@@ -6,6 +6,39 @@ has 'topic_info' => sub { {} };
 has 'content' => sub { [] };
 has 'validator';
 
+sub run_check {
+  my ($self, $name, $args, $key, $params) = @_;
+  
+  my $checks = $self->validator->{checks} || {};
+  my $check = $checks->{$name};
+  unless ($check) {
+    croak "Can't call $name check";
+  }
+  
+  my $ret = $check->($self, $key, $params, $args);
+  
+  if (ref $ret eq 'HASH') {
+    return 0;
+  }
+  else {
+    return $ret ? 1: 0;
+  }
+}
+
+sub run_filter {
+  my ($self, $name, $args, $key, $params) = @_;
+  
+  my $filters = $self->validator->{filters} || {};
+  my $filter = $filters->{$name};
+  unless ($filter) {
+    croak "Can't call $name filter";
+  }
+  
+  my $new_params = $filter->($self, $key, $params, $args);
+  
+  return $new_params;
+}
+
 sub fallback {
   my ($self, $fallback) = @_;
   
@@ -117,12 +150,15 @@ sub validate {
         if ($func_info->{type} eq 'check') {
           my $values = $current_params->{$current_key};
           
+          croak "check_each can receive only array reference values"
+            unless ref $values eq 'ARRAY';
+          
           # Validation loop
           for (my $k = 0; $k < @$values; $k++) {
             my $value = $values->[$k];
             
             # Validate
-            my $is_valid = $func->($self->validator, $current_key, {$current_key => $value}, $arg);
+            my $is_valid = $func->($self, $current_key, {$current_key => $value}, $arg);
             
             # Constrint result
             if (ref $is_valid eq 'HASH') {
@@ -149,13 +185,16 @@ sub validate {
         elsif ($func_info->{type} eq 'filter') {
           my $values = $current_params->{$current_key};
           
+          croak "filter_each can receive only array reference values"
+            unless ref $values eq 'ARRAY';
+          
           my $new_values = [];
           
           # Validation loop
           my $new_current_value = [];
           for (my $k = 0; $k < @$values; $k++) {
             my $value = $values->[$k];
-            my $new_params = $func->($self->validator, $current_key, {$current_key => $value}, $arg);
+            my $new_params = $func->($self, $current_key, {$current_key => $value}, $arg);
             push @$new_values, $new_params->{$current_key};
           }
           $current_params->{$current_key} = $new_values;
@@ -165,7 +204,7 @@ sub validate {
       # Single value
       else {      
         if ($func_info->{type} eq 'check') {
-          my $is_valid = $func->($self->validator, $current_key, $current_params, $arg);
+          my $is_valid = $func->($self, $current_key, $current_params, $arg);
           
           if (ref $is_valid eq 'HASH') {
             $is_invalid = 1;
@@ -184,7 +223,7 @@ sub validate {
           }
         }
         elsif ($func_info->{type} eq 'filter') {
-          my $new_params = $func->($self->validator, $current_key, $current_params, $arg);
+          my $new_params = $func->($self, $current_key, $current_params, $arg);
           $current_params = $new_params;
         }
       }

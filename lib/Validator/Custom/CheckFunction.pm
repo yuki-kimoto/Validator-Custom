@@ -8,7 +8,7 @@ use Carp 'croak';
 my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 
 sub exists {
-  my ($vc, $key, $params, $args) = @_;
+  my ($rule, $key, $params, $args) = @_;
   
   my $is_valid = exists $params->{$key};
   
@@ -16,7 +16,7 @@ sub exists {
 }
 
 sub defined {
-  my ($vc, $key, $params, $args) = @_;
+  my ($rule, $key, $params, $args) = @_;
   
   my $value = $params->{$key};
   
@@ -26,7 +26,7 @@ sub defined {
 }
 
 sub ascii {
-  my ($vc, $key, $params, $args) = @_;
+  my ($rule, $key, $params, $args) = @_;
   
   my $value = $params->{$key};
   
@@ -36,7 +36,7 @@ sub ascii {
 }
 
 sub between {
-  my ($vc, $key, $params, $args) = @_;
+  my ($rule, $key, $params, $args) = @_;
   
   my $value = $params->{$key};
 
@@ -51,7 +51,7 @@ sub between {
 }
 
 sub blank {
-  my ($vc, $key, $params, $args) = @_;
+  my ($rule, $key, $params, $args) = @_;
   
   my $value = $params->{$key};
   
@@ -61,7 +61,7 @@ sub blank {
 }
 
 sub date {
-  my ($vc, $key, $params, $args) = @_;
+  my ($rule, $key, $params, $args) = @_;
   
   my $value = $params->{$key};
   
@@ -108,7 +108,7 @@ sub date {
 }
 
 sub datetime {
-  my ($vc, $key, $params, $args) = @_;
+  my ($rule, $key, $params, $args) = @_;
   
   my $value = $params->{$key};
   
@@ -160,7 +160,7 @@ sub datetime {
 }
 
 sub decimal {
-  my ($vc, $key, $params, $digits_tmp) = @_;
+  my ($rule, $key, $params, $digits_tmp) = @_;
   
   my $value = $params->{$key};
   
@@ -203,7 +203,7 @@ sub decimal {
 }
 
 sub duplication {
-  my ($vc, $key, $params, $args) = @_;
+  my ($rule, $key, $params, $args) = @_;
   
   my $values = [map { $params->{$_} } @$key];
   
@@ -212,7 +212,7 @@ sub duplication {
 }
 
 sub equal_to {
-  my ($vc, $key, $params, $target) = @_;
+  my ($rule, $key, $params, $target) = @_;
   
   my $value = $params->{$key};
   
@@ -224,7 +224,7 @@ sub equal_to {
 }
 
 sub greater_than {
-  my ($vc, $key, $params, $target) = @_;
+  my ($rule, $key, $params, $target) = @_;
   
   my $value = $params->{$key};
   
@@ -236,7 +236,7 @@ sub greater_than {
 }
 
 sub http_url {
-  my ($vc, $key, $params, $target) = @_;
+  my ($rule, $key, $params, $target) = @_;
   
   my $value = $params->{$key};
   
@@ -246,7 +246,7 @@ sub http_url {
 }
 
 sub int {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -256,7 +256,7 @@ sub int {
 }
 
 sub in_array {
-  my ($vc, $key, $params, $args) = @_;
+  my ($rule, $key, $params, $args) = @_;
   
   my $value = $params->{$key};
   
@@ -266,7 +266,7 @@ sub in_array {
 }
 
 sub length {
-  my ($vc, $key, $params, $args) = @_; 
+  my ($rule, $key, $params, $args) = @_; 
   
   my $value = $params->{$key};
   
@@ -300,7 +300,7 @@ sub length {
 }
 
 sub less_than {
-  my ($vc, $key, $params, $target) = @_;
+  my ($rule, $key, $params, $target) = @_;
   
   my $value = $params->{$key};
   
@@ -312,7 +312,7 @@ sub less_than {
 }
 
 sub string {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -322,7 +322,7 @@ sub string {
 }
 
 sub not_blank   {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -332,7 +332,7 @@ sub not_blank   {
 }
 
 sub not_defined {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -342,7 +342,7 @@ sub not_defined {
 }
 
 sub not_space {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -352,7 +352,7 @@ sub not_space {
 }
 
 sub uint {
-  my ($vc, $key, $params) = @_;
+  my ($rule, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -362,7 +362,7 @@ sub uint {
 }
 
 sub regex {
-  my ($vc, $key, $params, $regex) = @_;
+  my ($rule, $key, $params, $regex) = @_;
   
   my $value = $params->{$key};
   
@@ -372,7 +372,7 @@ sub regex {
 }
 
 sub selected_at_least {
-  my ($vc, $key, $params, $num) = @_;
+  my ($rule, $key, $params, $num) = @_;
   
   my $values = $params->{$key};
   
@@ -385,7 +385,7 @@ sub selected_at_least {
 }
 
 sub space {
-  my ($vc, $key, $params, $regex) = @_;
+  my ($rule, $key, $params, $regex) = @_;
   
   my $value = $params->{$key};
   

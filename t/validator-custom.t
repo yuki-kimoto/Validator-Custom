@@ -9,23 +9,61 @@ use Validator::Custom::Rule;
 # TODO
 # run_filter
 # run_check
+# to_array
 
 my $vc_common = Validator::Custom->new;
 $vc_common->add_check(
-  Int => sub { $_[1] =~ /^\d+$/ },
-  Num => sub {
-    require Scalar::Util;
-    return Scalar::Util::looks_like_number($_[1]);
+  Int => sub {
+    my ($rule, $key, $params) = @_;
+    
+    my $value = $params->{$key};
+    
+    return $value =~ /^\d+$/;
   },
-  aaa => sub {$_[1] eq 'aaa'},
-  bbb => sub {$_[1] eq 'bbb'}
+  Num => sub {
+    my ($rule, $key, $params) = @_;
+    
+    my $value = $params->{$key};
+
+    require Scalar::Util;
+    return Scalar::Util::looks_like_number($value);
+  },
+  aaa => sub {
+    my ($rule, $key, $params) = @_;
+    
+    my $value = $params->{$key};
+
+    return $value eq 'aaa';
+  },
+  bbb => sub {
+    my ($rule, $key, $params) = @_;
+    
+    my $value = $params->{$key};
+
+    return $value eq 'bbb';
+  }
 );
 $vc_common->add_filter(
   C1 => sub {
-    my ($self, $value, $args) = @_;
-    return $value * 2;
+    my ($rule, $key, $params) = @_;
+    
+    my $value = $params->{$key};
+    
+    return {$key => $value * 2};
   }
 );
+
+# filter_each
+{
+  my $vc = $vc_common;
+  my $input = {k1 => [1,2]};
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->filter_each('C1')->filter_each('C1');
+
+  my $result= $rule->validate($input);
+  is_deeply($result->messages, []);
+  is_deeply($result->output, {k1 => [4,8]});
+}
 
 # check_each
 {
@@ -34,10 +72,10 @@ $vc_common->add_filter(
   my $rule = $vc->create_rule;
   $rule->topic('key1')
     ->check_each('not_blank')
-    ->check_each(sub { !shift->run_check('int', shift) });
+    ->check_each(sub { !shift->run_check('int') });
   $rule->topic('key2')
     ->check_each('not_blank')
-    ->check_each(sub { !shift->run_check('int', shift) });
+    ->check_each(sub { !shift->run_check('int') });
   
   my $result = $rule->validate($input);
   is_deeply($result->invalid_rule_keys, ['key2']);
@@ -290,18 +328,6 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {k1 => [1,2]};
-  my $rule = $vc->create_rule;
-  $rule->topic('k1')->filter_each('C1')->filter_each('C1');
-
-  my $result= $rule->validate($input);
-  is_deeply($result->messages, []);
-  is_deeply($result->output, {k1 => [4,8]});
-}
-
-
-{
-  my $vc = $vc_common;
   my $input = { k1 => 1};
   my $rule = $vc->create_rule;
   $rule->topic('k1')->check('Int')->message("k1Error1");
@@ -330,7 +356,9 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     length => sub {
-      my ($self, $value, $args) = @_;
+      my ($rule, $key, $params, $args) = @_;
+      
+      my $value = $params->{$key};
       
       my $min;
       my $max;
@@ -372,11 +400,17 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
    'C1' => sub {
-      my ($self, $value) = @_;
+      my ($rule, $key, $params) = @_;
+      
+      my $value = $params->{$key};
+      
       return $value > 1 ? 1 : 0;
     },
    'C2' => sub {
-      my ($self, $value) = @_;
+      my ($rule, $key, $params) = @_;
+      
+      my $value = $params->{$key};
+      
       return $value > 5 ? 1 : 0;
     }
   );
@@ -396,11 +430,17 @@ $vc_common->add_filter(
 {
   my $vc = Validator::Custom->new;
   $vc->add_check(p => sub {
-    my ($self, $values) = @_;
+    my ($rule, $key, $params) = @_;
+    
+    my $values = $params->{$key};
+    
     return $values->[0] eq $values->[1];
   });
   $vc->add_check(q => sub {
-    my ($self, $value) = @_;
+    my ($rule, $key, $params) = @_;
+    
+    my $value = $params->{$key};
+    
     return $value eq 1;
   });
   
@@ -974,8 +1014,8 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   my $input = {key1 => 'a', key2 => 'b', key3 => 'c'};
   my $rule = $vc->create_rule;
-  $rule->topic( ['key1', 'key2', 'key3'])->name('key123')->filter('merge')->output_to('key');
-
+  $rule->topic( ['key1', 'key2', 'key3'])->name('key123')->filter('merge' => ['key']);
+  
   my $result = $rule->validate($input);
   is($result->output->{key}, 'abc');
 }
@@ -1461,7 +1501,9 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     c1 => sub {
-      my ($self, $value) = @_;
+      my ($rule, $key, $params) = @_;
+      
+      my $value = $params->{$key};
       
       if ($value eq 'a') {
         return 1;
@@ -1471,7 +1513,9 @@ $vc_common->add_filter(
       }
     },
     c2 => sub {
-      my ($self, $value) = @_;
+      my ($rule, $key, $params) = @_;
+      
+      my $value = $params->{$key};
       
       if ($value eq 'a') {
         return 1;
@@ -1484,9 +1528,9 @@ $vc_common->add_filter(
   my $rule = $vc->create_rule;
   $rule->topic('k1')->check('c1');
   $rule->topic('k2')->check_each('c2');
-  my $vresult = $rule->validate({k1 => 'a', k2 => 'a'});
+  my $vresult = $rule->validate({k1 => 'a', k2 => ['a']});
   ok($vresult->is_ok);
-  $vresult = $rule->validate({k1 => 'b', k2 => 'b'});
+  $vresult = $rule->validate({k1 => 'b', k2 => ['b']});
   ok(!$vresult->is_ok);
   is_deeply($vresult->messages, ['error1', 'error2']);
 }
@@ -1652,13 +1696,21 @@ $vc_common->add_filter(
 
 {
   my $vc = Validator::Custom->new;
-  $vc->add_check(Int => sub{ $_[1] =~ /^\d+$/ });
+  $vc->add_check(
+    Int => sub{
+      my ($rule, $key, $params) = @_;
+      
+      my $value = $params->{$key};
+      
+      return $value =~ /^\d+$/;
+    }
+  );
   my $input = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a'};
   my $rule = $vc->create_rule;
-  $rule->topic('k1')->check_each('Int')->message("k1Error1");
+  $rule->topic('k1')->filter('to_array')->check_each('Int')->message("k1Error1");
   $rule->topic('k2')->check_each('Int')->message("k2Error1");
   $rule->topic('k3')->check_each('Int')->message("k3Error1");
-  $rule->topic('k4')->check_each('Int')->message("k4Error1");
+  $rule->topic('k4')->filter('to_array')->check_each('Int')->message("k4Error1");
 
   my $messages = $rule->validate($input)->messages;
 

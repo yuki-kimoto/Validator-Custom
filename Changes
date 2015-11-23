@@ -9,7 +9,7 @@
   It is important to change some syntax for Validator::Csutom future.
   
   I keep backword compatibilyty of 0.xx completely.
-  Validator::Custom 0.xx work well after major version up.
+  Validator::Custom 0.xx syntax work well after major version up.
   You can rewrite your code guradually.
   
   I list the changes in the version 1.00 bellow.
@@ -28,6 +28,7 @@
   - check function return value change. If the value is invalid, you must return 1.
     If the value is invalid, you must 0 or {message => "some error occur}.
   - filter function must return new parameters, for example, {title => $new_value}.
+  - $rule->default(...) is removed. You must use $rule->fallback(...).
   
   - Many methods is removed.
       Validator::Custom
