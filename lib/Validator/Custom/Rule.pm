@@ -39,6 +39,11 @@ sub run_filter {
     croak "Can't call $name filter";
   }
   
+  unless (defined $key) {
+    $key = $self->{current_key};
+    $params = $self->{current_params};
+  }
+  
   my $new_params = $filter->($self, $key, $params, $args);
   
   return $new_params;
@@ -114,8 +119,6 @@ sub validate {
     else {
       $current_params->{$key} = $input->{$key};
     }
-    $self->{current_key} = $current_key;
-    $self->{current_params} = $current_params;
     
     # Is invalid
     my $is_invalid;
@@ -165,8 +168,12 @@ sub validate {
           for (my $k = 0; $k < @$values; $k++) {
             my $value = $values->[$k];
             
+            # Set current key and params
+            $self->{current_key} = $current_key;
+            $self->{current_params} = {$current_key => $value};
+            
             # Validate
-            my $is_valid = $func->($self, $current_key, {$current_key => $value}, $arg);
+            my $is_valid = $func->($self, $current_key, $self->{current_params}, $arg);
             
             # Constrint result
             if (ref $is_valid eq 'HASH') {
@@ -202,7 +209,12 @@ sub validate {
           my $new_current_value = [];
           for (my $k = 0; $k < @$values; $k++) {
             my $value = $values->[$k];
-            my $new_params = $func->($self, $current_key, {$current_key => $value}, $arg);
+            
+            # Set current key and params
+            $self->{current_key} = $current_key;
+            $self->{current_params} = {$current_key => $value};
+            
+            my $new_params = $func->($self, $current_key, $self->{current_params}, $arg);
             push @$new_values, $new_params->{$current_key};
           }
           $current_params->{$current_key} = $new_values;
@@ -211,6 +223,10 @@ sub validate {
       
       # Single value
       else {      
+        # Set current key and params
+        $self->{current_key} = $current_key;
+        $self->{current_params} = $current_params;
+        
         if ($func_info->{type} eq 'check') {
           my $is_valid = $func->($self, $current_key, $current_params, $arg);
           
