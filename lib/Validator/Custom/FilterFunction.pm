@@ -110,7 +110,7 @@ sub merge {
   croak "Input key of filter \"merge\" must be array refernce"
     unless ref $key eq 'ARRAY';
 
-  my $new_key = $arg->[0];
+  my $new_key = $arg;
   croak "filter \"merge\" need output key"
     unless defined $new_key;
   
