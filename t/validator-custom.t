@@ -261,12 +261,42 @@ $vc_common->add_filter(
   my $input = {k1 => 1, k2 => 2, k3 => 3};
   my $rule = $vc->create_rule;
   $rule->topic('k1')
-    ->check(sub{$_[1] == 1})->message("k1Error1")
-    ->check(sub{$_[1] == 2})->message("k1Error2")
-    ->check(sub{$_[1] == 3})->message("k1Error3");
+    ->check(sub{
+      my ($rule, $key, $params) = @_;
+      
+      my $value = $params->{$key};
+      
+      return $value == 1;
+    })->message("k1Error1")
+    ->check(sub {
+      my ($rule, $key, $params) = @_;
+      
+      my $value = $params->{$key};
+
+      return $value == 2;
+    })->message("k1Error2")
+    ->check(sub{
+      my ($rule, $key, $params) = @_;
+      
+      my $value = $params->{$key};
+
+      return $value == 3;
+    })->message("k1Error3");
   $rule->topic('k2')
-    ->check(sub{$_[1] == 2})->message("k2Error1")
-    ->check(sub{$_[1] == 3})->message("k2Error2");
+    ->check(sub{
+      my ($rule, $key, $params) = @_;
+      
+      my $value = $params->{$key};
+
+      return $value == 2;
+    })->message("k2Error1")
+    ->check(sub{
+      my ($rule, $key, $params) = @_;
+      
+      my $value = $params->{$key};
+
+      return $value == 3;
+    })->message("k2Error2");
 
   my $vresult   = $rule->validate($input);
   
