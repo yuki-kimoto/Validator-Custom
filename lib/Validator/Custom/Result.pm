@@ -6,17 +6,6 @@ use Carp 'croak';
 # Attrbutes
 has output => sub { {} };
 
-sub invalid_rule_keys {
-  my $self = shift;
-  
-  # Invalid rule keys
-  my $error_infos = $self->{_error_infos};
-  my @invalid_rule_keys = sort { $error_infos->{$a}{position} <=>
-    $error_infos->{$b}{position} } keys %$error_infos;
-  
-  return \@invalid_rule_keys;
-}
-
 sub is_valid {
   my ($self, $name) = @_;
  
@@ -26,6 +15,17 @@ sub is_valid {
   else {
     return !(keys %{$self->{_error_infos}}) ? 1 : 0;
   }
+}
+
+sub failed {
+  my $self = shift;
+  
+  # Invalid rule keys
+  my $error_infos = $self->{_error_infos};
+  my @invalid_rule_keys = sort { $error_infos->{$a}{position} <=>
+    $error_infos->{$b}{position} } keys %$error_infos;
+  
+  return \@invalid_rule_keys;
 }
 
 sub message {
@@ -90,6 +90,9 @@ sub to_hash {
   
   return $result;
 }
+
+# Version 0 method(Not used now)
+sub invalid_rule_keys { shift->failed(@_) }
 
 # Version 0 method(Not used now)
 sub has_missing { @{shift->missing_params} ? 1 : 0 }
@@ -211,25 +214,22 @@ Validator::Custom::Result - Result of validation
   my $output = $result->output;
 
   # Chacke if the result is valid.
-  my $is_ok = $result->is_ok;
+  my $is_valid = $result->is_valid;
 
   # Check if one parameter is valid
   my $title_is_valid = $result->is_valid('title');
 
-  # Invalid rule keys
-  my $invalid_rule_keys = $result->invalid_rule_keys;
+  # Parameter names that validation failed.
+  my $failed = $result->failed;
 
   # A error message
   my $message = $result->message('title');
 
-  # Error messages
+  # All Error messages
   my $messages = $result->messages;
 
-  # Error messages to hash ref
+  # Error messages to hash reference
   my $messages_hash = $result->message_to_hash;
-  
-  # Result to hash
-  my $rhash = $result->to_hash;
 
 =head1 ATTRIBUTES
 
@@ -248,26 +248,21 @@ You can get filtered output using C<output>.
 L<Validator::Custom::Result> inherits all methods from L<Object::Simple>
 and implements the following new ones.
 
-=head2 invalid_rule_keys
+=head2 falied
 
-  my $invalid_rule_keys = $result->invalid_rule_keys;
+  my $failed = $result->failed;
 
-Invalid rule keys
-
-=head2 is_ok
-
-  my $is_ok = $result->is_ok;
-
-If you check the data is completely valid, use C<is_ok()>.
-C<is_ok()> return true value
-if invalid parameter values is not found and all parameter
-names specified in the rule is found in the data.
+Failed parameter names.
 
 =head2 is_valid
-
+  
+  my $is_valid = $result->is_valid;
   my $title_is_valid = $result->is_valid('title');
 
-Check if one parameter is valid.
+Check if data is valid. If you omit arguments,
+this method check if all input data is valid.
+
+If you specify name, this method check if one data is valid.
 
 =head2 message
 
@@ -288,17 +283,5 @@ Messages keep the order of parameter names of the rule.
 
 You can get the pairs of invalid parameter name and message
 using C<messages_to_hash()>.
-
-=head2 to_hash
-
-  my $rhash = $result->to_hash;
-
-Convert result information to hash reference.
-The following keys is set.
-
-  {
-    ok =>      $result->is_ok,
-    messages => $result->messages_to_hash
-  }
 
 =cut

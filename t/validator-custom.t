@@ -78,7 +78,7 @@ $vc_common->add_filter(
     ->check_each(sub { !shift->run_check('int') });
   
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['key2']);
+  is_deeply($result->failed, ['key2']);
 }
 
 # check - code reference
@@ -181,7 +181,7 @@ $vc_common->add_filter(
   $rule->topic('k4')->check('Num')->message("k4Error1");
   my $result= $rule->validate($input);
   is_deeply($result->messages, [qw/k2Error1 k4Error1/]);
-  is_deeply($result->invalid_rule_keys, [qw/k2 k4/]);
+  is_deeply($result->failed, [qw/k2 k4/]);
   ok(!$result->is_valid);
 }
 
@@ -201,7 +201,7 @@ $vc_common->add_filter(
   $rule->topic('k4')->check('int');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k3', 'k4']);
+  is_deeply($result->failed, ['k3', 'k4']);
 }
 
 
@@ -377,16 +377,16 @@ $vc_common->add_filter(
   $rule->topic('name')->check(length => [1, 2]);
   
   my $vresult = $rule->validate($input);
-  my $invalid_rule_keys = $vresult->invalid_rule_keys;
-  is_deeply($invalid_rule_keys, ['name']);
+  my $failed = $vresult->failed;
+  is_deeply($failed, ['name']);
   
   my $messages_hash = $vresult->messages_to_hash;
   is_deeply($messages_hash, {name => 'name is invalid'});
   
   is($vresult->message('name'), 'name is invalid');
   
-  $invalid_rule_keys = $rule->validate($input)->invalid_rule_keys;
-  is_deeply($invalid_rule_keys, ['name']);
+  $failed = $rule->validate($input)->failed;
+  is_deeply($failed, ['name']);
 }
 
 {
@@ -423,10 +423,10 @@ $vc_common->add_filter(
   $rule->topic('k2_1')->check('C2');
   $rule->topic('k2_2')->check('C2');
   
-  is_deeply($rule->validate($input)->invalid_rule_keys, [qw/k1_1 k2_1/]);
+  is_deeply($rule->validate($input)->failed, [qw/k1_1 k2_1/]);
 }
 
-# Validator::Custom::Result raw_invalid_rule_keys'
+# Validator::Custom::Result raw_failed'
 {
   my $vc = Validator::Custom->new;
   $vc->add_check(p => sub {
@@ -451,7 +451,7 @@ $vc_common->add_filter(
   $rule->topic('k4')->check('q');
   my $vresult = $rule->validate($input);
 
-  is_deeply($vresult->invalid_rule_keys, ['k12', 'k3']);
+  is_deeply($vresult->failed, ['k12', 'k3']);
 }
 
 # check default;
@@ -468,7 +468,7 @@ $vc_common->add_filter(
   $rule->topic('k2')->check('not_defined');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k2']);
+  is_deeply($result->failed, ['k2']);
 }
 
 # defined
@@ -483,7 +483,7 @@ $vc_common->add_filter(
   $rule->topic('k2')->check('defined');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k1']);
+  is_deeply($result->failed, ['k1']);
 }
 
 # not_space
@@ -500,7 +500,7 @@ $vc_common->add_filter(
   $rule->topic('k3')->check('not_space');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k1', 'k2']);
+  is_deeply($result->failed, ['k1', 'k2']);
 }
 
 # not_blank
@@ -517,7 +517,7 @@ $vc_common->add_filter(
   $rule->topic('k3')->check('not_blank');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k1']);
+  is_deeply($result->failed, ['k1']);
 }
 
 # blank
@@ -534,7 +534,7 @@ $vc_common->add_filter(
   $rule->topic('k3')->check('blank');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k2', 'k3']);
+  is_deeply($result->failed, ['k2', 'k3']);
 }
 
 # uint
@@ -553,7 +553,7 @@ $vc_common->add_filter(
   $rule->topic('k4')->check('uint');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k2', 'k3', 'k4']);
+  is_deeply($result->failed, ['k2', 'k3', 'k4']);
 }
 
 # uint
@@ -570,7 +570,7 @@ $vc_common->add_filter(
   $rule->topic('k3')->check('ascii');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k2', 'k3']);
+  is_deeply($result->failed, ['k2', 'k3']);
 }
 
 # length
@@ -589,7 +589,7 @@ $vc_common->add_filter(
   $rule->topic('k2')->check('length' => [4, 5]);
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k2']);
+  is_deeply($result->failed, ['k2']);
 }
 
 # duplication
@@ -607,7 +607,7 @@ $vc_common->add_filter(
   $rule->topic([qw/k2_1 k2_2/])->check('duplication')->name('k2');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k2']);
+  is_deeply($result->failed, ['k2']);
 }
 
 # regex
@@ -622,7 +622,7 @@ $vc_common->add_filter(
   $rule->topic('k2')->check('regex' => "a{4}");
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k2']);
+  is_deeply($result->failed, ['k2']);
 }
 
 # http_url
@@ -637,7 +637,7 @@ $vc_common->add_filter(
   $rule->topic('k2')->check('http_url');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k2']);
+  is_deeply($result->failed, ['k2']);
 }
 
 # selected_at_least
@@ -658,7 +658,7 @@ $vc_common->add_filter(
   $rule->topic('k5')->check('selected_at_least' => 3);
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k5']);
+  is_deeply($result->failed, ['k5']);
 }
 
 # greater_than
@@ -675,7 +675,7 @@ $vc_common->add_filter(
   $rule->topic('k3')->check('greater_than' => 1);
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k1', 'k3']);
+  is_deeply($result->failed, ['k1', 'k3']);
 }
 
 # less_than
@@ -692,7 +692,7 @@ $vc_common->add_filter(
   $rule->topic('k3')->check('less_than' => 1);
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k1', 'k3']);
+  is_deeply($result->failed, ['k1', 'k3']);
 }
 
 # less_than
@@ -709,7 +709,7 @@ $vc_common->add_filter(
   $rule->topic('k3')->check('equal_to' => 1);
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k2', 'k3']);
+  is_deeply($result->failed, ['k2', 'k3']);
 }
 
 # between
@@ -730,7 +730,7 @@ $vc_common->add_filter(
   $rule->topic('k5')->check('between' => [5, 5]);
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k3', 'k5']);
+  is_deeply($result->failed, ['k3', 'k5']);
 }
 
 # decimal
@@ -767,7 +767,7 @@ $vc_common->add_filter(
   $rule->topic('k13')->check('decimal' => [2, undef]);
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, [qw/k2 k3 k5 k6 k8 k9 k11 k13/]);
+  is_deeply($result->failed, [qw/k2 k3 k5 k6 k8 k9 k11 k13/]);
 }
 
 # in_array
@@ -784,7 +784,7 @@ $vc_common->add_filter(
   $rule->topic('k3')->check('in_array' => [qw/b c/]);
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['k2', 'k3']);
+  is_deeply($result->failed, ['k2', 'k3']);
 }
 
 # first
@@ -1030,7 +1030,7 @@ $vc_common->add_filter(
   $rule->topic('key3')->check('space');
 
   my $result = $rule->validate($input);
-  is_deeply($result->invalid_rule_keys, ['key3']);
+  is_deeply($result->failed, ['key3']);
 }
 
 # to_array filter
@@ -1741,7 +1741,7 @@ $vc_common->add_filter(
     
     my $result = $rule->validate($input);
     ok(!$result->is_valid);
-    is_deeply($result->invalid_rule_keys, ['key2']);
+    is_deeply($result->failed, ['key2']);
     is($result->output, {key1 => 2});
   }
 

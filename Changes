@@ -23,13 +23,13 @@
     You must use $rule->topic($key).
   - $vresult->is_ok is removed. You must use $vresult->is_valid.
   - $vresult->data is removed. You must use $vresult->output.
+  - $vresult->invaid_rule_keys is removed. You must use $vresult->failed.
   - check function arguments is changed
     from ($value, $args, $vc) to ($rule, $key, $params, $args).
   - check function return value change. If the value is invalid, you must return 1.
     If the value is invalid, you must 0 or {message => "some error occur}.
   - filter function must return new parameters, for example, {title => $new_value}.
   - $rule->default(...) is removed. You must use $rule->fallback(...).
-  
   - Many methods is removed.
       Validator::Custom
         error_stock
@@ -42,6 +42,11 @@
         is_ok
         data
         loose_data
+        has_invalid
+        has_missing
+        invalid_rule_keys
+        invalid_params
+        to_hash
 
   --- Why version up was needed? ---------------------
   - Constraint function is mixed with check function and filter function.
@@ -49,7 +54,10 @@
   - 0.xx can't process not existing value properly.
   - 0.xx can't create output properly.
   - $rule->check(...) method can't receive function arguments properly.
-  
+  - I originaly create Validator::Custom for Mojolicious, recently Mojolicious
+    has own validator which name is Mojoliciou::Validator.
+    I wanted to create similar interface of Mojolicious::Validator.
+
 0.28
   - improve decimal check. you can specify undef value which mean unlimit muximanu digits
     Example:
