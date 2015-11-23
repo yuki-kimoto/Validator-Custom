@@ -9,7 +9,6 @@ use Validator::Custom::Rule;
 # TODO
 # run_filter
 # run_check
-# to_array
 # fallback
 
 my $vc_common = Validator::Custom->new;
@@ -1087,14 +1086,18 @@ $vc_common->add_filter(
 # to_array filter
 {
   my $vc = Validator::Custom->new;
-  my $input = {key1 => 1, key2 => [1, 2]};
+  my $input = {key1 => 1, key2 => [1, 2], key3 => undef};
   my $rule = $vc->create_rule;
   $rule->topic('key1')->filter('to_array');
   $rule->topic('key2')->filter('to_array');
-
+  $rule->topic('key3')->filter('to_array');
+  $rule->topic('key4')->filter('to_array');
+  
   my $result = $rule->validate($input);
   is_deeply($result->output->{key1}, [1]);
   is_deeply($result->output->{key2}, [1, 2]);
+  is_deeply($result->output->{key3}, [undef]);
+  is_deeply($result->output->{key4}, []);
 }
 
 # undefined value
