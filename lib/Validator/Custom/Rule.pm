@@ -7,7 +7,7 @@ has 'content' => sub { [] };
 has 'validator';
 
 sub run_check {
-  my ($self, $name, $args, $key, $params) = @_;
+  my ($self, $name, $arg, $key, $params) = @_;
   
   my $checks = $self->validator->{checks} || {};
   my $check = $checks->{$name};
@@ -20,7 +20,7 @@ sub run_check {
     $params = $self->{current_params};
   }
   
-  my $ret = $check->($self, $key, $params, $args);
+  my $ret = $check->($self, $arg, $key, $params);
   
   if (ref $ret eq 'HASH') {
     return 0;
@@ -31,7 +31,7 @@ sub run_check {
 }
 
 sub run_filter {
-  my ($self, $name, $args, $key, $params) = @_;
+  my ($self, $name, $arg, $key, $params) = @_;
   
   my $filters = $self->validator->{filters} || {};
   my $filter = $filters->{$name};
@@ -44,7 +44,7 @@ sub run_filter {
     $params = $self->{current_params};
   }
   
-  my $new_params = $filter->($self, $key, $params, $args);
+  my $new_params = $filter->($self, $arg, $key, $params);
   
   return $new_params;
 }
@@ -173,7 +173,7 @@ sub validate {
             $self->{current_params} = {$current_key => $value};
             
             # Validate
-            my $is_valid = $func->($self, $current_key, $self->{current_params}, $arg);
+            my $is_valid = $func->($self, $arg, $current_key, $self->{current_params});
             
             # Constrint result
             if (ref $is_valid eq 'HASH') {
@@ -214,7 +214,7 @@ sub validate {
             $self->{current_key} = $current_key;
             $self->{current_params} = {$current_key => $value};
             
-            my $new_params = $func->($self, $current_key, $self->{current_params}, $arg);
+            my $new_params = $func->($self, $arg, $current_key, $self->{current_params});
             push @$new_values, $new_params->{$current_key};
           }
           $current_params->{$current_key} = $new_values;
@@ -232,7 +232,7 @@ sub validate {
         $self->{current_params} = $current_params;
         
         if ($func_info->{type} eq 'check') {
-          my $is_valid = $func->($self, $current_key, $current_params, $arg);
+          my $is_valid = $func->($self, $arg, $current_key, $current_params);
           
           if (ref $is_valid eq 'HASH') {
             $is_invalid = 1;
@@ -251,7 +251,7 @@ sub validate {
           }
         }
         elsif ($func_info->{type} eq 'filter') {
-          my $new_params = $func->($self, $current_key, $current_params, $arg);
+          my $new_params = $func->($self, $arg, $current_key, $current_params);
           $current_params = $new_params;
           $current_key = [sort keys %$current_params];
           if (@$current_key == 1) {
@@ -726,8 +726,8 @@ The topic becomes optional.
 Execute check fucntion.
 
   my $is_valid = $rule->run_check('int');
-  my $is_valid = $rule->run_check('length', $args);
-  my $is_valid = $rule->run_check('length', $args, $key, $params);
+  my $is_valid = $rule->run_check('length', $arg);
+  my $is_valid = $rule->run_check('length', $arg, $key, $params);
 
 if return value is hash reference or false value, C<run_check> method return false value.
 In other cases, C<run_check> method return true value.
@@ -739,7 +739,7 @@ if key and parameters is omitted, current key and parameters is used.
 Execute filter function.
 
   my $new_params = $rule->run_filter('trim');
-  my $new_params = $rule->run_filter('foo', $args);
-  my $new_params = $vc->run_check('length', $args, $key, $params);
+  my $new_params = $rule->run_filter('foo', $arg);
+  my $new_params = $vc->run_check('length', $arg, $key, $params);
 
 if key and parameters is omitted, current key and parameters is used.

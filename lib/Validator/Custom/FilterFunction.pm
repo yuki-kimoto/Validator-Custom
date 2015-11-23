@@ -6,7 +6,7 @@ use warnings;
 use Carp 'croak';
 
 sub date_to_timepiece {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -53,7 +53,7 @@ sub date_to_timepiece {
 }
 
 sub datetime_to_timepiece {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -105,12 +105,12 @@ sub datetime_to_timepiece {
 }
 
 sub merge {
-  my ($rule, $key, $params, $args) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   croak "Input key of filter \"merge\" must be array refernce"
     unless ref $key eq 'ARRAY';
 
-  my $new_key = $args->[0];
+  my $new_key = $arg->[0];
   croak "filter \"merge\" need output key"
     unless defined $new_key;
   
@@ -123,7 +123,7 @@ sub merge {
 }
 
 sub first {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $values = $params->{$key};
   
@@ -139,7 +139,7 @@ sub first {
 }
 
 sub to_array {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $values;
   if (exists $params->{$key}) {
@@ -155,7 +155,7 @@ sub to_array {
 }
 
 sub remove_blank {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $values = $params->{$key};
   
@@ -168,7 +168,7 @@ sub remove_blank {
 }
 
 sub trim {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -178,7 +178,7 @@ sub trim {
 }
 
 sub trim_collapse {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -191,7 +191,7 @@ sub trim_collapse {
 }
 
 sub trim_lead {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -201,7 +201,7 @@ sub trim_lead {
 }
 
 sub trim_trail {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -211,7 +211,7 @@ sub trim_trail {
 }
 
 sub trim_uni {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -221,7 +221,7 @@ sub trim_uni {
 }
 
 sub trim_uni_collapse {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $value = $params->{$key};
 
@@ -234,7 +234,7 @@ sub trim_uni_collapse {
 }
 
 sub trim_uni_lead {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -244,7 +244,7 @@ sub trim_uni_lead {
 }
 
 sub trim_uni_trail {
-  my ($rule, $key, $params) = @_;
+  my ($rule, $arg, $key, $params) = @_;
   
   my $value = $params->{$key};
   
