@@ -1512,7 +1512,7 @@ L<http://github.com/yuki-kimoto/Validator-Custom>
 
 =head1 COPYRIGHT & LICENCE
 
-Copyright 2009-2014 Yuki Kimoto, all rights reserved.
+Copyright 2009-2015 Yuki Kimoto, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
