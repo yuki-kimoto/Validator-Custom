@@ -107,13 +107,19 @@ sub datetime_to_timepiece {
 sub merge {
   my ($rule, $key, $params, $args) = @_;
   
-  my $values = $params->{$key};
-  
-  $values = [$values] unless ref $values eq 'ARRAY';
-  
+  croak "Input key of filter \"merge\" must be array refernce"
+    unless ref $key eq 'ARRAY';
+
   my $new_key = $args->[0];
+  croak "filter \"merge\" need output key"
+    unless defined $new_key;
   
-  return {$new_key => join('', @$values)};
+  my $new_value;
+  for my $k (@$key) {
+    $new_value .= $params->{$k};
+  }
+  
+  return {$new_key => $new_value};
 }
 
 sub first {

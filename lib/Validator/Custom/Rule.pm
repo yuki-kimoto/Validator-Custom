@@ -218,6 +218,10 @@ sub validate {
             push @$new_values, $new_params->{$current_key};
           }
           $current_params->{$current_key} = $new_values;
+          $current_key = [sort keys %$current_params];
+          if (@$current_key == 1) {
+            $current_key = $current_key->[0];
+          }
         }
       }
       
@@ -249,6 +253,10 @@ sub validate {
         elsif ($func_info->{type} eq 'filter') {
           my $new_params = $func->($self, $current_key, $current_params, $arg);
           $current_params = $new_params;
+          $current_key = [sort keys %$current_params];
+          if (@$current_key == 1) {
+            $current_key = $current_key->[0];
+          }
         }
       }
       last if $is_invalid;

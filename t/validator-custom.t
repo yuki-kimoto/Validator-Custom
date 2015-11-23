@@ -53,6 +53,17 @@ $vc_common->add_filter(
   }
 );
 
+# merge
+{
+  my $vc = Validator::Custom->new;
+  my $input = {key1 => 'a', key2 => 'b', key3 => 'c'};
+  my $rule = $vc->create_rule;
+  $rule->topic(['key1', 'key2', 'key3'])->name('key123')->filter('merge' => ['key']);
+  
+  my $result = $rule->validate($input);
+  is($result->output->{key}, 'abc');
+}
+
 # check_each
 {
   # check_each - basic
@@ -459,7 +470,7 @@ $vc_common->add_filter(
   is_deeply($rule->validate($input)->failed, [qw/k1_1 k2_1/]);
 }
 
-# Validator::Custom::Result raw_failed'
+# failed
 {
   my $vc = Validator::Custom->new;
   $vc->add_check(p => sub {
@@ -467,7 +478,7 @@ $vc_common->add_filter(
     
     my $values = $params->{$key};
     
-    return $values->[0] eq $values->[1];
+    return defined $values->[0] && defined $values->[1] && $values->[0] eq $values->[1];
   });
   $vc->add_check(q => sub {
     my ($rule, $key, $params) = @_;
@@ -1040,17 +1051,6 @@ $vc_common->add_filter(
   ok(!$result->is_valid('key1'));
   ok(!$result->is_valid('key2'));
   ok($result->is_valid('key3'));
-}
-
-# merge
-{
-  my $vc = Validator::Custom->new;
-  my $input = {key1 => 'a', key2 => 'b', key3 => 'c'};
-  my $rule = $vc->create_rule;
-  $rule->topic( ['key1', 'key2', 'key3'])->name('key123')->filter('merge' => ['key']);
-  
-  my $result = $rule->validate($input);
-  is($result->output->{key}, 'abc');
 }
 
 # space
