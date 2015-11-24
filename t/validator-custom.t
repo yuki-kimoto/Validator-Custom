@@ -14,14 +14,14 @@ use Validator::Custom::Rule;
 my $vc_common = Validator::Custom->new;
 $vc_common->add_check(
   Int => sub {
-    my ($rule, $arg, $key, $params) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
     my $value = $params->{$key};
     
     return $value =~ /^\d+$/;
   },
   Num => sub {
-    my ($rule, $arg, $key, $params) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
     my $value = $params->{$key};
 
@@ -29,14 +29,14 @@ $vc_common->add_check(
     return Scalar::Util::looks_like_number($value);
   },
   aaa => sub {
-    my ($rule, $arg, $key, $params) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
     my $value = $params->{$key};
 
     return $value eq 'aaa';
   },
   bbb => sub {
-    my ($rule, $arg, $key, $params) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
     my $value = $params->{$key};
 
@@ -45,13 +45,34 @@ $vc_common->add_check(
 );
 $vc_common->add_filter(
   C1 => sub {
-    my ($rule, $arg, $key, $params) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
     my $value = $params->{$key};
     
     return {$key => $value * 2};
   }
 );
+
+# selected_at_least
+{
+  my $vc = Validator::Custom->new;
+  my $input = {
+    k1 => 1,
+    k2 =>[1],
+    k3 => [1, 2],
+    k4 => [],
+    k5 => [1,2]
+  };
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->check(selected_at_least => 1);
+  $rule->topic('k2')->check(selected_at_least => 1);
+  $rule->topic('k3')->check(selected_at_least => 2);
+  $rule->topic('k4')->check('selected_at_least');
+  $rule->topic('k5')->check('selected_at_least' => 3);
+
+  my $result = $rule->validate($input);
+  is_deeply($result->failed, ['k5']);
+}
 
 # merge
 {
@@ -116,7 +137,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   my $input = { k1 => 1, k2 => 2};
   my $check = sub {
-    my ($self, $arg, $key, $params) = @_;
+    my ($self, $args, $key, $params) = @_;
     
     my $values = $params->{$key};
     
@@ -290,21 +311,21 @@ $vc_common->add_filter(
   my $rule = $vc->create_rule;
   $rule->topic('k1')
     ->check(sub{
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
       return $value == 1;
     })->message("k1Error1")
     ->check(sub {
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
 
       return $value == 2;
     })->message("k1Error2")
     ->check(sub{
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
 
@@ -312,14 +333,14 @@ $vc_common->add_filter(
     })->message("k1Error3");
   $rule->topic('k2')
     ->check(sub{
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
 
       return $value == 2;
     })->message("k2Error1")
     ->check(sub{
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
 
@@ -417,14 +438,14 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     length => sub {
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
       my $min;
       my $max;
       
-      ($min, $max) = @$arg;
+      ($min, $max) = @{$args->[0]};
       my $length  = length $value;
       return $min <= $length && $length <= $max ? 1 : 0;
     }
@@ -461,14 +482,14 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
    'C1' => sub {
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
       return $value > 1 ? 1 : 0;
     },
    'C2' => sub {
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
@@ -491,14 +512,14 @@ $vc_common->add_filter(
 {
   my $vc = Validator::Custom->new;
   $vc->add_check(p => sub {
-    my ($rule, $arg, $key, $params) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
     my $values = $params->{$key};
     
     return defined $values->[0] && defined $values->[1] && $values->[0] eq $values->[1];
   });
   $vc->add_check(q => sub {
-    my ($rule, $arg, $key, $params) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
     my $value = $params->{$key};
     
@@ -699,27 +720,6 @@ $vc_common->add_filter(
 
   my $result = $rule->validate($input);
   is_deeply($result->failed, ['k2']);
-}
-
-# selected_at_least
-{
-  my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => 1,
-    k2 =>[1],
-    k3 => [1, 2],
-    k4 => [],
-    k5 => [1,2]
-  };
-  my $rule = $vc->create_rule;
-  $rule->topic('k1')->check(selected_at_least => 1);
-  $rule->topic('k2')->check(selected_at_least => 1);
-  $rule->topic('k3')->check(selected_at_least => 2);
-  $rule->topic('k4')->check('selected_at_least');
-  $rule->topic('k5')->check('selected_at_least' => 3);
-
-  my $result = $rule->validate($input);
-  is_deeply($result->failed, ['k5']);
 }
 
 # greater_than
@@ -1555,7 +1555,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     c1 => sub {
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
@@ -1567,7 +1567,7 @@ $vc_common->add_filter(
       }
     },
     c2 => sub {
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
@@ -1752,7 +1752,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     Int => sub{
-      my ($rule, $arg, $key, $params) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       

@@ -742,11 +742,12 @@ Validator::Custom - HTML form Validation, easy and flexibly
     ->check(length => [1, 5])->message('name is too long');
   
   # Rule syntax - value is optional, default is 20
-  $rule->topic('age')->optional->filter('trim')->check('int')->default(20);
+  $rule->topic('age')->optional->default(20)
+    ->filter('trim')->check('int');
   
   # Validation
   my $result = $rule->validate($input);
-  if ($result->is_ok) {
+  if ($result->is_valid) {
     # Output
     my $output = $vresult->output;
   }
@@ -757,13 +758,16 @@ Validator::Custom - HTML form Validation, easy and flexibly
   
   # You can create your original check
   my $blank_or_number = sub {
-    my ($vc, $value, $arg) = @_;
+    my ($rule, $args, $key, $params) = @_;
+    
+    my $value = $params->{$key};
     
     my $is_valid
-      = $vc->run_check('blank', $value) || $vc->run_check('regex', $value, qr/[0-9]+/);
+      = $vc->run_check('blank') || $vc->run_check('regex');
     
     return $is_valid;
   };
+  
   $rule->topic('age')
     ->check($blank_or_number)->message('age must be blank or number')
   
@@ -1052,7 +1056,12 @@ and L<Validator::Custom> object as third argument.
 
   $vc->add_check(
     telephone => sub {
-      my ($vc, $value, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
+      
+      my $value = $params->{$key};
+      
+      my $is_valid;
+      # ...
       
       return $is_valid;
     }
@@ -1064,11 +1073,13 @@ Filter function is registered by C<add_filter> method.
 
   $vc->add_filter(
     to_upper_case => sub {
-      my ($vc, $value, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
+      
+      my $value = $params->{$key};
       
       $value = uc $value;
                   
-      return $value;
+      return {$key => $value};
     }
   );
 
@@ -1431,14 +1442,18 @@ It receives Validator::Custom object, value, and arguments.
   
   $vc->add_check(
     int => sub {
-      my ($vc, $value, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
+      
+      my $value = $params->{$key};
       
       my $is_valid = $value =~ /^\-?[\d]+$/;
       
       return $is_valid;
     },
     greater_than => sub {
-      my ($rule, $value, $arg_value) = @_;
+      my ($rule, $args, $key, $params) = @_;
+      
+      my ($arg_value) = @$args;
       
       if ($value > $arg_value) {
         return 1;
@@ -1475,13 +1490,14 @@ Filter function should be new value.
 
   $vc->add_filter(
     trim => sub {
-      my ($vc, $value, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = shift;
+      my $value = $params->{$key};
+      
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
       
-      return $value;
+      return {$key => $value};
     }
   );
 
@@ -1515,7 +1531,7 @@ You can call check function by C<run_check> method.
   
   # Check blank or int
   $rule->topic('age')->check(sub {
-    my ($rule, $arg) = @_;
+    my ($rule, $args) = @_;
     
     return $rule->run_check('blank') || $rule->run_check('int');
   });

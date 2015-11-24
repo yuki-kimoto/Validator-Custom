@@ -30,7 +30,7 @@ sub optional {
 }
 
 sub run_check {
-  my ($self, $name, $arg, $key, $params) = @_;
+  my ($self, $name, $args, $key, $params) = @_;
   
   my $checks = $self->validator->{checks} || {};
   my $check = $checks->{$name};
@@ -43,7 +43,7 @@ sub run_check {
     $params = $self->{current_params};
   }
   
-  my $ret = $check->($self, $arg, $key, $params);
+  my $ret = $check->($self, $args, $key, $params);
   
   if (ref $ret eq 'HASH') {
     return 0;
@@ -54,7 +54,7 @@ sub run_check {
 }
 
 sub run_filter {
-  my ($self, $name, $arg, $key, $params) = @_;
+  my ($self, $name, $args, $key, $params) = @_;
   
   my $filters = $self->validator->{filters} || {};
   my $filter = $filters->{$name};
@@ -67,7 +67,7 @@ sub run_filter {
     $params = $self->{current_params};
   }
   
-  my $new_params = $filter->($self, $arg, $key, $params);
+  my $new_params = $filter->($self, $args, $key, $params);
   
   return $new_params;
 }
@@ -174,7 +174,7 @@ sub validate {
         }
       }
       
-      my $arg = $func_info->{args};
+      my $args = $func_info->{args};
       my $func_info_message = $func_info->{message};
       my $each = $func_info->{each};
       
@@ -200,7 +200,7 @@ sub validate {
             $self->{current_params} = {$current_key => $value};
             
             # Validate
-            my $is_valid = $func->($self, $arg, $current_key, $self->{current_params});
+            my $is_valid = $func->($self, $args, $current_key, $self->{current_params});
             
             # Constrint result
             if (ref $is_valid eq 'HASH') {
@@ -241,7 +241,7 @@ sub validate {
             $self->{current_key} = $current_key;
             $self->{current_params} = {$current_key => $value};
             
-            my $new_params = $func->($self, $arg, $current_key, $self->{current_params});
+            my $new_params = $func->($self, $args, $current_key, $self->{current_params});
             push @$new_values, $new_params->{$current_key};
           }
           $current_params->{$current_key} = $new_values;
@@ -259,7 +259,7 @@ sub validate {
         $self->{current_params} = $current_params;
         
         if ($func_info->{type} eq 'check') {
-          my $is_valid = $func->($self, $arg, $current_key, $current_params);
+          my $is_valid = $func->($self, $args, $current_key, $current_params);
           
           if (ref $is_valid eq 'HASH') {
             $is_invalid = 1;
@@ -278,7 +278,7 @@ sub validate {
           }
         }
         elsif ($func_info->{type} eq 'filter') {
-          my $new_params = $func->($self, $arg, $current_key, $current_params);
+          my $new_params = $func->($self, $args, $current_key, $current_params);
           $current_params = $new_params;
           $current_key = [sort keys %$current_params];
           if (@$current_key == 1) {
@@ -346,9 +346,7 @@ sub filter_each {
   my $func_info = {};
   $func_info->{type} = 'filter';
   $func_info->{name} = shift;
-  if (@_) {
-    $func_info->{args} = shift;
-  }
+  $func_info->{args} = [@_];
   $func_info->{each} = 1;
   $self->topic_info->{func_infos} ||= [];
   push @{$self->topic_info->{func_infos}}, $func_info;
@@ -362,9 +360,7 @@ sub check_each {
   my $func_info = {};
   $func_info->{type} = 'check';
   $func_info->{name} = shift;
-  if (@_) {
-    $func_info->{args} = shift;
-  }
+  $func_info->{args} = [@_];
   $func_info->{each} = 1;
   $self->topic_info->{func_infos} ||= [];
   push @{$self->topic_info->{func_infos}}, $func_info;
@@ -380,9 +376,7 @@ sub filter {
     my $func_info = {};
     $func_info->{type} = 'filter';
     $func_info->{name} = shift;
-    if (@_) {
-      $func_info->{args} = shift;
-    }
+    $func_info->{args} = [@_];
     $self->topic_info->{func_infos} ||= [];
     push @{$self->topic_info->{func_infos}}, $func_info;
     
@@ -402,9 +396,7 @@ sub check {
     my $func_info = {};
     $func_info->{type} = 'check';
     $func_info->{name} = shift;
-    if (@_) {
-      $func_info->{args} = shift;
-    }
+    $func_info->{args} = [@_];
     $self->topic_info->{func_infos} ||= [];
     push @{$self->topic_info->{func_infos}}, $func_info;
     
@@ -741,8 +733,8 @@ Set fallback value. Cancel invalid status and set output value.
 Execute check fucntion.
 
   my $is_valid = $rule->run_check('int');
-  my $is_valid = $rule->run_check('length', $arg);
-  my $is_valid = $rule->run_check('length', $arg, $key, $params);
+  my $is_valid = $rule->run_check('length', $args);
+  my $is_valid = $rule->run_check('length', $args, $key, $params);
 
 if return value is hash reference or false value, C<run_check> method return false value.
 In other cases, C<run_check> method return true value.
@@ -754,7 +746,7 @@ if key and parameters is omitted, current key and parameters is used.
 Execute filter function.
 
   my $new_params = $rule->run_filter('trim');
-  my $new_params = $rule->run_filter('foo', $arg);
-  my $new_params = $vc->run_check('length', $arg, $key, $params);
+  my $new_params = $rule->run_filter('foo', $args);
+  my $new_params = $vc->run_check('length', $args, $key, $params);
 
 if key and parameters is omitted, current key and parameters is used.

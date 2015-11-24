@@ -8,7 +8,7 @@ use Carp 'croak';
 my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 
 sub exists {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $is_valid = exists $params->{$key};
   
@@ -16,7 +16,7 @@ sub exists {
 }
 
 sub defined {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -26,7 +26,7 @@ sub defined {
 }
 
 sub ascii {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -36,11 +36,11 @@ sub ascii {
 }
 
 sub between {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
 
-  my ($start, $end) = @$arg;
+  my ($start, $end) = @{$args->[0]};
 
   croak "Constraint 'between' needs two numeric arguments"
     unless defined($start) && $start =~ /$NUM_RE/ && defined($end) && $end =~ /$NUM_RE/;
@@ -50,7 +50,7 @@ sub between {
 }
 
 sub blank {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -60,7 +60,7 @@ sub blank {
 }
 
 sub date {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -107,7 +107,7 @@ sub date {
 }
 
 sub datetime {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -159,9 +159,9 @@ sub datetime {
 }
 
 sub decimal {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $digits_tmp = $arg;
+  my ($digits_tmp) = @$args;
   
   my $value = $params->{$key};
   
@@ -204,7 +204,7 @@ sub decimal {
 }
 
 sub duplication {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $values = [map { $params->{$_} } @$key];
   
@@ -213,9 +213,9 @@ sub duplication {
 }
 
 sub equal_to {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $target = $arg;
+  my ($target) = @$args;
   
   my $value = $params->{$key};
   
@@ -227,9 +227,9 @@ sub equal_to {
 }
 
 sub greater_than {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $target = $arg;
+  my ($target) = @$args;
   
   my $value = $params->{$key};
   
@@ -241,9 +241,7 @@ sub greater_than {
 }
 
 sub http_url {
-  my ($rule, $arg, $key, $params) = @_;
-  
-  my $target = $arg;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -253,7 +251,7 @@ sub http_url {
 }
 
 sub int {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -263,30 +261,34 @@ sub int {
 }
 
 sub in_array {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
+  my ($valid_values) = @$args;
+  
   $value = '' unless defined $value;
-  my $match = grep { $_ eq $value } @$arg;
+  my $match = grep { $_ eq $value } @$valid_values;
   return $match > 0 ? 1 : 0;
 }
 
 sub length {
-  my ($rule, $arg, $key, $params) = @_; 
+  my ($rule, $args, $key, $params) = @_; 
   
   my $value = $params->{$key};
+  
+  my ($info) = @$args;
   
   return unless defined $value;
   
   my $min;
   my $max;
-  if(ref $arg eq 'ARRAY') { ($min, $max) = @$arg }
-  elsif (ref $arg eq 'HASH') {
-    $min = $arg->{min};
-    $max = $arg->{max};
+  if(ref $info eq 'ARRAY') { ($min, $max) = @$info }
+  elsif (ref $info eq 'HASH') {
+    $min = $info->{min};
+    $max = $info->{max};
   }
-  else { $min = $max = $arg }
+  else { $min = $max = $info }
   
   croak "Constraint 'length' needs one or two arguments"
     unless defined $min || defined $max;
@@ -307,9 +309,9 @@ sub length {
 }
 
 sub less_than {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $target = $arg;
+  my ($target) = @$args;
   
   my $value = $params->{$key};
   
@@ -321,7 +323,7 @@ sub less_than {
 }
 
 sub string {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -331,7 +333,7 @@ sub string {
 }
 
 sub not_blank   {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -341,7 +343,7 @@ sub not_blank   {
 }
 
 sub not_defined {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -351,7 +353,7 @@ sub not_defined {
 }
 
 sub not_space {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -361,7 +363,7 @@ sub not_space {
 }
 
 sub uint {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
   my $value = $params->{$key};
   
@@ -371,9 +373,9 @@ sub uint {
 }
 
 sub regex {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $regex = $arg;
+  my ($regex) = @$args;
   
   my $value = $params->{$key};
   
@@ -383,9 +385,9 @@ sub regex {
 }
 
 sub selected_at_least {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $num = $arg;
+  my ($num) = @$args;
   
   my $values = $params->{$key};
   
@@ -398,9 +400,9 @@ sub selected_at_least {
 }
 
 sub space {
-  my ($rule, $arg, $key, $params) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $regex = $arg;
+  my ($regex) = @$args;
   
   my $value = $params->{$key};
   
