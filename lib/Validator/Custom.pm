@@ -42,14 +42,12 @@ sub new {
     selected_at_least => \&Validator::Custom::CheckFunction::selected_at_least,
     space             => \&Validator::Custom::CheckFunction::space,
     string            => \&Validator::Custom::CheckFunction::string,
-    date              => \&Validator::Custom::CheckFunction::date_to_timepiece,
-    datetime          => \&Validator::Custom::CheckFunction::datetime_to_timepiece,
+    date              => \&Validator::Custom::CheckFunction::date,
+    datetime          => \&Validator::Custom::CheckFunction::datetime,
   );
   
   # Add filters
   $self->add_filter(
-    date_to_timepiece => \&Validator::Custom::FilterFunction::date_to_timepiece,
-    datetime_to_timepiece => \&Validator::Custom::FilterFunction::datetime_to_timepiece,
     first             => \&Validator::Custom::FilterFunction::first,
     merge             => \&Validator::Custom::FilterFunction::merge,
     to_array          => \&Validator::Custom::FilterFunction::to_array,
@@ -1079,7 +1077,7 @@ Filter function is registered by C<add_filter> method.
       
       $value = uc $value;
                   
-      return {$key => $value};
+      return [$key, {$key => $value}];
     }
   );
 
@@ -1437,8 +1435,10 @@ Create a new L<Validator::Custom> object.
   $vc->add_check(%check);
   $vc->add_check(\%check);
 
-Register check function.
-It receives Validator::Custom object, value, and arguments.
+Add check function.
+It receives four arguments,
+Validator::Custom::Rule object, arguments of check function,
+current key name, and parameters
   
   $vc->add_check(
     int => sub {
@@ -1484,9 +1484,10 @@ Return hash reference which constains C<message>.
 
 =head2 add_filter
 
-You can add filter function. 
-It receives Validator::Custom object, value, and arguments.
-Filter function should be new value.
+Add filter function. 
+It receives four arguments,
+Validator::Custom::Rule object, arguments of check function,
+current key name, and parameters,
 
   $vc->add_filter(
     trim => sub {
@@ -1497,9 +1498,11 @@ Filter function should be new value.
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
       
-      return {$key => $value};
+      return [$key, {$key => $value}];
     }
   );
+
+you must retrun array reference which contains a new key and parameter.
 
 =head1 FAQ
 

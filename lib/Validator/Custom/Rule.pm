@@ -230,10 +230,9 @@ sub validate {
           croak "filter_each can receive only array reference values"
             unless ref $values eq 'ARRAY';
           
-          my $new_values = [];
           
           # Validation loop
-          my $new_current_value = [];
+          my $new_values = [];
           for (my $k = 0; $k < @$values; $k++) {
             my $value = $values->[$k];
             
@@ -241,14 +240,21 @@ sub validate {
             $self->{current_key} = $current_key;
             $self->{current_params} = {$current_key => $value};
             
-            my $new_params = $func->($self, $args, $current_key, $self->{current_params});
-            push @$new_values, $new_params->{$current_key};
+            my $ret = $func->($self, $args, $current_key, $self->{current_params});
+            croak "Filter return value must be array refernce"
+              unless ref $ret eq 'ARRAY';
+            
+            my $new_key = $ret->[0];
+            
+            croak "Filter function must retrun same key as original key"
+              unless $new_key eq $current_key;
+            
+            my $new_params = $ret->[1];
+            
+            push @$new_values, $new_params->{$new_key};
           }
-          $current_params->{$current_key} = $new_values;
-          $current_key = [sort keys %$current_params];
-          if (@$current_key == 1) {
-            $current_key = $current_key->[0];
-          }
+          
+          $current_params = {$current_key => $new_values};
         }
       }
       
@@ -278,12 +284,12 @@ sub validate {
           }
         }
         elsif ($func_info->{type} eq 'filter') {
-          my $new_params = $func->($self, $args, $current_key, $current_params);
-          $current_params = $new_params;
-          $current_key = [sort keys %$current_params];
-          if (@$current_key == 1) {
-            $current_key = $current_key->[0];
-          }
+          my $ret = $func->($self, $args, $current_key, $current_params);
+          croak "Filter return value must be array refernce"
+            unless ref $ret eq 'ARRAY';
+          
+          $current_key = $ret->[0];
+          $current_params = $ret->[1];
         }
       }
       last if $is_invalid;

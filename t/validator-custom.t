@@ -10,6 +10,8 @@ use Validator::Custom::Rule;
 # run_filter
 # run_check
 # fallback
+# add_filter mutiple keys
+# default
 
 my $vc_common = Validator::Custom->new;
 $vc_common->add_check(
@@ -49,7 +51,7 @@ $vc_common->add_filter(
     
     my $value = $params->{$key};
     
-    return {$key => $value * 2};
+    return [$key => {$key => $value * 2}];
   }
 );
 

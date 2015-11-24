@@ -5,105 +5,6 @@ use warnings;
 
 use Carp 'croak';
 
-sub date_to_timepiece {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
-  
-  require Time::Piece;
-  
-  # To Time::Piece object
-  if (ref $value eq 'ARRAY') {
-    my $year = $value->[0];
-    my $mon  = $value->[1];
-    my $mday = $value->[2];
-    
-    return undef
-      unless defined $year && defined $mon && defined $mday;
-    
-    unless ($year =~ /^[0-9]{1,4}$/ && $mon =~ /^[0-9]{1,2}$/
-     && $mday =~ /^[0-9]{1,2}$/) 
-    {
-      return undef;
-    } 
-    
-    my $date = sprintf("%04s%02s%02s", $year, $mon, $mday);
-    
-    my $tp;
-    eval {
-      local $SIG{__WARN__} = sub { die @_ };
-      $tp = Time::Piece->strptime($date, '%Y%m%d');
-    };
-    
-    return $@ ? undef : $tp;
-  }
-  else {
-    $value = '' unless defined $value;
-    $value =~ s/[^0-9]//g;
-    
-    return undef unless $value =~ /^[0-9]{8}$/;
-    
-    my $tp;
-    eval {
-      local $SIG{__WARN__} = sub { die @_ };
-      $tp = Time::Piece->strptime($value, '%Y%m%d');
-    };
-    return $@ ? undef : $tp;
-  }
-}
-
-sub datetime_to_timepiece {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
-  
-  require Time::Piece;
-  
-  # To Time::Piece object
-  if (ref $value eq 'ARRAY') {
-    my $year = $value->[0];
-    my $mon  = $value->[1];
-    my $mday = $value->[2];
-    my $hour = $value->[3];
-    my $min  = $value->[4];
-    my $sec  = $value->[5];
-
-    return [0, undef]
-      unless defined $year && defined $mon && defined $mday
-        && defined $hour && defined $min && defined $sec;
-    
-    unless ($year =~ /^[0-9]{1,4}$/ && $mon =~ /^[0-9]{1,2}$/
-      && $mday =~ /^[0-9]{1,2}$/ && $hour =~ /^[0-9]{1,2}$/
-      && $min =~ /^[0-9]{1,2}$/ && $sec =~ /^[0-9]{1,2}$/) 
-    {
-      return undef;
-    } 
-    
-    my $date = sprintf("%04s%02s%02s%02s%02s%02s", 
-      $year, $mon, $mday, $hour, $min, $sec);
-    my $tp;
-    eval {
-      local $SIG{__WARN__} = sub { die @_ };
-      $tp = Time::Piece->strptime($date, '%Y%m%d%H%M%S');
-    };
-    
-    return $@ ? undef : $tp;
-  }
-  else {
-    $value = '' unless defined $value;
-    $value =~ s/[^0-9]//g;
-    
-    return undef unless $value =~ /^[0-9]{14}$/;
-    
-    my $tp;
-    eval {
-      local $SIG{__WARN__} = sub { die @_ };
-      $tp = Time::Piece->strptime($value, '%Y%m%d%H%M%S');
-    };
-    return $@ ? undef : $tp;
-  }
-}
-
 sub merge {
   my ($rule, $args, $key, $params) = @_;
   
@@ -119,7 +20,7 @@ sub merge {
     $new_value .= $params->{$k};
   }
   
-  return {$new_key => $new_value};
+  return [$new_key, {$new_key => $new_value}];
 }
 
 sub first {
@@ -135,7 +36,7 @@ sub first {
     $new_value = $values;
   }
   
-  return {$key => $new_value};
+  return [$key, {$key => $new_value}];
 }
 
 sub to_array {
@@ -151,7 +52,7 @@ sub to_array {
     $values = [];
   }
   
-  return {$key => $values};
+  return [$key, {$key => $values}];
 }
 
 sub remove_blank {
@@ -164,7 +65,7 @@ sub remove_blank {
   
   $values = [grep { defined $_ && CORE::length $_} @$values];
   
-  return {$key => $values};
+  return [$key, {$key => $values}];
 }
 
 sub trim {
@@ -174,7 +75,7 @@ sub trim {
 
   $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms if defined $value;
 
-  return {$key => $value};
+  return [$key, {$key => $value}];
 }
 
 sub trim_collapse {
@@ -187,7 +88,7 @@ sub trim_collapse {
     $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
   }
 
-  return {$key => $value};
+  return [$key, {$key => $value}];
 }
 
 sub trim_lead {
@@ -197,7 +98,7 @@ sub trim_lead {
 
   $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms if defined $value;
 
-  return {$key => $value};
+  return [$key, {$key => $value}];
 }
 
 sub trim_trail {
@@ -207,7 +108,7 @@ sub trim_trail {
 
   $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms if defined $value;
 
-  return {$key => $value};
+  return [$key, {$key => $value}];
 }
 
 sub trim_uni {
@@ -217,7 +118,7 @@ sub trim_uni {
 
   $value =~ s/^\s*(.*?)\s*$/$1/ms if defined $value;
 
-  return {$key => $value};
+  return [$key, {$key => $value}];
 }
 
 sub trim_uni_collapse {
@@ -230,7 +131,7 @@ sub trim_uni_collapse {
     $value =~ s/^\s*(.*?)\s*$/$1/ms;
   }
 
-  return {$key => $value};
+  return [$key, {$key => $value}];
 }
 
 sub trim_uni_lead {
@@ -240,7 +141,7 @@ sub trim_uni_lead {
   
   $value =~ s/^\s+(.*)$/$1/ms if defined $value;
   
-  return {$key => $value};
+  return [$key, {$key => $value}];
 }
 
 sub trim_uni_trail {
@@ -250,7 +151,7 @@ sub trim_uni_trail {
   
   $value =~ s/^(.*?)\s+$/$1/ms if defined $value;
 
-  return {$key => $value};
+  return [$key, {$key => $value}];
 }
 
 1;
