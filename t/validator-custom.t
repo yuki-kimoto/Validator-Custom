@@ -17,14 +17,14 @@ use Validator::Custom::Rule;
 my $vc_common = Validator::Custom->new;
 $vc_common->add_check(
   Int => sub {
-    my ($rule, $args) = @_;
+    my ($rule, @args) = @_;
     
     my $value = $rule->current_value;
     
     return $value =~ /^\d+$/;
   },
   Num => sub {
-    my ($rule, $args) = @_;
+    my ($rule, @args) = @_;
     
     my $value = $rule->current_value;
 
@@ -32,14 +32,14 @@ $vc_common->add_check(
     return Scalar::Util::looks_like_number($value);
   },
   aaa => sub {
-    my ($rule, $args) = @_;
+    my ($rule, @args) = @_;
     
     my $value = $rule->current_value;
 
     return $value eq 'aaa';
   },
   bbb => sub {
-    my ($rule, $args) = @_;
+    my ($rule, @args) = @_;
     
     my $value = $rule->current_value;
 
@@ -48,7 +48,7 @@ $vc_common->add_check(
 );
 $vc_common->add_filter(
   C1 => sub {
-    my ($rule, $args) = @_;
+    my ($rule, @args) = @_;
     
     my $value = $rule->current_value;
     
@@ -140,7 +140,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   my $input = { k1 => 1, k2 => 2};
   my $check = sub {
-    my ($rule, $args) = @_;
+    my ($rule, @args) = @_;
     
     my $values = $rule->current_value;
     
@@ -314,21 +314,21 @@ $vc_common->add_filter(
   my $rule = $vc->create_rule;
   $rule->topic('k1')
     ->check(sub{
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
       
       return $value == 1;
     })->message("k1Error1")
     ->check(sub {
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
 
       return $value == 2;
     })->message("k1Error2")
     ->check(sub{
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
 
@@ -336,14 +336,14 @@ $vc_common->add_filter(
     })->message("k1Error3");
   $rule->topic('k2')
     ->check(sub{
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
 
       return $value == 2;
     })->message("k2Error1")
     ->check(sub{
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
 
@@ -441,14 +441,14 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     length => sub {
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
       
       my $min;
       my $max;
       
-      ($min, $max) = @{$args->[0]};
+      ($min, $max) = $args[0];
       my $length  = length $value;
       return $min <= $length && $length <= $max ? 1 : 0;
     }
@@ -485,14 +485,14 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
    'C1' => sub {
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
       
       return $value > 1 ? 1 : 0;
     },
    'C2' => sub {
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
       
@@ -515,14 +515,14 @@ $vc_common->add_filter(
 {
   my $vc = Validator::Custom->new;
   $vc->add_check(p => sub {
-    my ($rule, $args) = @_;
+    my ($rule, @args) = @_;
     
     my $values = $rule->current_value;
     
     return defined $values->[0] && defined $values->[1] && $values->[0] eq $values->[1];
   });
   $vc->add_check(q => sub {
-    my ($rule, $args) = @_;
+    my ($rule, @args) = @_;
     
     my $value = $rule->current_value;
     
@@ -1558,7 +1558,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     c1 => sub {
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
       
@@ -1571,7 +1571,7 @@ $vc_common->add_filter(
       }
     },
     c2 => sub {
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
       
@@ -1757,7 +1757,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     Int => sub{
-      my ($rule, $args) = @_;
+      my ($rule, @args) = @_;
       
       my $value = $rule->current_value;
       

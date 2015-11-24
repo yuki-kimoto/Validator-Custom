@@ -8,7 +8,7 @@ use Carp 'croak';
 my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 
 sub exists {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $key = $rule->current_key;
   my $params = $rule->current_params;
@@ -19,7 +19,7 @@ sub exists {
 }
 
 sub defined {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -29,7 +29,7 @@ sub defined {
 }
 
 sub ascii {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -39,11 +39,11 @@ sub ascii {
 }
 
 sub between {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
 
-  my ($start, $end) = @{$args->[0]};
+  my ($start, $end) = @{$args[0]};
 
   croak "Constraint 'between' needs two numeric arguments"
     unless defined($start) && $start =~ /$NUM_RE/ && defined($end) && $end =~ /$NUM_RE/;
@@ -53,7 +53,7 @@ sub between {
 }
 
 sub blank {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -63,7 +63,7 @@ sub blank {
 }
 
 sub date {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -110,7 +110,7 @@ sub date {
 }
 
 sub datetime {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -162,9 +162,9 @@ sub datetime {
 }
 
 sub decimal {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
-  my ($digits_tmp) = @$args;
+  my ($digits_tmp) = @args;
   
   my $value = $rule->current_value;
   
@@ -207,7 +207,7 @@ sub decimal {
 }
 
 sub duplication {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $key = $rule->current_key;
   my $params = $rule->current_params;
@@ -219,9 +219,9 @@ sub duplication {
 }
 
 sub equal_to {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
-  my ($target) = @$args;
+  my ($target) = @args;
   
   my $value = $rule->current_value;
   
@@ -233,9 +233,9 @@ sub equal_to {
 }
 
 sub greater_than {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
-  my ($target) = @$args;
+  my ($target) = @args;
   
   my $value = $rule->current_value;
   
@@ -247,7 +247,7 @@ sub greater_than {
 }
 
 sub http_url {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -257,7 +257,7 @@ sub http_url {
 }
 
 sub int {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -267,11 +267,11 @@ sub int {
 }
 
 sub in_array {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
-  my ($valid_values) = @$args;
+  my ($valid_values) = @args;
   
   $value = '' unless defined $value;
   my $match = grep { $_ eq $value } @$valid_values;
@@ -279,11 +279,11 @@ sub in_array {
 }
 
 sub length {
-  my ($rule, $args) = @_; 
+  my ($rule, @args) = @_; 
   
   my $value = $rule->current_value;
   
-  my ($info) = @$args;
+  my ($info) = @args;
   
   return unless defined $value;
   
@@ -315,9 +315,9 @@ sub length {
 }
 
 sub less_than {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
-  my ($target) = @$args;
+  my ($target) = @args;
   
   my $value = $rule->current_value;
   
@@ -329,7 +329,7 @@ sub less_than {
 }
 
 sub string {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -339,7 +339,7 @@ sub string {
 }
 
 sub not_blank   {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -349,7 +349,7 @@ sub not_blank   {
 }
 
 sub not_defined {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -359,7 +359,7 @@ sub not_defined {
 }
 
 sub not_space {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -369,7 +369,7 @@ sub not_space {
 }
 
 sub uint {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
   my $value = $rule->current_value;
   
@@ -379,9 +379,9 @@ sub uint {
 }
 
 sub regex {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
-  my ($regex) = @$args;
+  my ($regex) = @args;
   
   my $value = $rule->current_value;
   
@@ -391,9 +391,9 @@ sub regex {
 }
 
 sub selected_at_least {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
-  my ($num) = @$args;
+  my ($num) = @args;
   
   my $values = $rule->current_value;
   
@@ -406,9 +406,9 @@ sub selected_at_least {
 }
 
 sub space {
-  my ($rule, $args) = @_;
+  my ($rule, @args) = @_;
   
-  my ($regex) = @$args;
+  my ($regex) = @args;
   
   my $value = $rule->current_value;
   
