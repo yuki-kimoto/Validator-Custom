@@ -6,6 +6,29 @@ has 'topic_info' => sub { {} };
 has 'content' => sub { [] };
 has 'validator';
 
+sub default {
+  my ($self, $default) = @_;
+  
+  $self->topic_info->{default} = $default;
+  
+  return $self;
+}
+
+sub optional {
+  my ($self, $key) = @_;
+  
+  # Version 0 logic(Not used now)
+  if (defined $key) {
+    # Create topic
+    $self->topic_v0($key);
+  }
+  
+  # Value is optional
+  $self->content->[-1]{option}{optional} = 1;
+  
+  return $self;
+}
+
 sub run_check {
   my ($self, $name, $arg, $key, $params) = @_;
   
@@ -457,31 +480,6 @@ sub topic {
 }
 
 # Version 0 method(Not used now)
-sub default {
-  my ($self, $default) = @_;
-  
-  $self->topic_info->{default} = $default;
-  
-  return $self;
-}
-
-# Version 0 method(Not used now)
-sub optional {
-  my ($self, $key) = @_;
-  
-  # Version 0 logic(Not used now)
-  if (defined $key) {
-    # Create topic
-    $self->topic_v0($key);
-  }
-  
-  # Value is optional
-  $self->content->[-1]{option}{optional} = 1;
-  
-  return $self;
-}
-
-# Version 0 method(Not used now)
 sub each {
   my $self = shift;
   
@@ -723,7 +721,20 @@ Set result key name
 
   $rule->optional;
 
-The topic becomes optional.
+The topic becomes optional. Even if the value doesn't exists, validation succeed.
+
+=head2 default
+
+  $rule->default('foo');
+  
+Set default value when the value doesn't exists.
+
+=head2 fallback
+  
+  $rule->fallback;
+  $rule->fallback('foo');
+  
+Set fallback value. Cancel invalid status and set output value.
 
 =head2 run_check
 
