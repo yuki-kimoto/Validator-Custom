@@ -112,10 +112,18 @@ $vc_common->add_filter(
     my $rule = $vc->create_rule;
     $rule->topic('key1')
       ->check_each('not_blank')
-      ->check_each(sub { !shift->run_check('int') });
+      ->check_each(sub {
+        my ($rule, $args, $key, $params) = @_;
+        
+        return !$rule->run_check('int', [], $key, $params);
+      });
     $rule->topic('key2')
       ->check_each('not_blank')
-      ->check_each(sub { !shift->run_check('int') });
+      ->check_each(sub {
+        my ($rule, $args, $key, $params) = @_;
+        
+        return !$rule->run_check('int', [], $key, $params);
+      });
     
     my $result = $rule->validate($input);
     is_deeply($result->failed, ['key2']);

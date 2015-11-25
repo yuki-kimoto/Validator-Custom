@@ -38,11 +38,6 @@ sub run_check {
     croak "Can't call $name check";
   }
   
-  unless (defined $key) {
-    $key = $self->{current_key};
-    $params = $self->{current_params};
-  }
-  
   my $ret = $check->($self, $args, $key, $params);
   
   if (ref $ret eq 'HASH') {
@@ -60,11 +55,6 @@ sub run_filter {
   my $filter = $filters->{$name};
   unless ($filter) {
     croak "Can't call $name filter";
-  }
-  
-  unless (defined $key) {
-    $key = $self->{current_key};
-    $params = $self->{current_params};
   }
   
   my $new_params = $filter->($self, $args, $key, $params);
@@ -196,11 +186,9 @@ sub validate {
             my $value = $values->[$k];
             
             # Set current key and params
-            $self->{current_key} = $current_key;
-            $self->{current_params} = {$current_key => $value};
             
             # Validate
-            my $is_valid = $func->($self, $args, $current_key, $self->{current_params});
+            my $is_valid = $func->($self, $args, $current_key, {$current_key => $value});
             
             # Constrint result
             if (ref $is_valid eq 'HASH') {
@@ -237,10 +225,8 @@ sub validate {
             my $value = $values->[$k];
             
             # Set current key and params
-            $self->{current_key} = $current_key;
-            $self->{current_params} = {$current_key => $value};
             
-            my $ret = $func->($self, $args, $current_key, $self->{current_params});
+            my $ret = $func->($self, $args, $current_key, {$current_key => $value});
             croak "Filter return value must be array refernce"
               unless ref $ret eq 'ARRAY';
             
@@ -261,8 +247,6 @@ sub validate {
       # Single value
       else {      
         # Set current key and params
-        $self->{current_key} = $current_key;
-        $self->{current_params} = $current_params;
         
         if ($func_info->{type} eq 'check') {
           my $is_valid = $func->($self, $args, $current_key, $current_params);
@@ -738,8 +722,6 @@ Set fallback value. Cancel invalid status and set output value.
 
 Execute check fucntion.
 
-  my $is_valid = $rule->run_check('int');
-  my $is_valid = $rule->run_check('length', $args);
   my $is_valid = $rule->run_check('length', $args, $key, $params);
 
 if return value is hash reference or false value, C<run_check> method return false value.
@@ -751,8 +733,6 @@ if key and parameters is omitted, current key and parameters is used.
 
 Execute filter function.
 
-  my $new_params = $rule->run_filter('trim');
-  my $new_params = $rule->run_filter('foo', $args);
   my $new_params = $vc->run_check('length', $args, $key, $params);
 
 if key and parameters is omitted, current key and parameters is used.
