@@ -1605,18 +1605,19 @@ $vc_common->add_filter(
 
   # new rule syntax - basic
   {
+    my $input = {k1 => 'aaa', k2 => '', k3 => '', k4 => ''};
     my $rule = $vc->create_rule;
     $rule->topic('k1')->check('not_blank');
     $rule->topic('k2')->check('not_blank');
     $rule->topic('k3')->check('not_blank')->message('k3 is empty');
-    $rule->topic('k4')->optional->check('not_blank')->fallback(5);
-    my $vresult = $rule->validate({k1 => 'aaa', k2 => '', k3 => '', k4 => ''});
+    $rule->topic('k4')->optional->default(5)->check('not_blank');
+    my $vresult = $rule->validate($input);
     ok($vresult->is_valid('k1'));
     is($vresult->output->{k1}, 'aaa');
     ok(!$vresult->is_valid('k2'));
     ok(!$vresult->is_valid('k3'));
     is($vresult->messages_to_hash->{k3}, 'k3 is empty');
-    is($vresult->output->{k4}, 5);
+    ok(!exists $vresult->output->{k4});
   }
   
   # new rule syntax - message option
@@ -1783,16 +1784,16 @@ $vc_common->add_filter(
 
 # fallback
 {
-  # fallback - undef
+  # fallback - basic
   {
     my $vc = Validator::Custom->new;
     my $input = {};
     my $rule = $vc->create_rule;
-    $rule->topic('key1')->check('int')->fallback(2);
+    $rule->topic('key1')->check('int')->fallback;
 
     my $result = $rule->validate($input);
     ok($result->is_valid);
-    is_deeply($result->output, {key1 => 2});
+    is_deeply($result->output, {});
   }
   
   # fallback - invalid
@@ -1800,7 +1801,7 @@ $vc_common->add_filter(
     my $vc = Validator::Custom->new;
     my $input = {key1 => 'a'};
     my $rule = $vc->create_rule;
-    $rule->topic('key1')->check('int')->fallback(2);
+    $rule->topic('key1')->check('int')->fallback->default(2);
     $rule->topic('key2')->check('int');
     
     my $result = $rule->validate($input);
@@ -1808,14 +1809,15 @@ $vc_common->add_filter(
     is_deeply($result->failed, ['key2']);
     is_deeply($result->output, {key1 => 2});
   }
-
+  
+  # fallback
   {
     my $vc = Validator::Custom->new;
     my $input = {key1 => 'a', key3 => 'b'};
     my $rule = $vc->create_rule;
-    $rule->topic('key1')->check('int')->fallback(sub { return $_[0] });
-    $rule->topic('key2')->check('int')->fallback(sub { return 5 });
-    $rule->topic('key3')->check('int')->fallback(undef);
+    $rule->topic('key1')->check('int')->fallback->default(sub { return $_[0] });
+    $rule->topic('key2')->check('int')->fallback->default(sub { return 5 });
+    $rule->topic('key3')->check('int')->fallback->default(undef);
     
     my $result = $rule->validate($input);
     is($result->output->{key1}, $rule);

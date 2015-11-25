@@ -29,6 +29,14 @@ sub optional {
   return $self;
 }
 
+sub fallback {
+  my $self = shift;
+  
+  $self->topic_info->{fallback} = 1;
+  
+  return $self;
+}
+
 sub run_check {
   my ($self, $name, $args, $key, $params) = @_;
   
@@ -62,14 +70,6 @@ sub run_filter {
   return $new_params;
 }
 
-sub fallback {
-  my ($self, $fallback) = @_;
-  
-  $self->topic_info->{fallback} = $fallback;
-  
-  return $self;
-}
-
 sub name {
   my ($self, $name) = @_;
   
@@ -95,7 +95,6 @@ sub validate {
   # Error position
   my $pos = 0;
   
-  
   # Process each param
   for my $r (@{$self->content}) {
     
@@ -120,10 +119,23 @@ sub validate {
     # Function information
     my $func_infos = $r->{func_infos} || [];
     
+    # Skip validation
+    my $skip_validation;
+    
+    # Fallback
+    my $fallback = $r->{fallback};
+
+    # Is invalid
+    my $is_invalid;
+    
     # Process funcs
     my $current_key = $key;
     my $current_params;
     if (ref $current_key eq 'ARRAY') {
+      
+      croak "optional method must be called from single key topic."
+        if $optional;
+      
       $current_params = {};
       for my $key (@$current_key) {
         if (exists $input->{$key}) {
@@ -135,62 +147,126 @@ sub validate {
       if (exists $input->{$key}) {
         $current_params->{$key} = $input->{$key};
       }
+      elsif ($optional) {
+        $skip_validation = 1;
+        $is_invalid = 1;
+        $fallback = 1;
+      }
     }
     
-    # Is invalid
-    my $is_invalid;
     
     # Message
     my $message;
     
-    for my $func_info (@$func_infos) {
-      
-      # Constraint information
-      my $func_name = $func_info->{name};
-      my $func;
-      if (ref $func_name eq 'CODE') {
-        $func = $func_name;
-      }
-      else {
-        if ($func_info->{type} eq 'check') {
-          $func = $self->validator->{checks}{$func_name};
-          croak "Can't find \"$func_name\" check"
-            unless $func;
-        }
-        elsif ($func_info->{type} eq 'filter') {
-          $func = $self->validator->{filters}{$func_name};
-          croak "Can't find \"$func_name\" filter"
-            unless $func;
-        }
-      }
-      
-      my $args = $func_info->{args};
-      my $func_info_message = $func_info->{message};
-      my $each = $func_info->{each};
-      
-      # Is valid
-      my $is_valid;
-      
-      # Each value
-      if ($func_info->{each}) {
+    unless ($skip_validation) {
+      for my $func_info (@$func_infos) {
         
-        # Check
-        if ($func_info->{type} eq 'check') {
-          my $values = $current_params->{$current_key};
+        # Constraint information
+        my $func_name = $func_info->{name};
+        my $func;
+        if (ref $func_name eq 'CODE') {
+          $func = $func_name;
+        }
+        else {
+          if ($func_info->{type} eq 'check') {
+            $func = $self->validator->{checks}{$func_name};
+            croak "Can't find \"$func_name\" check"
+              unless $func;
+          }
+          elsif ($func_info->{type} eq 'filter') {
+            $func = $self->validator->{filters}{$func_name};
+            croak "Can't find \"$func_name\" filter"
+              unless $func;
+          }
+        }
+        
+        my $args = $func_info->{args};
+        my $func_info_message = $func_info->{message};
+        my $each = $func_info->{each};
+        
+        # Is valid
+        my $is_valid;
+        
+        # Each value
+        if ($func_info->{each}) {
           
-          croak "check_each can receive only array reference values"
-            unless ref $values eq 'ARRAY';
+          # Check
+          if ($func_info->{type} eq 'check') {
+            my $values = $current_params->{$current_key};
+            
+            croak "check_each can receive only array reference values"
+              unless ref $values eq 'ARRAY';
+            
+            # Validation loop
+            for (my $k = 0; $k < @$values; $k++) {
+              my $value = $values->[$k];
+              
+              # Set current key and params
+              
+              # Validate
+              my $is_valid = $func->($self, $args, $current_key, {$current_key => $value});
+              
+              # Constrint result
+              if (ref $is_valid eq 'HASH') {
+                $is_invalid = 1;
+                $message = $is_valid->{message};
+                warn "$name message is empty(Validator::Custom::Rule::validate)"
+                  unless defined $is_valid->{message};              
+              }
+              elsif (!$is_valid) {
+                $is_invalid = 1;
+                if (defined $func_info_message) {
+                  $message = $func_info_message;
+                }
+                else {
+                  $message = "$name is invalid";
+                }
+              }
+              
+              # Validation failed
+              last if $is_invalid;
+            }
+          }
+          # Filter
+          elsif ($func_info->{type} eq 'filter') {
+            my $values = $current_params->{$current_key};
+            
+            croak "filter_each can receive only array reference values"
+              unless ref $values eq 'ARRAY';
+            
+            
+            # Validation loop
+            my $new_values = [];
+            for (my $k = 0; $k < @$values; $k++) {
+              my $value = $values->[$k];
+              
+              # Set current key and params
+              
+              my $ret = $func->($self, $args, $current_key, {$current_key => $value});
+              croak "Filter return value must be array refernce"
+                unless ref $ret eq 'ARRAY';
+              
+              my $new_key = $ret->[0];
+              
+              croak "Filter function must retrun same key as original key"
+                unless $new_key eq $current_key;
+              
+              my $new_params = $ret->[1];
+              
+              push @$new_values, $new_params->{$new_key};
+            }
+            
+            $current_params = {$current_key => $new_values};
+          }
+        }
+        
+        # Single value
+        else {      
+          # Set current key and params
           
-          # Validation loop
-          for (my $k = 0; $k < @$values; $k++) {
-            my $value = $values->[$k];
+          if ($func_info->{type} eq 'check') {
+            my $is_valid = $func->($self, $args, $current_key, $current_params);
             
-            # Set current key and params
-            
-            # Validate
-            my $is_valid = $func->($self, $args, $current_key, {$current_key => $value});
-            
-            # Constrint result
             if (ref $is_valid eq 'HASH') {
               $is_invalid = 1;
               $message = $is_valid->{message};
@@ -206,81 +282,53 @@ sub validate {
                 $message = "$name is invalid";
               }
             }
-            
-            # Validation failed
-            last if $is_invalid;
           }
-        }
-        # Filter
-        elsif ($func_info->{type} eq 'filter') {
-          my $values = $current_params->{$current_key};
-          
-          croak "filter_each can receive only array reference values"
-            unless ref $values eq 'ARRAY';
-          
-          
-          # Validation loop
-          my $new_values = [];
-          for (my $k = 0; $k < @$values; $k++) {
-            my $value = $values->[$k];
-            
-            # Set current key and params
-            
-            my $ret = $func->($self, $args, $current_key, {$current_key => $value});
+          elsif ($func_info->{type} eq 'filter') {
+            my $ret = $func->($self, $args, $current_key, $current_params);
             croak "Filter return value must be array refernce"
               unless ref $ret eq 'ARRAY';
             
-            my $new_key = $ret->[0];
-            
-            croak "Filter function must retrun same key as original key"
-              unless $new_key eq $current_key;
-            
-            my $new_params = $ret->[1];
-            
-            push @$new_values, $new_params->{$new_key};
+            $current_key = $ret->[0];
+            $current_params = $ret->[1];
           }
-          
-          $current_params = {$current_key => $new_values};
         }
+        last if $is_invalid;
       }
-      
-      # Single value
-      else {      
-        # Set current key and params
-        
-        if ($func_info->{type} eq 'check') {
-          my $is_valid = $func->($self, $args, $current_key, $current_params);
-          
-          if (ref $is_valid eq 'HASH') {
-            $is_invalid = 1;
-            $message = $is_valid->{message};
-            warn "$name message is empty(Validator::Custom::Rule::validate)"
-              unless defined $is_valid->{message};              
-          }
-          elsif (!$is_valid) {
-            $is_invalid = 1;
-            if (defined $func_info_message) {
-              $message = $func_info_message;
-            }
-            else {
-              $message = "$name is invalid";
-            }
-          }
-        }
-        elsif ($func_info->{type} eq 'filter') {
-          my $ret = $func->($self, $args, $current_key, $current_params);
-          croak "Filter return value must be array refernce"
-            unless ref $ret eq 'ARRAY';
-          
-          $current_key = $ret->[0];
-          $current_params = $ret->[1];
-        }
-      }
-      last if $is_invalid;
     }
     
-    # Set output
-    if (!$is_invalid) {
+    if ($is_invalid) {
+      # Fallback
+      if ($fallback) {
+        # Set default
+        if (exists $r->{default}) {
+          if (ref $current_key eq 'ARRAY') {
+            for (my $i = 0; $i < @$current_key; $i++) {
+              my $key = $current_key->[$i];
+              my $default = $r->{default}[$i];
+              $output->{$key} =
+                ref $default eq 'CODE'
+                ? $default->($self)
+                : $default;
+            }
+          }
+          else {
+            $output->{$current_key}
+              = ref $r->{default} eq 'CODE'
+              ? $r->{default}->($self)
+              : $r->{default};
+          }
+        }
+      }
+      # Invalid
+      else {
+        $result->{_error_infos}->{$name} = {
+          message      => $message,
+          position     => $pos,
+        };
+      }
+    }
+    # Valid
+    else {
       # Set output
       if (ref $current_key eq 'ARRAY') {
         for(my $i = 0; $i < @$current_key; $i++) {
@@ -291,34 +339,6 @@ sub validate {
       else {
         $output->{$current_key} = $current_params->{$current_key};
       }
-    }
-    elsif ($is_invalid && exists $r->{fallback}) {
-      if (ref $current_key eq 'ARRAY') {
-        for (my $i = 0; $i < @$current_key; $i++) {
-          my $key = $current_key->[$i];
-          my $fallback = $r->{fallback}[$i];
-          $output->{$key} =
-            ref $fallback eq 'CODE'
-            ? $fallback->($self)
-            : $fallback;
-        }
-      }
-      else {
-        $output->{$current_key}
-          = ref $r->{fallback} eq 'CODE'
-          ? $r->{fallback}->($self)
-          : $r->{fallback};
-      }
-      
-      $is_invalid = 0;
-    }
-    
-    # Add result information
-    if ($is_invalid) {
-      $result->{_error_infos}->{$name} = {
-        message      => $message,
-        position     => $pos,
-      };
     }
     
     # Increment position
@@ -734,4 +754,3 @@ Execute filter function.
   my $new_params = $vc->run_check('length', $args, $key, $params);
 
 =head1 FAQ
-
