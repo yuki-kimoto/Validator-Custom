@@ -12,61 +12,48 @@ use Validator::Custom::Rule;
 # fallback
 # add_filter mutiple keys
 # default
-# current_key
 
 my $vc_common = Validator::Custom->new;
 $vc_common->add_check(
   Int => sub {
-    my ($rule, $args) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
-    my $value = $rule->current_value;
+    my $value = $params->{$key};
     
     return $value =~ /^\d+$/;
   },
   Num => sub {
-    my ($rule, $args) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
-    my $value = $rule->current_value;
+    my $value = $params->{$key};
 
     require Scalar::Util;
     return Scalar::Util::looks_like_number($value);
   },
   aaa => sub {
-    my ($rule, $args) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
-    my $value = $rule->current_value;
+    my $value = $params->{$key};
 
     return $value eq 'aaa';
   },
   bbb => sub {
-    my ($rule, $args) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
-    my $value = $rule->current_value;
+    my $value = $params->{$key};
 
     return $value eq 'bbb';
   }
 );
 $vc_common->add_filter(
   C1 => sub {
-    my ($rule, $args) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
-    my $value = $rule->current_value;
+    my $value = $params->{$key};
     
-    $rule->current_value($value * 2);
+    return [$key => {$key => $value * 2}];
   }
 );
-
-# filter_each
-{
-  my $vc = $vc_common;
-  my $input = {k1 => [1,2]};
-  my $rule = $vc->create_rule;
-  $rule->topic('k1')->filter_each('C1')->filter_each('C1');
-
-  my $result= $rule->validate($input);
-  is_deeply($result->messages, []);
-  is_deeply($result->output, {k1 => [4,8]});
-}
 
 # selected_at_least
 {
@@ -135,14 +122,26 @@ $vc_common->add_filter(
   }
 }
 
+# filter_each
+{
+  my $vc = $vc_common;
+  my $input = {k1 => [1,2]};
+  my $rule = $vc->create_rule;
+  $rule->topic('k1')->filter_each('C1')->filter_each('C1');
+
+  my $result= $rule->validate($input);
+  is_deeply($result->messages, []);
+  is_deeply($result->output, {k1 => [4,8]});
+}
+
 # check - code reference
 {
   my $vc = Validator::Custom->new;
   my $input = { k1 => 1, k2 => 2};
   my $check = sub {
-    my ($rule, $args) = @_;
+    my ($self, $args, $key, $params) = @_;
     
-    my $values = $rule->current_value;
+    my $values = $params->{$key};
     
     return defined $values->[0] && defined $values->[1] && $values->[0] eq $values->[1];
   };
@@ -314,38 +313,38 @@ $vc_common->add_filter(
   my $rule = $vc->create_rule;
   $rule->topic('k1')
     ->check(sub{
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       return $value == 1;
     })->message("k1Error1")
     ->check(sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
 
       return $value == 2;
     })->message("k1Error2")
     ->check(sub{
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
 
       return $value == 3;
     })->message("k1Error3");
   $rule->topic('k2')
     ->check(sub{
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
 
       return $value == 2;
     })->message("k2Error1")
     ->check(sub{
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
 
       return $value == 3;
     })->message("k2Error2");
@@ -441,9 +440,9 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     length => sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       my $min;
       my $max;
@@ -485,16 +484,16 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
    'C1' => sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       return $value > 1 ? 1 : 0;
     },
    'C2' => sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       return $value > 5 ? 1 : 0;
     }
@@ -515,16 +514,16 @@ $vc_common->add_filter(
 {
   my $vc = Validator::Custom->new;
   $vc->add_check(p => sub {
-    my ($rule, $args) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
-    my $values = $rule->current_value;
+    my $values = $params->{$key};
     
     return defined $values->[0] && defined $values->[1] && $values->[0] eq $values->[1];
   });
   $vc->add_check(q => sub {
-    my ($rule, $args) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
-    my $value = $rule->current_value;
+    my $value = $params->{$key};
     
     return $value eq 1;
   });
@@ -1558,29 +1557,27 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     c1 => sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       if ($value eq 'a') {
         return 1;
       }
       else {
-        $rule->current_message('error1');
-        return 0;
+        return {message => 'error1'};
       }
     },
     c2 => sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       if ($value eq 'a') {
         return 1;
       }
       else {
-        $rule->current_message('error2');
-        return 0;
+        return {message => 'error2'};
       }
     }
   );
@@ -1757,9 +1754,9 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
   $vc->add_check(
     Int => sub{
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       return $value =~ /^\d+$/;
     }

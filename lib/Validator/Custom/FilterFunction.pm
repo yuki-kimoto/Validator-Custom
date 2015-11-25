@@ -6,10 +6,7 @@ use warnings;
 use Carp 'croak';
 
 sub merge {
-  my ($rule, $args) = @_;
-  
-  my $key = $rule->current_key;
-  my $params = $rule->current_params;
+  my ($rule, $args, $key, $params) = @_;
   
   croak "Input key of filter \"merge\" must be array refernce"
     unless ref $key eq 'ARRAY';
@@ -23,14 +20,13 @@ sub merge {
     $new_value .= $params->{$k};
   }
   
-  $rule->current_key($new_key);
-  $rule->current_params({$new_key => $new_value});
+  return [$new_key, {$new_key => $new_value}];
 }
 
 sub first {
-  my ($rule, $args) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $values = $rule->current_value;
+  my $values = $params->{$key};
   
   my $new_value;
   if (ref $values eq 'ARRAY') {
@@ -40,14 +36,11 @@ sub first {
     $new_value = $values;
   }
   
-  $rule->current_value($new_value);
+  return [$key, {$key => $new_value}];
 }
 
 sub to_array {
-  my ($rule, $args) = @_;
-  
-  my $key = $rule->current_key;
-  my $params = $rule->current_params;
+  my ($rule, $args, $key, $params) = @_;
   
   my $values;
   if (exists $params->{$key}) {
@@ -59,106 +52,106 @@ sub to_array {
     $values = [];
   }
   
-  $rule->current_value($values);
+  return [$key, {$key => $values}];
 }
 
 sub remove_blank {
-  my ($rule, $args) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $values = $rule->current_value;
+  my $values = $params->{$key};
   
   croak "filter \"remove_blank\" need array reference"
     unless ref $values eq 'ARRAY';
   
   $values = [grep { defined $_ && CORE::length $_} @$values];
   
-  $rule->current_value($values);
+  return [$key, {$key => $values}];
 }
 
 sub trim {
-  my ($rule, $args) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $value = $rule->current_value;
+  my $value = $params->{$key};
 
   $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms if defined $value;
 
-  $rule->current_value($value);
+  return [$key, {$key => $value}];
 }
 
 sub trim_collapse {
-  my ($rule, $args) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $value = $rule->current_value;
+  my $value = $params->{$key};
 
   if (defined $value) {
     $value =~ s/[ \t\n\r\f]+/ /g;
     $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
   }
 
-  $rule->current_value($value);
+  return [$key, {$key => $value}];
 }
 
 sub trim_lead {
-  my ($rule, $args) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $value = $rule->current_value;
+  my $value = $params->{$key};
 
   $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms if defined $value;
 
-  $rule->current_value($value);
+  return [$key, {$key => $value}];
 }
 
 sub trim_trail {
-  my ($rule, $args) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $value = $rule->current_value;
+  my $value = $params->{$key};
 
   $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms if defined $value;
 
-  $rule->current_value($value);
+  return [$key, {$key => $value}];
 }
 
 sub trim_uni {
-  my ($rule, $args) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $value = $rule->current_value;
+  my $value = $params->{$key};
 
   $value =~ s/^\s*(.*?)\s*$/$1/ms if defined $value;
 
-  $rule->current_value($value);
+  return [$key, {$key => $value}];
 }
 
 sub trim_uni_collapse {
-  my ($rule, $args) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $value = $rule->current_value;
+  my $value = $params->{$key};
 
   if (defined $value) {
     $value =~ s/\s+/ /g;
     $value =~ s/^\s*(.*?)\s*$/$1/ms;
   }
 
-  $rule->current_value($value);
+  return [$key, {$key => $value}];
 }
 
 sub trim_uni_lead {
-  my ($rule, $args) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $value = $rule->current_value;
+  my $value = $params->{$key};
   
   $value =~ s/^\s+(.*)$/$1/ms if defined $value;
   
-  $rule->current_value($value);
+  return [$key, {$key => $value}];
 }
 
 sub trim_uni_trail {
-  my ($rule, $args) = @_;
+  my ($rule, $args, $key, $params) = @_;
   
-  my $value = $rule->current_value;
+  my $value = $params->{$key};
   
   $value =~ s/^(.*?)\s+$/$1/ms if defined $value;
 
-  $rule->current_value($value);
+  return [$key, {$key => $value}];
 }
 
 1;

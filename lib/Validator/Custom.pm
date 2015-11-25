@@ -756,9 +756,9 @@ Validator::Custom - HTML form Validation, easy and flexibly
   
   # You can create your original check
   my $blank_or_number = sub {
-    my ($rule, $args) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
-    my $value = $rule->current_value;
+    my $value = $params->{$key};
     
     my $is_valid
       = $vc->run_check('blank') || $vc->run_check('regex');
@@ -1054,9 +1054,9 @@ and L<Validator::Custom> object as third argument.
 
   $vc->add_check(
     telephone => sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       my $is_valid;
       # ...
@@ -1071,13 +1071,13 @@ Filter function is registered by C<add_filter> method.
 
   $vc->add_filter(
     to_upper_case => sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       $value = uc $value;
-      
-      $rule->current_value($value);
+                  
+      return [$key, {$key => $value}];
     }
   );
 
@@ -1442,16 +1442,16 @@ current key name, and parameters
   
   $vc->add_check(
     int => sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       my $is_valid = $value =~ /^\-?[\d]+$/;
       
       return $is_valid;
     },
     greater_than => sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
       my ($arg_value) = @$args;
       
@@ -1469,8 +1469,6 @@ Return hash reference which constains C<message>.
 
   $vc->add_check(
     foo => sub {
-      my ($rule, $args) = @_;
-      
       my $is_valid;
       
       ...
@@ -1479,8 +1477,7 @@ Return hash reference which constains C<message>.
         return 1;
       }
       else {
-        $rule->current_message("Validation fail");
-        return 0;
+        return {message => "Validation fail"};
       }
     }
   );
@@ -1494,14 +1491,14 @@ current key name, and parameters,
 
   $vc->add_filter(
     trim => sub {
-      my ($rule, $args) = @_;
+      my ($rule, $args, $key, $params) = @_;
       
-      my $value = $rule->current_value;
+      my $value = $params->{$key};
       
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
       
-      $rule->current_value($value);
+      return [$key, {$key => $value}];
     }
   );
 
