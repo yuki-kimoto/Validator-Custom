@@ -47,7 +47,7 @@ sub optional {
 }
 
 sub run_check {
-  my ($self, $name, @args) = @_;
+  my ($self, $name, $args) = @_;
   
   my $checks = $self->validator->{checks} || {};
   my $check = $checks->{$name};
@@ -55,13 +55,18 @@ sub run_check {
     croak "Can't call $name check";
   }
   
-  my $is_valid = $check->($self, @args);
+  my $ret = $check->($self, $args);
   
-  return $is_valid;
+  if (ref $ret eq 'HASH') {
+    return 0;
+  }
+  else {
+    return $ret ? 1: 0;
+  }
 }
 
 sub run_filter {
-  my ($self, $name, @args) = @_;
+  my ($self, $name, $args) = @_;
   
   my $filters = $self->validator->{filters} || {};
   my $filter = $filters->{$name};
@@ -69,7 +74,7 @@ sub run_filter {
     croak "Can't call $name filter";
   }
   
-  $filter->($self, @args);
+  $filter->($self, $args);
 }
 
 sub fallback {
@@ -205,7 +210,7 @@ sub validate {
             $self->current_params({$current_key => $value});
             
             # Validate
-            my $is_valid = $func->($self, @$args);
+            my $is_valid = $func->($self, $args);
             
             if (!$is_valid) {
               $is_invalid = 1;
@@ -240,7 +245,7 @@ sub validate {
             
             $self->current_params({$current_key => $value});
             
-            $func->($self, @$args);
+            $func->($self, $args);
             
             croak "Filter function must retrun same key as original key"
               unless $self->current_key eq $original_current_key;
@@ -256,7 +261,7 @@ sub validate {
       else {
         
         if ($func_info->{type} eq 'check') {
-          my $is_valid = $func->($self, @$args);
+          my $is_valid = $func->($self, $args);
           
           if (!$is_valid) {
             $is_invalid = 1;
@@ -272,7 +277,7 @@ sub validate {
           }
         }
         elsif ($func_info->{type} eq 'filter') {
-          $func->($self, @$args);
+          $func->($self, $args);
         }
       }
       last if $is_invalid;
@@ -725,7 +730,8 @@ Set fallback value. Cancel invalid status and set output value.
 Execute check fucntion.
 
   my $is_valid = $rule->run_check('int');
-  my $is_valid = $rule->run_check('length', @args);
+  my $is_valid = $rule->run_check('length', $args);
+  my $is_valid = $rule->run_check('length', $args, $key, $params);
 
 if return value is hash reference or false value, C<run_check> method return false value.
 In other cases, C<run_check> method return true value.
@@ -737,6 +743,7 @@ if key and parameters is omitted, current key and parameters is used.
 Execute filter function.
 
   my $new_params = $rule->run_filter('trim');
-  my $new_params = $rule->run_filter('some_filter', @args);
+  my $new_params = $rule->run_filter('foo', $args);
+  my $new_params = $vc->run_check('length', $args, $key, $params);
 
 if key and parameters is omitted, current key and parameters is used.

@@ -6,7 +6,7 @@ use warnings;
 use Carp 'croak';
 
 sub merge {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $key = $rule->current_key;
   my $params = $rule->current_params;
@@ -14,7 +14,7 @@ sub merge {
   croak "Input key of filter \"merge\" must be array refernce"
     unless ref $key eq 'ARRAY';
 
-  my ($new_key) = @args;
+  my ($new_key) = @$args;
   croak "filter \"merge\" need output key"
     unless defined $new_key;
   
@@ -28,7 +28,7 @@ sub merge {
 }
 
 sub first {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $values = $rule->current_value;
   
@@ -44,7 +44,7 @@ sub first {
 }
 
 sub to_array {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $key = $rule->current_key;
   my $params = $rule->current_params;
@@ -63,7 +63,7 @@ sub to_array {
 }
 
 sub remove_blank {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $values = $rule->current_value;
   
@@ -76,7 +76,7 @@ sub remove_blank {
 }
 
 sub trim {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $value = $rule->current_value;
 
@@ -86,7 +86,7 @@ sub trim {
 }
 
 sub trim_collapse {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $value = $rule->current_value;
 
@@ -99,7 +99,7 @@ sub trim_collapse {
 }
 
 sub trim_lead {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $value = $rule->current_value;
 
@@ -109,7 +109,7 @@ sub trim_lead {
 }
 
 sub trim_trail {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $value = $rule->current_value;
 
@@ -119,7 +119,7 @@ sub trim_trail {
 }
 
 sub trim_uni {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $value = $rule->current_value;
 
@@ -129,7 +129,7 @@ sub trim_uni {
 }
 
 sub trim_uni_collapse {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $value = $rule->current_value;
 
@@ -142,7 +142,7 @@ sub trim_uni_collapse {
 }
 
 sub trim_uni_lead {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $value = $rule->current_value;
   
@@ -152,7 +152,7 @@ sub trim_uni_lead {
 }
 
 sub trim_uni_trail {
-  my ($rule, @args) = @_;
+  my ($rule, $args) = @_;
   
   my $value = $rule->current_value;
   
