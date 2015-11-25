@@ -727,12 +727,11 @@ Execute check fucntion.
 if return value is hash reference or false value, C<run_check> method return false value.
 In other cases, C<run_check> method return true value.
 
-if key and parameters is omitted, current key and parameters is used.
-
 =head2 run_filter
 
 Execute filter function.
 
   my $new_params = $vc->run_check('length', $args, $key, $params);
 
-if key and parameters is omitted, current key and parameters is used.
+=head1 FAQ
+

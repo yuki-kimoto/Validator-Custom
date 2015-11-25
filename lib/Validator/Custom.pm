@@ -996,8 +996,8 @@ you can call checks from $_ in subroutine.
 
 Multiple parameters validation is available.
 
-  Data: {password1 => 'xxx', password2 => 'xxx'}
-  Rule: $rule->topic(['password1', 'password2'])->name('password_check)
+  Input: {password1 => 'xxx', password2 => 'xxx'}
+  Rule:  $rule->topic(['password1', 'password2'])->name('password_check)
           ->check('duplication')
 
 In this example, We check if 'password1' and 'password2' is same.
@@ -1019,8 +1019,8 @@ You can C<check_each> method if all the elements of array is valid.
 
 The following is old syntax. Please use above syntax.
 
-  Data: {nums => [1, 2, 3]}
-  Rule: $rule->topic('nums')->check_each('int')
+  Input: {nums => [1, 2, 3]}
+  Rule:  $rule->topic('nums')->check_each('int')
 
 =head2 4. Check functions
 
@@ -1085,30 +1085,30 @@ Filter function is registered by C<add_filter> method.
 
 =head2 ascii
 
-  Data: {name => 'Ken'}
-  Rule: $rule->topic('name')->check('ascii')
+  Input: {name => 'Ken'}
+  Rule:  $rule->topic('name')->check('ascii')
 
 Ascii graphic characters(hex 21-7e).
 
 =head2 between
 
   # Check (1, 2, .. 19, 20)
-  Data: {age => 19}
-  Rule: $rule->topic('age')->check(between => [1, 20])
+  Input: {age => 19}
+  Rule:  $rule->topic('age')->check(between => [1, 20])
 
 Between A and B.
 
 =head2 blank
 
-  Data: {name => ''}
-  Rule: $rule->topic('name')->check('blank')
+  Input: {name => ''}
+  Rule:  $rule->topic('name')->check('blank')
 
 Blank.
 
 =head2 decimal
   
-  Data: {num1 => '123', num2 => '1.45'}
-  Rule: $rule->topic('num1')->check('decimal' => 3)
+  Input: {num1 => '123', num2 => '1.45'}
+  Rule:  $rule->topic('num1')->check('decimal' => 3)
         $rule->topic('num2')->check('decimal' => [1, 2])
 
 Decimal. You can specify maximum digits number at before
@@ -1116,22 +1116,22 @@ and after '.'.
 
 If you set undef value or don't set any value, that means there is no maximum limit.
   
-  Data: {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'}
-  Rule: $rule->topic('num1')->check('decimal')
+  Input: {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'}
+  Rule:  $rule->topic('num1')->check('decimal')
         $rule->topic('num2')->check('decimal' => [undef, 2])
         $rule->topic('num2')->check('decimal' => [2, undef])
 
 =head2 defined
 
-  Data: {name => 'Ken'}
-  Rule: $rule->topic('name')->check('defined')
+  Input: {name => 'Ken'}
+  Rule:  $rule->topic('name')->check('defined')
 
 Defined.
 
 =head2 duplication
 
-  Data: {mail1 => 'a@somehost.com', mail2 => 'a@somehost.com'};
-  Rule: $rule->topic(['mail1', 'mail2'])->name('mail')->check('duplication)
+  Input: {mail1 => 'a@somehost.com', mail2 => 'a@somehost.com'};
+  Rule:  $rule->topic(['mail1', 'mail2'])->name('mail')->check('duplication)
 
 Check if the two data are same or not.
 
@@ -1144,43 +1144,43 @@ result of validation is false.
 
 =head2 equal_to
 
-  Data: {price => 1000}
-  Rule: $rule->topic('price')->check('equal_to' => 1000)
+  Input: {price => 1000}
+  Rule:  $rule->topic('price')->check('equal_to' => 1000)
 
 Numeric equal comparison.
 
 =head2 greater_than
 
-  Data: {price => 1000}
-  Rule: $rule->topic('price')->check('greater_than' => 900)
+  Input: {price => 1000}
+  Rule:  $rule->topic('price')->check('greater_than' => 900)
 
 Numeric "greater than" comparison
 
 =head2 http_url
 
-  Data: {url => 'http://somehost.com'};
-  Rule: $rule->topic('url')->check('http_url')
+  Input: {url => 'http://somehost.com'};
+  Rule:  $rule->topic('url')->check('http_url')
 
 HTTP(or HTTPS) URL.
 
 =head2 int
 
-  Data: {age => 19};
-  Rule: $rule->topic('age')->check('int')
+  Input: {age => 19};
+  Rule:  $rule->topic('age')->check('int')
 
 Integer.
 
 =head2 in_array
 
-  Data: {food => 'sushi'};
-  Rule: $rule->topic('food')->check('in_array' => [qw/sushi bread apple/])
+  Input: {food => 'sushi'};
+  Rule:  $rule->topic('food')->check('in_array' => [qw/sushi bread apple/])
 
 Check if the values is in array.
 
 =head2 length
 
-  Data: {value1 => 'aaa', value2 => 'bbbbb'};
-  Rule: # length is equal to 3
+  Input: {value1 => 'aaa', value2 => 'bbbbb'};
+  Rule:  # length is equal to 3
         $rule->topic('value1')->check('length' => 3) 
         # length is greater than or equal to 2 and lower than or equeal to 5
         $rule->topic('value2')->check('length' => [2, 5]) 
@@ -1198,29 +1198,29 @@ if value is byte string, length is byte length.
 
 =head2 less_than
 
-  Data: {num => 20}
-  Rule: $rule->topic('num')->check('less_than' => 25);
+  Input: {num => 20}
+  Rule:  $rule->topic('num')->check('less_than' => 25);
 
 Numeric "less than" comparison.
 
 =head2 not_blank
 
-  Data: {name => 'Ken'}
-  Rule: $rule->topic('name')->check('not_blank') # Except for ''
+  Input: {name => 'Ken'}
+  Rule:  $rule->topic('name')->check('not_blank') # Except for ''
 
 Not blank.
 
 =head2 not_defined
 
-  Data: {name => 'Ken'}
-  Rule: $rule->topic('name')->check('not_defined')
+  Input: {name => 'Ken'}
+  Rule:  $rule->topic('name')->check('not_defined')
 
 Not defined.
 
 =head2 not_space
 
-  Data: {name => 'Ken'}
-  Rule: $rule->topic('name')->check('not_space') # Except for '', ' ', '   '
+  Input: {name => 'Ken'}
+  Rule:  $rule->topic('name')->check('not_space') # Except for '', ' ', '   '
 
 Not contain only space characters. 
 Not that space is only C<[ \t\n\r\f]>
@@ -1228,8 +1228,8 @@ which don't contain unicode space character.
 
 =head2 space
 
-  Data: {name => '   '}
-  Rule: $rule->topic('name')->check('space') # '', ' ', '   '
+  Input: {name => '   '}
+  Rule:  $rule->topic('name')->check('space') # '', ' ', '   '
 
 White space or empty string.
 Not that space is only C<[ \t\n\r\f]>
@@ -1237,30 +1237,30 @@ which don't contain unicode space character.
 
 =head2 string
 
-  Data: {name => 'abc'}
-  Rule: $rule->topic('name')->check('string') # '', 'abc', 0, 1, 1.23
+  Input: {name => 'abc'}
+  Rule:  $rule->topic('name')->check('string') # '', 'abc', 0, 1, 1.23
 
 Check if the value is string, which contain numeric value.
 if value is not defined or reference, this check return false.
 
 =head2 uint
 
-  Data: {age => 19}
-  Rule: $rule->topic('age')->check('uint')
+  Input: {age => 19}
+  Rule:  $rule->topic('age')->check('uint')
 
 Unsigned integer(contain zero).
   
 =head2 regex
 
-  Data: {num => '123'}
-  Rule: $rule->topic('num')->check('regex' => qr/\d{0,3}/)
+  Input: {num => '123'}
+  Rule:  $rule->topic('num')->check('regex' => qr/\d{0,3}/)
 
 Match a regular expression.
 
 =head2 selected_at_least
 
-  Data: {hobby => ['music', 'movie' ]}
-  Rule: $rule->topic('hobby')->check(selected_at_least => 1)
+  Input: {hobby => ['music', 'movie' ]}
+  Rule:  $rule->topic('hobby')->check(selected_at_least => 1)
 
 Selected at least specified count item.
 In other word, the array contains at least specified count element.
@@ -1268,70 +1268,15 @@ In other word, the array contains at least specified count element.
 =head1 FILTERS
 
 You can use the following filter by default.
-C<filter> method is only alias for C<check> method for readability.
-
-=head2 date_to_timepiece
-
-  Data: {date => '2010/11/12'}
-  Rule: $rule->topic('date')->filter('date_to_timepiece')
-
-The value which looks like date is converted
-to L<Time::Piece> object.
-If the value contains 8 digits, the value is assumed date.
-
-  2010/11/12 # ok
-  2010-11-12 # ok
-  20101112   # ok
-  2010       # NG
-  2010111106 # NG
-
-And year and month and mday combination is ok.
-
-  Data: {year => 2011, month => 3, mday => 9}
-  Rule: $rule->topic(['year', 'month', 'mday'])->name('date')
-                                          ->filter('date_to_timepiece')
-
-You can get result value.
-
-  my $date = $vresult->data->{date};
-
-Note that L<Time::Piece> is required.
-
-=head2 datetime_to_timepiece
-
-  Data: {datetime => '2010/11/12 12:14:45'}
-  Rule: $rule->topic('datetime')->filter('datetime_to_timepiece');
-
-The value which looks like date and time is converted
-to L<Time::Piece> object.
-If the value contains 14 digits, the value is assumed date and time.
-
-  2010/11/12 12:14:45 # ok
-  2010-11-12 12:14:45 # ok
-  20101112 121445     # ok
-  2010                # NG
-  2010111106 12       # NG
-
-And year and month and mday combination is ok.
-
-  Data: {year => 2011, month => 3, mday => 9
-         hour => 10, min => 30, sec => 30}
-  Rule: $rule->topic(['year', 'month', 'mday', 'hour', 'min', 'sec'])
-          ->name('datetime')->filter('datetime_to_timepiece')
-
-You can get result value.
-
-  my $date = $vresult->data->{datetime};
-
-Note that L<Time::Piece> is required.
 
 =head2 merge
 
-  Data: {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'}
-  Rule: $rule->topic(['name1', 'name2', 'name3'])->name('mergd_name')
-          ->filter('merge') # KenRikaTaro
+  Input: {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'}
+  Rule:  $rule->topic(['name1', 'name2', 'name3'])->name('mergd_name')
+          ->filter('merge' => 'all_name')
+  Output:{all_name => 'KenRikaTaro'}
 
-Merge the values.
+Merge the values. you must set the key for merged value.
 
 You can get result value.
 
@@ -1341,23 +1286,25 @@ Note that if one value is not defined, merged value become undefined.
 
 =head2 first
 
-  Data: {names => ['Ken', 'Taro']}
-  Rule: $rule->topic('names')->filter('first') # 'Ken'
-
+  Input: {names => ['Ken', 'Taro']}
+  Rule:  $rule->topic('names')->filter('first')
+  Output:{names => 'Ken'}
 Get fisrt element of array.
 
 =head2 to_array
 
-  Data: {languages => 'Japanese'}
-  Rule: $rule->topic('languages')->filter('to_array') # ['Japanese']
+  Input: {languages => 'Japanese'}
+  Rule:  $rule->topic('languages')->filter('to_array')
+  Output:{languages => ['Japanese']}
   
 Convert non array reference data to array reference.
 This is useful to check checkbox values or select multiple values.
 
 =head2 trim
 
-  Data: {name => '  Ken  '}
-  Rule: $rule->topic('name')->filter('trim') # 'Ken'
+  Input: {name => '  Ken  '}
+  Rule:  $rule->topic('name')->filter('trim')
+  Output:{name => 'Ken'}
 
 Trim leading and trailing white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1365,8 +1312,9 @@ which don't contain unicode space character.
 
 =head2 trim_collapse
 
-  Data: {name => '  Ken   Takagi  '}
-  Rule: $rule->topic('name')->filter('trim_collapse') # 'Ken Takagi'
+  Input: {name => '  Ken   Takagi  '}
+  Rule:  $rule->topic('name')->filter('trim_collapse') # 
+  Output:{name => 'Ken Takagi'}
 
 Trim leading and trailing white space,
 and collapse all whitespace characters into a single space.
@@ -1375,8 +1323,9 @@ which don't contain unicode space character.
 
 =head2 trim_lead
 
-  Data: {name => '  Ken  '}
-  Rule: $rule->topic('name')->filter('trim_lead') # 'Ken  '
+  Input: {name => '  Ken  '}
+  Rule:  $rule->topic('name')->filter('trim_lead')
+  Output:{name => 'Ken  '}
 
 Trim leading white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1384,8 +1333,9 @@ which don't contain unicode space character.
 
 =head2 trim_trail
 
-  Data: {name => '  Ken  '}
-  Rule: $rule->topic('name')->filter('trim_trail') # '  Ken'
+  Input: {name => '  Ken  '}
+  Rule:  $rule->topic('name')->filter('trim_trail')
+  Output:{name => '  Ken'}
 
 Trim trailing white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1393,29 +1343,33 @@ which don't contain unicode space character.
 
 =head2 trim_uni
 
-  Data: {name => '  Ken  '}
-  Rule: $rule->topic('name')->filter('trim_uni') # 'Ken'
+  Input: {name => '  Ken  '}
+  Rule:  $rule->topic('name')->filter('trim_uni')
+  Output:{name => 'Ken'}
 
 Trim leading and trailing white space, which contain unicode space character.
 
 =head2 trim_uni_collapse
 
-  Data: {name => '  Ken   Takagi  '};
-  Rule: $rule->topic('name')->filter('trim_uni_collapse') # 'Ken Takagi'
+  Input: {name => '  Ken   Takagi  '};
+  Rule:  $rule->topic('name')->filter('trim_uni_collapse')
+  Output:{name => 'Ken Takagi'}
 
 Trim leading and trailing white space, which contain unicode space character.
 
 =head2 trim_uni_lead
 
-  Data: {name => '  Ken  '};
-  Rule: $rule->topic('name')->filter('trim_uni_lead') # 'Ken  '
+  Input: {name => '  Ken  '};
+  Rule:  $rule->topic('name')->filter('trim_uni_lead')
+  Output:{name => 'Ken  '}
 
 Trim leading white space, which contain unicode space character.
 
 =head2 trim_uni_trail
   
-  Data: {name => '  Ken  '};
-  Rule: $rule->topic('name')->filter('trim_uni_trail') # '  Ken'
+  Input: {name => '  Ken  '};
+  Rule:  $rule->topic('name')->filter('trim_uni_trail')
+  Output:{name => '  Ken'}
 
 Trim trailing white space, which contain unicode space character.
 
@@ -1526,7 +1480,7 @@ You can do the following way.
 =head2 How to do validation of "or" condition
 
 You create your check code using code reference.
-You can call check function by C<run_check> method.
+You can use check function by C<run_check> method.
 
   # Data
   my $input = {age => ''};
@@ -1534,9 +1488,12 @@ You can call check function by C<run_check> method.
   
   # Check blank or int
   $rule->topic('age')->check(sub {
-    my ($rule, $args) = @_;
+    my ($rule, $args, $key, $params) = @_;
     
-    return $rule->run_check('blank') || $rule->run_check('int');
+    my $is_blank = $rule->run_check('blank', [], $key, $params);
+    my $is_int = $rule->run_check('int', [], $key, $params);
+    
+    return $is_blank || $is_int;
   });
 
 =head1 AUTHOR
