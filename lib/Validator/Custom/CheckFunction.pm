@@ -7,18 +7,8 @@ use Carp 'croak';
 
 my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 
-sub exists {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $is_valid = exists $params->{$key};
-  
-  return $is_valid;
-}
-
 sub defined {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   my $is_valid = defined $value;
   
@@ -26,9 +16,7 @@ sub defined {
 }
 
 sub ascii {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   my $is_valid = $value && $value =~ /^[\x21-\x7E]+$/;
   
@@ -36,12 +24,10 @@ sub ascii {
 }
 
 sub between {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
 
-  my ($start, $end) = @{$args->[0]};
-
+  my ($start, $end) = @$args;
+    
   croak "Constraint 'between' needs two numeric arguments"
     unless defined($start) && $start =~ /$NUM_RE/ && defined($end) && $end =~ /$NUM_RE/;
   
@@ -50,9 +36,7 @@ sub between {
 }
 
 sub blank {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   my $is_valid = defined $value && $value eq '';
   
@@ -60,9 +44,7 @@ sub blank {
 }
 
 sub date {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   require Time::Piece;
   
@@ -107,9 +89,7 @@ sub date {
 }
 
 sub datetime {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   require Time::Piece;
   
@@ -159,11 +139,9 @@ sub datetime {
 }
 
 sub decimal {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
   my ($digits_tmp) = @$args;
-  
-  my $value = $params->{$key};
   
   # Œ…”î•ñ‚ð®—
   my $digits;
@@ -204,20 +182,16 @@ sub decimal {
 }
 
 sub duplication {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $values = [map { $params->{$_} } @$key];
+  my ($rule, $args, $values) = @_;
   
   return 0 unless defined $values->[0] && defined $values->[1];
   return $values->[0] eq $values->[1];
 }
 
 sub equal_to {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
   my ($target) = @$args;
-  
-  my $value = $params->{$key};
   
   croak "Constraint 'equal_to' needs a numeric argument"
     unless defined $target && $target =~ /$NUM_RE/;
@@ -227,11 +201,9 @@ sub equal_to {
 }
 
 sub greater_than {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
   my ($target) = @$args;
-  
-  my $value = $params->{$key};
   
   croak "Constraint 'greater_than' needs a numeric argument"
     unless defined $target && $target =~ /$NUM_RE/;
@@ -241,9 +213,7 @@ sub greater_than {
 }
 
 sub http_url {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   my $is_valid = defined $value && $value =~ /^s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/;
   
@@ -251,9 +221,7 @@ sub http_url {
 }
 
 sub int {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   my $is_valid = defined $value && $value =~ /^\-?[0-9]+$/;
   
@@ -261,34 +229,26 @@ sub int {
 }
 
 sub in_array {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
-  
-  my ($valid_values) = @$args;
+  my ($rule, $args, $value) = @_;
   
   $value = '' unless defined $value;
-  my $match = grep { $_ eq $value } @$valid_values;
+  my $match = grep { $_ eq $value } @$args;
   return $match > 0 ? 1 : 0;
 }
 
 sub length {
-  my ($rule, $args, $key, $params) = @_; 
-  
-  my $value = $params->{$key};
-  
-  my ($info) = @$args;
+  my ($rule, $args, $value) = @_; 
   
   return unless defined $value;
   
   my $min;
   my $max;
-  if(ref $info eq 'ARRAY') { ($min, $max) = @$info }
-  elsif (ref $info eq 'HASH') {
-    $min = $info->{min};
-    $max = $info->{max};
+  if(ref $args eq 'ARRAY') { ($min, $max) = @$args }
+  elsif (ref $args eq 'HASH') {
+    $min = $args->{min};
+    $max = $args->{max};
   }
-  else { $min = $max = $info }
+  else { $min = $max = $args }
   
   croak "Constraint 'length' needs one or two arguments"
     unless defined $min || defined $max;
@@ -309,11 +269,9 @@ sub length {
 }
 
 sub less_than {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
   my ($target) = @$args;
-  
-  my $value = $params->{$key};
   
   croak "Constraint 'less_than' needs a numeric argument"
     unless defined $target && $target =~ /$NUM_RE/;
@@ -323,9 +281,7 @@ sub less_than {
 }
 
 sub string {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   my $is_valid = defined $value && !ref $value;
   
@@ -333,9 +289,7 @@ sub string {
 }
 
 sub not_blank   {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   my $is_valid = defined $value && $value ne '';
   
@@ -343,9 +297,7 @@ sub not_blank   {
 }
 
 sub not_defined {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   my $is_valid = !defined $value;
   
@@ -353,9 +305,7 @@ sub not_defined {
 }
 
 sub not_space {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   my $is_valid = defined $value && $value !~ '^[ \t\n\r\f]*$';
   
@@ -363,9 +313,7 @@ sub not_space {
 }
 
 sub uint {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   my $is_valid = defined $value && $value =~ /^[0-9]+$/;
   
@@ -373,11 +321,9 @@ sub uint {
 }
 
 sub regex {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
   my ($regex) = @$args;
-  
-  my $value = $params->{$key};
   
   my $is_valid = defined $value && $value =~ /$regex/;
   
@@ -385,11 +331,9 @@ sub regex {
 }
 
 sub selected_at_least {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $values) = @_;
   
   my ($num) = @$args;
-  
-  my $values = $params->{$key};
   
   my $selected = ref $values ? $values : [$values];
   $num += 0;
@@ -400,11 +344,9 @@ sub selected_at_least {
 }
 
 sub space {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
-  my ($regex) = @$args;
-  
-  my $value = $params->{$key};
+  my ($regex) = @$args;  
   
   my $is_valid = defined $value && $value =~ '^[ \t\n\r\f]*$';
   

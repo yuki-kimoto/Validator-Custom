@@ -5,28 +5,24 @@ use warnings;
 
 use Carp 'croak';
 
-sub merge {
-  my ($rule, $args, $key, $params) = @_;
+sub to_array {
+  my ($rule, $args, $values) = @_;
   
-  croak "Input key of filter \"merge\" must be array refernce"
-    unless ref $key eq 'ARRAY';
+  $values = [$values] unless ref $values eq 'ARRAY';
+  
+  return $values;
+}
 
-  my ($new_key) = @$args;
-  croak "filter \"merge\" need output key"
-    unless defined $new_key;
+sub merge {
+  my ($rule, $args, $values) = @_;
   
-  my $new_value;
-  for my $k (@$key) {
-    $new_value .= $params->{$k};
-  }
+  my $new_value = join('', @$values);
   
-  return [$new_key, {$new_key => $new_value}];
+  return $new_value;
 }
 
 sub first {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $values = $params->{$key};
+  my ($rule, $args, $values) = @_;
   
   my $new_value;
   if (ref $values eq 'ARRAY') {
@@ -36,122 +32,88 @@ sub first {
     $new_value = $values;
   }
   
-  return [$key, {$key => $new_value}];
-}
-
-sub to_array {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $values;
-  if (exists $params->{$key}) {
-    $values = $params->{$key};
-    
-    $values = [$values] unless ref $values eq 'ARRAY';
-  }
-  else {
-    $values = [];
-  }
-  
-  return [$key, {$key => $values}];
+  return $new_value;
 }
 
 sub remove_blank {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $values = $params->{$key};
+  my ($rule, $args, $values) = @_;
   
   croak "filter \"remove_blank\" need array reference"
     unless ref $values eq 'ARRAY';
   
   $values = [grep { defined $_ && CORE::length $_} @$values];
   
-  return [$key, {$key => $values}];
+  return $values;
 }
 
 sub trim {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
-  my $value = $params->{$key};
-
   $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms if defined $value;
 
-  return [$key, {$key => $value}];
+  return $value;
 }
 
 sub trim_collapse {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
-  my $value = $params->{$key};
-
   if (defined $value) {
     $value =~ s/[ \t\n\r\f]+/ /g;
     $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
   }
 
-  return [$key, {$key => $value}];
+  return $value;
 }
 
 sub trim_lead {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
-  my $value = $params->{$key};
-
   $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms if defined $value;
 
-  return [$key, {$key => $value}];
+  return $value;
 }
 
 sub trim_trail {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
-  my $value = $params->{$key};
-
   $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms if defined $value;
 
-  return [$key, {$key => $value}];
+  return $value;
 }
 
 sub trim_uni {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
-  my $value = $params->{$key};
-
   $value =~ s/^\s*(.*?)\s*$/$1/ms if defined $value;
 
-  return [$key, {$key => $value}];
+  return $value;
 }
 
 sub trim_uni_collapse {
-  my ($rule, $args, $key, $params) = @_;
+  my ($rule, $args, $value) = @_;
   
-  my $value = $params->{$key};
-
   if (defined $value) {
     $value =~ s/\s+/ /g;
     $value =~ s/^\s*(.*?)\s*$/$1/ms;
   }
 
-  return [$key, {$key => $value}];
+  return $value;
 }
 
 sub trim_uni_lead {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   $value =~ s/^\s+(.*)$/$1/ms if defined $value;
   
-  return [$key, {$key => $value}];
+  return $value;
 }
 
 sub trim_uni_trail {
-  my ($rule, $args, $key, $params) = @_;
-  
-  my $value = $params->{$key};
+  my ($rule, $args, $value) = @_;
   
   $value =~ s/^(.*?)\s+$/$1/ms if defined $value;
 
-  return [$key, {$key => $value}];
+  return $value;
 }
 
 1;
