@@ -3,24 +3,63 @@ use Object::Simple -base;
 
 use Carp 'croak';
 
+sub new {
+  my $self = shift->SUPER::new(@_);
+  
+  $self->{_failed_infos} = {};
+  
+  return $self;
+}
+
 sub is_valid {
   my ($self, $name) = @_;
  
   if (defined $name) {
-    return exists $self->{_error_infos}->{$name} ? 0 : 1;
+    return exists $self->{_failed_infos}->{$name} ? 0 : 1;
   }
   else {
-    return !(keys %{$self->{_error_infos}}) ? 1 : 0;
+    return !(keys %{$self->{_failed_infos}}) ? 1 : 0;
   }
+}
+
+sub add_failed {
+  my ($self, $key, $message) = @_;
+  
+  my $failed_infos = $self->{_failed_infos};
+  
+  if ($failed_infos->{$key}) {
+    croak "\"$key\" is already exists";
+  }
+  
+  my $failed_keys = keys %$failed_infos;
+  
+  if (@$failed_keys) {
+    my $max_pos = 0
+    for my $key (@$failed_keys) {
+      my $pos = $failed_infos->{$key}{position};
+      if ($pos > $max_pos) {
+        $max_pos = $pos;
+      }
+    }
+    $pos = $max_pos + 1;
+  }
+  else {
+    $pos = 0;
+  }
+  
+  $failed_infos->{$key}{pos} = $pos;
+  $failed_infos->{$key}{message} = $message;
+  
+  return $self;
 }
 
 sub failed {
   my $self = shift;
   
   # Invalid rule keys
-  my $error_infos = $self->{_error_infos};
-  my @invalid_rule_keys = sort { $error_infos->{$a}{position} <=>
-    $error_infos->{$b}{position} } keys %$error_infos;
+  my $failed_infos = $self->{_failed_infos};
+  my @invalid_rule_keys = sort { $failed_infos->{$a}{position} <=>
+    $failed_infos->{$b}{position} } keys %$failed_infos;
   
   return \@invalid_rule_keys;
 }
@@ -32,7 +71,7 @@ sub message {
   croak 'Parameter name must be specified'
     unless $name;
   
-  return $self->{_error_infos}->{$name}{message}
+  return $self->{_failed_infos}->{$name}{message}
     || $self->{_default_messages}{$name}
     || 'Error message not specified';
 }
@@ -42,9 +81,9 @@ sub messages {
 
   # Error messages
   my @messages;
-  my $error_infos = $self->{_error_infos};
-  my @keys = sort { $error_infos->{$a}{position} <=>
-    $error_infos->{$b}{position} } keys %$error_infos;
+  my $failed_infos = $self->{_failed_infos};
+  my @keys = sort { $failed_infos->{$a}{position} <=>
+    $failed_infos->{$b}{position} } keys %$failed_infos;
   foreach my $name (@keys) {
     my $message = $self->message($name);
     push @messages, $message;
@@ -58,7 +97,7 @@ sub messages_to_hash {
 
   # Error messages
   my $messages = {};
-  foreach my $name (keys %{$self->{_error_infos}}) {
+  foreach my $name (keys %{$self->{_failed_infos}}) {
     $messages->{$name} = $self->message($name);
   }
   
