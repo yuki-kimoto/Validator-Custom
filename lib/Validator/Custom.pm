@@ -922,84 +922,50 @@ B<4. Validate input data>
     $validation->add_failed(favorite => 'favorite is invalid');
   }
 
-You can use many check and filterfunction,
+You can use many check and filter functions,
 such as C<int>, C<trim>.
 See L<Validator::Custom/"CHECKS"> and L<Validator::Custom/"FILTERS">.
 
-Rule details is explained in L</"3. Rule syntax"> section.
-
-B<4. Validate data>
-  
-  my $validation = $vc->validate($input, $vc);
-
-use C<validate()> to validate the data applying the rule.
-C<validate()> return L<Validator::Custom::Result> object.
+If input data is invalid, you can add message by C<add_failed> method.
 
 B<5. Manipulate the validation result>
   
-  if ($validation->is_ok) {
-    my $output = $validation->data;
+  # Get result
+  if ($validation->is_valid) {
+    # ...
   }
   else {
-    # Handle error
+    
+    # Know what is failed
+    unless ($validation->is_valid('name')) {
+      # ...
+    }
+    
+    # Get failed list
+    my $failed = $validation->failed;
+    
+    # Get a message
+    my $title_message = $validation->message('title');
+    
+    # Get messages
+    my $messages = $validation->messages;
+    
+    # Get messages as hash
+    my $messages_h = $validation->messages_to_hash;
   }
 
-If you check the data is completely valid, use C<is_ok()>.
-C<is_ok()> return true value
+If there are no failed message, C<is_valid> method return true.
+You can get a message and messages by C<message>, C<messages>, C<messages_to_hash>.
 
-You can get the pairs of invalid parameter name and message
-using C<messages_to_hash()>.
-In this example, return value is the following one.
+See also L<Validator::Custom::Validation>.
 
-  {
-    name => 'name must be string. the length 1 to 5'
-  }
-
-L<Validator::Custom::Result> details is explained
-in L</"2. Validation result">.
-
-=head2 2. Validation result
-
-C<validate()> return L<Validator::Custom::Result> object.
-You can manipulate the result by various methods.
-
-C<is_ok()>, C<has_invalid()>
-C<messages_to_hash()> is already explained in L</"1. Basic">
-
-The following ones is often used methods.
-
-B<output> method
-
-  my $output = $validation->data;
-
-Get the data in the end state. L<Validator::Custom> has filtering ability.
-The parameter values in data passed to C<validate()>
-is maybe converted to other data by filter.
-You can get filtered data using C<data()>.
-
-B<messages()>
-
-  my $messages = $validation->messages;
-
-Get messages corresponding to the parameter names which value is invalid.
-Messages keep the order of parameter names of the rule.
-
-B<message()>
-
-  my $message = $validation->message('name');
-
-Get a message corresponding to the parameter name which value is invalid.
-
-All L<Validator::Custom::Result>'s APIs is explained
-in the POD of L<Validator::Custom::Result>
-
-=head2 4. Check functions
+=head2 2. Check and filter functions
 
 =head3 Add check function
 
 L<Validator::Custom> has various check functions.
 You can see check functions added by default
-L<Validator::Custom/"CONSTRAINTS">.
+L<Validator::Custom/"CHECKS">.
 
 and you can add your check function if you need.
 
@@ -1017,40 +983,29 @@ and you can add your check function if you need.
 
 Check function for telephone number is added.
 
-Check function receive a scalar value as first argument and
-return boolean value which check if the value is valid.
+Check function receive a value as first argument,
+argument as second argument.
 
-Check function receive argument of check function as second argument
-and L<Validator::Custom> object as third argument.
+You must return the result of validation, true or false value.
 
-  $vc->add_check(
-    telephone => sub {
-      my ($vc, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
-      
-      my $is_valid;
-      # ...
-      
-      return $is_valid;
-    }
-  );
+=head3 Add filter function
 
-=head3 Register filter function
-
-Filter function is registered by C<add_filter> method.
+Filter function is added by C<add_filter> method.
 
   $vc->add_filter(
     to_upper_case => sub {
-      my ($vc, $args, $key, $params) = @_;
+      my ($vc, $value, $arg) = @_;
       
-      my $value = $params->{$key};
-      
-      $value = uc $value;
+      my $new_$value = uc $value;
                   
-      return [$key, {$key => $value}];
+      return $new_value;
     }
   );
+
+Check function receive a value as first argument,
+argument as second argument.
+
+You must return the result of filtering.
 
 =head1 CHECKS
 

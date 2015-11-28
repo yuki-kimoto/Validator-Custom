@@ -228,3 +228,51 @@ use Validator::Custom;
     is($k4, '　　def');
   }
 }
+
+# add_check
+{
+  my $vc = Validator::Custom->new;
+  $vc->add_check('equal' => sub {
+    my ($vc, $value, $arg) = @_;
+    
+    if ($value eq $arg) {
+      return 1;
+    }
+    else {
+      return 0;
+    }
+  });
+  
+  my $k1 = 'a';
+  my $k2 = 'a';
+  
+  my $validation = $vc->validation;
+  
+  if (!($vc->check($k1, 'equal', 'a'))) {
+    $validation->add_failed('k1');
+  }
+  
+  if (!($vc->check($k1, 'equal', 'b'))) {
+    $validation->add_failed('k2');
+  }
+  
+  is_deeply($validation->failed, ['k2']);
+}
+
+# add_filter
+{
+  my $vc = Validator::Custom->new;
+  $vc->add_filter('cat' => sub {
+    my ($vc, $value, $arg) = @_;
+    
+    return "$value$arg";
+  });
+  
+  my $k1 = 'a';
+  
+  my $validation = $vc->validation;
+  
+  $k1 = $vc->filter($k1, 'cat', 'b');
+  
+  is($k1, 'ab');
+}
