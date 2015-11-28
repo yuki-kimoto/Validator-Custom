@@ -86,7 +86,7 @@ sub new {
 }
 
 sub check_each {
-  my ($self, $name, $values, $arg) = @_;
+  my ($self, $values, $name, $arg) = @_;
   
   if (@_ < 3) {
     croak "value must be passed";
@@ -113,7 +113,7 @@ sub check_each {
 }
 
 sub filter_each {
-  my ($self, $name, $values, $arg) = @_;
+  my ($self, $values, $name, $arg) = @_;
   
   if (@_ < 3) {
     croak "value must be passed";
@@ -137,7 +137,7 @@ sub filter_each {
 }
 
 sub check {
-  my ($self, $name, $value, $arg) = @_;
+  my ($self, $value, $name, $arg) = @_;
 
   if (@_ < 3) {
     croak "value must be passed";
@@ -152,7 +152,7 @@ sub check {
 }
 
 sub filter {
-  my ($self, $name, $value, $arg) = @_;
+  my ($self, $value, $name, $arg) = @_;
   
   if (@_ < 3) {
     croak "value must be passed";

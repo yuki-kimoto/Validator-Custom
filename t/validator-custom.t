@@ -27,19 +27,19 @@ use Validator::Custom;
     my $k5 ='２';
       
     my $validation = $vc->validation;
-    if (!$vc->check('uint', $k1)) {
+    if (!$vc->check($k1, 'uint')) {
         $validation->add_failed('k1');
     }
-    if (!$vc->check('uint', $k2)) {
+    if (!$vc->check($k2, 'uint')) {
       $validation->add_failed('k2');
     }
-    if (!$vc->check('uint', $k3)) {
+    if (!$vc->check($k3, 'uint')) {
       $validation->add_failed('k3');
     }
-    if (!$vc->check('uint', $k4)) {
+    if (!$vc->check($k4, 'uint')) {
       $validation->add_failed('k4');
     }
-    if (!$vc->check('uint', $k5)) {
+    if (!$vc->check($k5, 'uint')) {
       $validation->add_failed('k5');
     }
 
@@ -54,13 +54,13 @@ use Validator::Custom;
     my $k3 = "\0x7f";
       
     my $validation = $vc->validation;
-    if (!$vc->check('ascii', $k1)) {
+    if (!$vc->check($k1, 'ascii')) {
       $validation->add_failed('k1');
     }
-    if (!$vc->check('ascii', $k2)) {
+    if (!$vc->check($k2, 'ascii')) {
       $validation->add_failed('k2');
     }
-    if (!$vc->check('ascii', $k3)) {
+    if (!$vc->check($k3, 'ascii')) {
       $validation->add_failed('k3');
     }
     
@@ -102,43 +102,43 @@ use Validator::Custom;
     my $k13 = '123.1111111';
       
     my $validation = $vc->validation;
-    if (!$vc->check('decimal', $k1, [2,3])) {
+    if (!$vc->check($k1, 'decimal', [2,3])) {
       $validation->add_failed('k1');
     }
-    if (!$vc->check('decimal', $k2,  [1,3])) {
+    if (!$vc->check($k2, 'decimal', [1,3])) {
       $validation->add_failed('k2');
     }
-    if (!$vc->check('decimal', $k3, [2,2])) {
+    if (!$vc->check($k3, 'decimal', [2,2])) {
       $validation->add_failed('k3');
     }
-    if (!$vc->check('decimal', $k4, [2])) {
+    if (!$vc->check($k4, 'decimal', [2])) {
       $validation->add_failed('k4');
     }
-    if (!$vc->check('decimal', $k5, 2)) {
+    if (!$vc->check($k5, 'decimal', 2)) {
       $validation->add_failed('k5');
     }
-    if (!$vc->check('decimal', $k6, 2)) {
+    if (!$vc->check($k6, 'decimal', 2)) {
       $validation->add_failed('k6');
     }
-    if (!$vc->check('decimal', $k7)) {
+    if (!$vc->check($k7, 'decimal')) {
       $validation->add_failed('k7');
     }
-    if (!$vc->check('decimal', $k8)) {
+    if (!$vc->check($k8, 'decimal')) {
       $validation->add_failed('k8');
     }
-    if (!$vc->check('decimal', $k9)) {
+    if (!$vc->check($k9, 'decimal')) {
       $validation->add_failed('k9');
     }
-    if (!$vc->check('decimal', $k10, [undef, 2])) {
+    if (!$vc->check($k10, 'decimal', [undef, 2])) {
       $validation->add_failed('k10');
     }
-    if (!$vc->check('decimal', $k11, [undef, 2])) {
+    if (!$vc->check($k11, 'decimal', [undef, 2])) {
       $validation->add_failed('k11');
     }
-    if (!$vc->check('decimal', $k12, [2, undef])) {
+    if (!$vc->check($k12, 'decimal', [2, undef])) {
       $validation->add_failed('k12');
     }
-    if (!$vc->check('decimal', $k13, [2, undef])) {
+    if (!$vc->check($k13, 'decimal', [2, undef])) {
       $validation->add_failed('k13');
     }
 
@@ -152,10 +152,10 @@ use Validator::Custom;
     my $k2 = 'a';
     
     my $validation = $vc->validation;
-    if (!($vc->check('in', $k1, [qw/a b/]))) {
+    if (!($vc->check($k1, 'in', [qw/a b/]))) {
       $validation->add_failed('k1');
     }
-    if (!($vc->check('in', $k2, [qw/b c/]))) {
+    if (!($vc->check($k2, 'in', [qw/b c/]))) {
       $validation->add_failed('k2');
     }
     
@@ -172,9 +172,9 @@ use Validator::Custom;
     my $k2 = [1, 3, '', ''];
     my $k3 = [];
     
-    $k1 = $vc->filter('remove_blank', $k1);
-    $k2 = $vc->filter('remove_blank', $k2);
-    $k3 = $vc->filter('remove_blank', $k3);
+    $k1 = $vc->filter($k1, 'remove_blank');
+    $k2 = $vc->filter($k2, 'remove_blank');
+    $k3 = $vc->filter($k3, 'remove_blank');
     
     is_deeply($k1, [1, 2]);
     is_deeply($k2, [1, 3]);
@@ -185,7 +185,7 @@ use Validator::Custom;
   {
     my $vc = Validator::Custom->new;
     my $k1 = 1;
-    eval {$k1 = $vc->filter('remove_blank', $k1)};
+    eval {$k1 = $vc->filter($k1, 'remove_blank')};
     like($@, qr/must be array reference/);
   }
 
@@ -198,10 +198,10 @@ use Validator::Custom;
     my $k3 = '  abc  ';
     my $k4 = '  def  ';
     
-    $k1 = $vc->filter('trim', $k1);
-    $k2 = $vc->filter('trim_collapse', $k2);
-    $k3 = $vc->filter('trim_lead', $k3);
-    $k4 = $vc->filter('trim_trail', $k4);
+    $k1 = $vc->filter($k1, 'trim');
+    $k2 = $vc->filter($k2, 'trim_collapse');
+    $k3 = $vc->filter($k3, 'trim_lead');
+    $k4 = $vc->filter($k4, 'trim_trail');
     
     is($k1, '123');
     is($k2, "a b c");
@@ -217,10 +217,10 @@ use Validator::Custom;
     my $k3 = '　　abc　　';
     my $k4 = '　　def　　';
     
-    $k1 = $vc->filter('trim_uni', $k1);
-    $k2 = $vc->filter('trim_uni_collapse', $k2);
-    $k3 = $vc->filter('trim_uni_lead', $k3);
-    $k4 = $vc->filter('trim_uni_trail', $k4);
+    $k1 = $vc->filter($k1, 'trim_uni');
+    $k2 = $vc->filter($k2, 'trim_uni_collapse');
+    $k3 = $vc->filter($k3, 'trim_uni_lead');
+    $k4 = $vc->filter($k4, 'trim_uni_trail');
     
     is($k1, '123');
     is($k2, "a b c");
