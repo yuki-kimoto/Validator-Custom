@@ -11,7 +11,8 @@ use Carp 'croak';
 sub remove_blank {
   my ($vc, $values, $arg) = @_;
   
-  return $values unless ref $values eq 'ARRAY';
+  croak "\"remove_blank filter value must be array reference"
+    unless ref $values eq 'ARRAY';
   
   $values = [grep { defined $_ && CORE::length $_} @$values];
   

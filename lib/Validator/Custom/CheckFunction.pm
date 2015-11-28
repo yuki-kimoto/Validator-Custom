@@ -10,6 +10,8 @@ my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 sub ascii {
   my ($vc, $value, $arg) = @_;
   
+  return undef unless defined $value;
+  
   my $is_valid = $value =~ /^[\x21-\x7E]+$/;
   
   return $is_valid;
@@ -17,6 +19,8 @@ sub ascii {
 
 sub decimal {
   my ($vc, $value, $arg) = @_;
+
+  return undef unless defined $value;
   
   my $digits_tmp = $arg;
   
@@ -60,8 +64,20 @@ sub decimal {
 
 sub int {
   my ($vc, $value, $arg) = @_;
+
+  return undef unless defined $value;
   
   my $is_valid = $value =~ /^\-?[0-9]+$/;
+  
+  return $is_valid;
+}
+
+sub uint {
+  my ($vc, $value, $arg) = @_;
+  
+  return undef unless defined $value;
+
+  my $is_valid = $value =~ /^[0-9]+$/;
   
   return $is_valid;
 }
@@ -69,34 +85,16 @@ sub int {
 sub in {
   my ($vc, $value, $arg) = @_;
   
+  return undef unless defined $value;
+  
   my $valid_values = $arg;
+  
+  croak "\"in\" check argument must be array reference"
+    unless ref $valid_values eq 'ARRAY';
   
   my $match = grep { $_ eq $value } @$valid_values;
   return $match > 0 ? 1 : 0;
 }
-
-sub uint {
-  my ($vc, $value, $arg) = @_;
-  
-  my $is_valid = $value =~ /^[0-9]+$/;
-  
-  return $is_valid;
-}
-
-sub selected_at_least {
-  my ($vc, $values, $arg) = @_;
-  
-  my $num = $arg;
-  
-  my $selected = ref $values ? $values : [$values];
-  $num += 0;
-  
-  my $is_valid = @$selected >= $num;
-  
-  return $is_valid;
-}
-
-
 
 1;
 
