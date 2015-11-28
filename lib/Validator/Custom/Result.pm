@@ -4,7 +4,9 @@ use Object::Simple -base;
 use Carp 'croak';
 
 # Attrbutes
-has output => sub { {} };
+has data => sub { {} };
+has raw_data  => sub { {} };
+has missing_params => sub { [] };
 
 sub is_valid {
   my ($self, $name) = @_;
@@ -15,17 +17,6 @@ sub is_valid {
   else {
     return !(keys %{$self->{_error_infos}}) ? 1 : 0;
   }
-}
-
-sub failed {
-  my $self = shift;
-  
-  # Invalid rule keys
-  my $error_infos = $self->{_error_infos};
-  my @invalid_rule_keys = sort { $error_infos->{$a}{position} <=>
-    $error_infos->{$b}{position} } keys %$error_infos;
-  
-  return \@invalid_rule_keys;
 }
 
 sub message {
@@ -68,7 +59,6 @@ sub messages_to_hash {
   return $messages;
 }
 
-# Version 0 method(Not used now)
 sub is_ok {
   my $self = shift;
   
@@ -76,7 +66,6 @@ sub is_ok {
   return !$self->has_invalid && !$self->has_missing ? 1 : 0;
 }
 
-# Version 0 method(Not used now)
 sub to_hash {
   my $self = shift;
   
@@ -91,13 +80,19 @@ sub to_hash {
   return $result;
 }
 
-# Version 0 method(Not used now)
-sub invalid_rule_keys { shift->failed(@_) }
+sub invalid_rule_keys {
+  my $self = shift;
+  
+  # Invalid rule keys
+  my $error_infos = $self->{_error_infos};
+  my @invalid_rule_keys = sort { $error_infos->{$a}{position} <=>
+    $error_infos->{$b}{position} } keys %$error_infos;
+  
+  return \@invalid_rule_keys;
+}
 
-# Version 0 method(Not used now)
 sub has_missing { @{shift->missing_params} ? 1 : 0 }
 
-# Version 0 method(Not used now)
 sub has_invalid {
   my $self = shift;
   
@@ -105,13 +100,11 @@ sub has_invalid {
   return keys %{$self->{_error_infos}} ? 1 : 0;
 }
 
-# Version 0 method(Not used now)
 sub loose_data {
   my $self = shift;
-  return {%{$self->raw_data}, %{$self->output}};
+  return {%{$self->raw_data}, %{$self->data}};
 }
 
-# Version 0 method(Not used now)
 sub invalid_params {
   my $self = shift;
   
@@ -126,19 +119,6 @@ sub invalid_params {
   return \@invalid_params;
 }
 
-# Version 0 attributes(Not used now)
-sub data {
-  my $self = shift;
-  
-  if (@_) {
-    return $self->output(@_);
-  }
-  else {
-    return $self->output;
-  }
-}
-has raw_data  => sub { {} };
-has missing_params => sub { [] };
 
 # DEPRECATED!
 sub error_reason {
@@ -203,85 +183,4 @@ sub remove_error_info {
 
 =head1 NAME
 
-Validator::Custom::Result - Result of validation
-
-=head1 SYNOPSYS
-    
-  # Result
-  my $result = $rule->validate($input);
-
-  # Output
-  my $output = $result->output;
-
-  # Chacke if the result is valid.
-  my $is_valid = $result->is_valid;
-
-  # Check if one parameter is valid
-  my $title_is_valid = $result->is_valid('title');
-
-  # Parameter names that validation failed.
-  my $failed = $result->failed;
-
-  # A error message
-  my $message = $result->message('title');
-
-  # All Error messages
-  my $messages = $result->messages;
-
-  # Error messages to hash reference
-  my $messages_hash = $result->message_to_hash;
-
-=head1 ATTRIBUTES
-
-=head2 output
-
-  my $output = $result->output;
-  $result  = $result->output($output);
-
-Get the output in the end state. L<Validator::Custom> has filtering ability
-if you need.
-Input is passed to C<validate()> method, and after validation the input is converted to output by filter.
-You can get filtered output using C<output>.
-
-=head1 METHODS
-
-L<Validator::Custom::Result> inherits all methods from L<Object::Simple>
-and implements the following new ones.
-
-=head2 falied
-
-  my $failed = $result->failed;
-
-Failed parameter names.
-
-=head2 is_valid
-  
-  my $is_valid = $result->is_valid;
-  my $title_is_valid = $result->is_valid('title');
-
-Check if data is valid. If you omit arguments,
-this method check if all input data is valid.
-
-If you specify name, this method check if one data is valid.
-
-=head2 message
-
-  my $message = $result->message('title');
-
-Get a message corresponding to the parameter name which value is invalid.
-
-=head2 messages
-
-  my $messages = $result->messages;
-
-Get messages corresponding to the parameter names which value is invalid.
-Messages keep the order of parameter names of the rule.
-
-=head2 messages_to_hash
-
-  my $messages = $result->messages_to_hash;
-
-You can get the pairs of invalid parameter name and message
-using C<messages_to_hash()>.
-
-=cut
+Validator::Custom::Result - Removed

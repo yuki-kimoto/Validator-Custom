@@ -437,7 +437,7 @@ sub validate {
       }
     }
     if ($found_missing_param) {
-      $result->output->{$result_key} = ref $r->{default} eq 'CODE'
+      $result->data->{$result_key} = ref $r->{default} eq 'CODE'
           ? $r->{default}->($self) : $r->{default}
         if exists $r->{default} && $copy;
       next if $r->{default} || !$require;
@@ -543,7 +543,7 @@ sub validate {
       unless ($is_valid) {
         if (exists $r->{default}) {
           # Set default value
-          $result->output->{$result_key} = ref $r->{default} eq 'CODE'
+          $result->data->{$result_key} = ref $r->{default} eq 'CODE'
                                        ? $r->{default}->($self)
                                        : $r->{default}
             if exists $r->{default} && $copy;
@@ -577,7 +577,7 @@ sub validate {
     }
     
     # Result data
-    $result->output->{$result_key} = $value if $copy;
+    $result->data->{$result_key} = $value if $copy;
     
     # Key is valid
     $valid_keys->{$result_key} = 1;
@@ -747,7 +747,7 @@ Validator::Custom - HTML form Validation, easy and flexibly
   my $result = $rule->validate($input);
   if ($result->is_valid) {
     # Output
-    my $output = $vresult->output;
+    my $output = $vresult->data;
   }
   else {
     # Error messgaes
@@ -846,7 +846,7 @@ C<validate()> return L<Validator::Custom::Result> object.
 B<5. Manipulate the validation result>
   
   if ($result->is_ok) {
-    my $output = $result->output;
+    my $output = $result->data;
   }
   else {
     # Handle error
@@ -878,7 +878,7 @@ The following ones is often used methods.
 
 B<output> method
 
-  my $output = $result->output;
+  my $output = $result->data;
 
 Get the data in the end state. L<Validator::Custom> has filtering ability.
 The parameter values in data passed to C<validate()>
