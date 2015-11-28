@@ -31,11 +31,11 @@ sub add_failed {
     croak "\"$name\" is already exists";
   }
   
-  my $failed_names = keys %$failed_infos;
+  my @failed_names = keys %$failed_infos;
   my $pos;
-  if (@$failed_names) {
+  if (@failed_names) {
     my $max_pos = 0;
-    for my $failed_name (@$failed_names) {
+    for my $failed_name (@failed_names) {
       my $pos = $failed_infos->{$failed_name}{position};
       if ($pos > $max_pos) {
         $max_pos = $pos;
