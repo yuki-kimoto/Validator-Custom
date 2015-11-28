@@ -306,3 +306,35 @@ use Validator::Custom;
   is($k1, 'ab');
 }
 
+# check_each
+{
+  # check_each - int
+  {
+    my $vc = Validator::Custom->new;
+    my $k1 = ['19', '20'];
+    my $k2 = ['a', '19'];
+      
+    my $validation = $vc->validation;
+    if (!$vc->check_each($k1, 'int')) {
+        $validation->add_failed('k1');
+    }
+    if (!$vc->check_each($k2, 'int')) {
+      $validation->add_failed('k2');
+    }
+    is_deeply($validation->failed, ['k2']);
+  }
+}
+
+# filter_each
+{
+  # filter_each - int
+  {
+    my $vc = Validator::Custom->new;
+    my $k1 = [' a ', ' b '];
+      
+    my $validation = $vc->validation;
+    $k1 = $vc->filter_each($k1, 'trim');
+
+    is_deeply($k1, ['a', 'b']);
+  }
+}
