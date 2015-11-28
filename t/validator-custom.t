@@ -333,49 +333,46 @@ use Validator::Custom;
   is_deeply($validation->failed, ['k2']);
 }
 
-__END__
-
-my $vc_common = Validator::Custom->new;
-$vc_common->add_check(
-  Int => sub {
-    my ($validation, $args, $key, $params) = @_;
+# int
+{
+  my $vc = Validator::Custom->new;
+  my $k1 = '19';
+  my $k2 = '-10';
+  my $k3 = 'a';
+  my $k4 = '10.0';
     
-    my $value = $params->{$key};
-    
-    return $value =~ /^\d+$/;
-  },
-  Num => sub {
-    my ($validation, $args, $key, $params) = @_;
-    
-    my $value = $params->{$key};
-
-    require Scalar::Util;
-    return Scalar::Util::looks_like_number($value);
-  },
-  aaa => sub {
-    my ($validation, $args, $key, $params) = @_;
-    
-    my $value = $params->{$key};
-
-    return $value eq 'aaa';
-  },
-  bbb => sub {
-    my ($validation, $args, $key, $params) = @_;
-    
-    my $value = $params->{$key};
-
-    return $value eq 'bbb';
+  my $validation = $vc->validation;
+  if (!$vc->check('int')) {
+    $validation->add_failed('k1');
   }
-);
-$vc_common->add_filter(
-  C1 => sub {
-    my ($validation, $args, $key, $params) = @_;
-    
-    my $value = $params->{$key};
-    
-    return [$key => {$key => $value * 2}];
+  if (!$vc->check('int')) {
+    $validation->add_failed('k2');
   }
-);
+  if (!$vc->check('int')) {
+    $validation->add_failed('k3');
+  }
+  if (!$vc->check('int')) {
+    $validation->add_failed('k4');
+  }
+
+  is_deeply($validation->failed, ['k3', 'k4']);
+}
+
+# remove_blank filter
+{
+  my $vc = Validator::Custom->new;
+  my $k1 = 1; my $k2 =[1, 2]; my $k3 =''; my $key4 = [1, 3, '', ''];
+  my $validation = $vc->validation;
+    $validation->add_failed('k1')->filter('to_array')->filter('remove_blank');
+    $validation->add_failed('k2')->filter('to_array')->filter('remove_blank');
+    $validation->add_failed('k3')->filter('to_array')->filter('remove_blank');
+    $validation->add_failed('key4')->filter('to_array')->filter('remove_blank');
+  
+  is_deeply($validation->output->{k1}, [1]);
+  is_deeply($validation->output->{k2}, [1, 2]);
+  is_deeply($validation->output->{k3}, []);
+  is_deeply($validation->output->{key4}, [1, 3]);
+}
 
 # selected_at_least
 {
@@ -411,16 +408,13 @@ $vc_common->add_filter(
   {
     my $vc = Validator::Custom->new;
     my $validation = $vc->validation;
-    my $k1 = 1; k2 => [1,2]; k3 => [1,'a', 'b']; k4 => 'a'; k5 => [];
-      $validation->add_failed('k1')->filter('to_array');$vc->check(selected_at_least => 1);$vc->check_each('int')->message('k1Error1');
-      $validation->add_failed('k2')->filter('to_array');$vc->check(selected_at_least => 1);$vc->check_each('int')->message('k2Error1');
-      $validation->add_failed('k3')->filter('to_array');$vc->check(selected_at_least => 1);$vc->check_each('int')->message('k3Error1');
-      $validation->add_failed('k4')->filter('to_array');$vc->check(selected_at_least => 1);$vc->check_each('int')->message('k4Error1');
-      $validation->add_failed('k5')->filter('to_array');$vc->check(selected_at_least => 1);$vc->check_each('int')->message('k5Error1');
-    
-    my $messages = $validation->validate($input)->messages;
+    my $k1 = 1; my $k2 = [1,2]; my $k3 = [1,'a', 'b']; my $k4 = 'a'; my $k5 = [];
+      $validation->add_failed('k1')->filter('to_array');$vc->check(selected_at_least => 1);$vc->check_each('int');
+      $validation->add_failed('k2')->filter('to_array');$vc->check(selected_at_least => 1);$vc->check_each('int');
+      $validation->add_failed('k3')->filter('to_array');$vc->check(selected_at_least => 1);$vc->check_each('int');
+      $validation->add_failed('k4')->filter('to_array');$vc->check(selected_at_least => 1);$vc->check_each('int');
+      $validation->add_failed('k5')->filter('to_array');$vc->check(selected_at_least => 1);$vc->check_each('int');
 
-    is_deeply($messages, [qw/k3Error1 k4Error1 k5Error1/]);
   }
 
   # check_each - repeat
@@ -448,163 +442,6 @@ $vc_common->add_filter(
   }
 }
 
-# filter_each
-{
-  my $vc = $vc_common;
-  my $k1 = [1,2];
-  my $validation = $vc->validation;
-    $validation->add_failed('k1')->filter_each('C1')->filter_each('C1');
-
-  my $validation= $validation->validate($input);
-  is_deeply($validation->messages, []);
-  is_deeply($validation->output, {k1 => [4,8]});
-}
-
-# check - code reference
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 1; k2 => 2;
-  my $check = sub {
-    my ($self, $args, $key, $params) = @_;
-    
-    my $values = $params->{$key};
-    
-    return defined $values->[0] && defined $values->[1] && $values->[0] eq $values->[1];
-    
-  my $validation = $vc->validation;
-    $validation->add_failed(['k1', 'k2'])->name('k1_2');$vc->check($check)->message('error_k1_2');
-  my $messages = $validation->validate($input)->messages;
-  is_deeply($messages, ['error_k1_2']);
-}
-
-# validate exception
-{
-  my $vc = Validator::Custom->new;
-
-  # validate exception - allow a key
-  {
-    my $validation = $vc->validation;
-    my $k1 = 'a'};
-      $validation->add_failed('k1');$vc->check('not_blank');
-    eval { $validation->validate($input) };
-    ok(!$@);
-  }
-  # validate exception - allow a key and name
-  {
-    my $validation = $vc->validation;
-    my $k1 = 'a'};
-      $validation->add_failed('k1')->name('k2');$vc->check('not_blank');
-    eval { $validation->validate($input) };
-    ok(!$@);
-  }
-  # validate exception - allow multiple keys and name
-  {
-    my $validation = $vc->validation;
-    my $k1 = 'a'; my $k2 ='b';
-      $validation->add_failed(['k1', 'k2'])->name('k12');$vc->check('not_blank');
-    eval { $validation->validate($input) };
-    ok(!$@);  
-  }
-  # validate exception - deny only multiple keys
-  {
-    my $validation = $vc->validation;
-    my $k1 = 'a'; my $k2 ='b';
-      $validation->add_failed(['k1', 'k2']);$vc->check('not_blank');
-    eval { $validation->validate($input) };
-    like($@, qr/name is needed for multiple topic values/);
-  }
-}
-
-# topic exception
-{
-  my $vc = Validator::Custom->new;
-  # topic exception - allow a string;
-  {
-    my $validation = $vc->validation;
-    eval { $validation->add_failed('k1') };
-    ok(!$@);
-  }
-  # topic exception - allow array refernce
-  {
-    my $validation = $vc->validation;
-    eval { $validation->add_failed(['k1', 'k2']) };
-    ok(!$@);
-  }
-  # topic exception - deny undef
-  {
-    my $validation = $vc->validation;
-    eval { $validation->add_failed(undef) };
-    like($@, qr/topic must be a string or array reference/);
-  }
-  # topic exception - deny hash refernce
-  {
-    my $validation = $vc->validation;
-    eval { $validation->add_failed({}) };
-    like($@, qr/topic must be a string or array reference/);
-  }
-}
-
-# Cuastom validator
-{
-  my $vc = $vc_common;
-  my $k1 = 1; k2 => 'a'; k3 => 3.1; k4 => 'a';
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('Int')->message("k1Error1");
-    $validation->add_failed('k2');$vc->check('Int')->message("k2Error1");
-    $validation->add_failed('k3');$vc->check('Num')->message("k3Error1");
-    $validation->add_failed('k4');$vc->check('Num')->message("k4Error1");
-  my $validation= $validation->validate($input);
-  is_deeply($validation->messages, [qw/k2Error1 k4Error1/]);
-  is_deeply($validation->failed, [qw/k2 k4/]);
-  ok(!$validation->is_valid);
-}
-
-# int
-{
-  my $vc = Validator::Custom->new;
-    k1  => '19';
-    k2  => '-10';
-  my $k3 = 'a';
-  my $k4 =  '10.0';
-    
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('int');
-    $validation->add_failed('k2');$vc->check('int');
-    $validation->add_failed('k3');$vc->check('int');
-    $validation->add_failed('k4');$vc->check('int');
-
-  is_deeply($validation->failed, ['k3', 'k4']);
-}
-
-# exists
-{
-  my $vc = Validator::Custom->new;
-    k1  => 1;
-    k2  => undef;
-    
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('exists');
-    $validation->add_failed('k2');$vc->check('exists');
-    $validation->add_failed('k3');$vc->check('exists');
-
-  is_deeply($validation->failed, ['k3']);
-}
-
-# remove_blank filter
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 1; my $k2 =[1, 2]; my $k3 =''; my $key4 = [1, 3, '', ''];
-  my $validation = $vc->validation;
-    $validation->add_failed('k1')->filter('to_array')->filter('remove_blank');
-    $validation->add_failed('k2')->filter('to_array')->filter('remove_blank');
-    $validation->add_failed('k3')->filter('to_array')->filter('remove_blank');
-    $validation->add_failed('key4')->filter('to_array')->filter('remove_blank');
-  my $vresult = $validation->validate($input);
-  is_deeply($vresult->output->{k1}, [1]);
-  is_deeply($vresult->output->{k2}, [1, 2]);
-  is_deeply($vresult->output->{k3}, []);
-  is_deeply($vresult->output->{key4}, [1, 3]);
-}
 
 # Validator::Custom::Resut filter method
 {
@@ -614,197 +451,7 @@ $vc_common->add_filter(
   my $validation = $vc->validation;
     $validation->add_failed('k1')->filter('trim');
 
-  my $vresult= $validation->validate($input)->output;
-
-  is_deeply($vresult, {k1 => '123'});
-}
-
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 1; k2 => 2; k3 => 3;;
-  my $validation = $vc->validation;
-    $validation->add_failed('k1')
-    ;$vc->check(sub{
-      my ($validation, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
-      
-      return $value == 1;
-    })->message("k1Error1")
-    ;$vc->check(sub {
-      my ($validation, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
-
-      return $value == 2;
-    })->message("k1Error2")
-    ;$vc->check(sub{
-      my ($validation, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
-
-      return $value == 3;
-    })->message("k1Error3");
-    $validation->add_failed('k2')
-    ;$vc->check(sub{
-      my ($validation, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
-
-      return $value == 2;
-    })->message("k2Error1")
-    ;$vc->check(sub{
-      my ($validation, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
-
-      return $value == 3;
-    })->message("k2Error2");
-
-  my $vresult   = $validation->validate($input);
-  my $messages      = $vresult->messages;
-  my $messages_hash = $vresult->messages_to_hash;
-  is_deeply($messages, [qw/k1Error2 k2Error2/]);
-  is_deeply($messages_hash, {k1 => 'k1Error2', k2 => 'k2Error2'});
-  my $messages_hash2 = $vresult->messages_to_hash;
-  is_deeply($messages_hash2, {k1 => 'k1Error2', k2 => 'k2Error2'});
-  $messages = $validation->validate($input)->messages;
-  is_deeply($messages, [qw/k1Error2 k2Error2/]);
-}
-
-{
-  ok(!Validator::Custom->new->rule);
-}
-
-{
-  my $validation = Validator::Custom::Result->new;
-    $validation->output({k => 1});
-  is_deeply($validation->output, {k => 1});
-}
-
-{
-  my $vc = $vc_common;
-  my $k1 = 1; k2 => 'a'; k3 => 3.1; k4 => 'a';
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('Int')->message("k1Error1");
-    $validation->add_failed('k2');$vc->check('Int')->message("k2Error1");
-    $validation->add_failed('k3');$vc->check('Num')->message("k3Error1");
-    $validation->add_failed('k4');$vc->check('Num')->message("k4Error1");
-  my $messages = $validation->validate($input)->messages;
-  is_deeply($messages, [qw/k2Error1 k4Error1/]);
-  $messages = $validation->validate($input)->messages;
-  is_deeply($messages, [qw/k2Error1 k4Error1/]);
-}
-
-# Check function not found
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 1;
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('No')->message("k1Error1");
-  eval { $validation->validate($input) };
-  like($@, qr/Can't find "No" check/);
-}
-
-# Filter function not found
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 1;
-  my $validation = $vc->validation;
-    $validation->add_failed('k1')->filter('No')->message("k1Error1");
-  eval { $validation->validate($input) };
-  like($@, qr/Can't find "No" filter/);
-}
-
-{
-  my $vc = $vc_common;
-  my $k1 = 1;
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('Int')->message("k1Error1");
-  my $messages = $validation->validate($input)->messages;
-  is(scalar @$messages, 0);
-}
-
-{
-  my $vc = Validator::Custom->new;
-  my $validation = $vc->validation;
-  eval{$validation->validate([])};
-  like($@, qr/Input must be hash reference/);
-}
-
-{
-  eval{Validator::Custom->new->rule({})->validate({})};
-  like($@, qr/Invalid rule structure/sm);
-}
-
-{
-  eval{Validator::Custom->new->rule([key => 'Int'])->validate({})};
-  like($@, qr/Invalid rule structure/sm);
-}
-
-{
-  my $vc = Validator::Custom->new;
-  $vc->add_check(
-    length => sub {
-      my ($validation, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
-      
-      my $min;
-      my $max;
-      
-      ($min, $max) = @{$args->[0]};
-      my $length  = length $value;
-      return $min <= $length && $length <= $max ? 1 : 0;
-    }
-  );
-    name => 'zz' x 30;
-    age => 'zz';
-    
-  my $validation = $vc->validation;
-    $validation->add_failed('name');$vc->check(length => [1, 2]);
-  my $vresult = $validation->validate($input);
-  my $failed = $vresult->failed;
-  is_deeply($failed, ['name']);
-  my $messages_hash = $vresult->messages_to_hash;
-  is_deeply($messages_hash, {name => 'name is invalid'});
-  is($vresult->message('name'), 'name is invalid');
-  $failed = $validation->validate($input)->failed;
-  is_deeply($failed, ['name']);
-}
-
-{
-  my $vc = Validator::Custom->new;
-  my $validation = $vc->validation;
-  my $validation = $validation->validate({key => 1});
-  ok($validation->is_valid);
-}
-
-{
-  my $vc = Validator::Custom->new;
-  $vc->add_check(
-   'C1' => sub {
-      my ($validation, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
-      
-      return $value > 1 ? 1 : 0;
-    },
-   'C2' => sub {
-      my ($validation, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
-      
-      return $value > 5 ? 1 : 0;
-    }
-  );
-  k1_1 => 1; k1_2 => 2; k2_1 => 5; k2_2 => 6};
-  my $validation = $vc->validation;
-    $validation->add_failed('k1_1');$vc->check('C1');
-    $validation->add_failed('k1_2');$vc->check('C1');
-    $validation->add_failed('k2_1');$vc->check('C2');
-    $validation->add_failed('k2_2');$vc->check('C2');
-  is_deeply($validation->validate($input)->failed, [qw/k1_1 k2_1/]);
+  is_deeply($validation, {k1 => '123'});
 }
 
 # failed
@@ -824,147 +471,23 @@ $vc_common->add_filter(
     
     return $value eq 1;
   });
-  my $k1 = 1; k2 => 2; k3 => 3; k4 => 1;
+  my $k1 = 1; my $k2 = 2; my $k3 = 3; my $k4 = 1;
   my $validation = $vc->validation;
     $validation->add_failed(['k1', 'k2'])->name('k12');$vc->check('p');
     $validation->add_failed('k3');$vc->check('q');
     $validation->add_failed('k4');$vc->check('q');
-  my $vresult = $validation->validate($input);
+  
 
-  is_deeply($vresult->failed, ['k12', 'k3']);
-}
-
-# exception
-{
-  # exception - length need parameter
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 'a';
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('length');
-    eval { $validation->validate($input) };
-    like($@, qr/\QConstraint 'length' needs one or two arguments/);
-  }
-  # exception - greater_than target undef
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 1;
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('greater_than');
-    eval { $validation->validate($input) };
-    like($@, qr/\QConstraint 'greater_than' needs a numeric argument/);
-  }
-
-  # exception - greater_than not number
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 1;
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('greater_than' => 'a');
-    eval { $validation->validate($input) };
-    like($@, qr/\QConstraint 'greater_than' needs a numeric argument/);
-  }
-
-  # exception - less_than target undef
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 1;
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('less_than');
-    eval { $validation->validate($input) };
-    like($@, qr/\QConstraint 'less_than' needs a numeric argument/);
-  }
-
-  # exception - less_than not number
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 1;
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('less_than' => 'a');
-    eval { $validation->validate($input) };
-    like($@, qr/\QConstraint 'less_than' needs a numeric argument/);
-  }
-
-  # exception - equal_to target undef
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 1;
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('equal_to');
-    eval { $validation->validate($input) };
-    like($@, qr/\QConstraint 'equal_to' needs a numeric argument/);
-  }
-
-  # exception - equal_to not number
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 1;
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('equal_to' => 'a');
-    eval { $validation->validate($input) };
-    like($@, qr/\QConstraint 'equal_to' needs a numeric argument/);
-  }
-
-  # exception - between undef
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 1;
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('between' => [undef, 1]);
-    eval { $validation->validate($input) };
-    like($@, qr/\QConstraint 'between' needs two numeric arguments/);
-  }
-
-  # exception - between target undef or not number1
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 1;
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('between' => ['a', 1]);
-    eval { $validation->validate($input) };
-    like($@, qr/\QConstraint 'between' needs two numeric arguments/);
-  }
-
-  # exception - between target undef or not number2
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 1;
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('between' => [1, undef]);
-    eval { $validation->validate($input) };
-    like($@, qr/\QConstraint 'between' needs two numeric arguments/);
-  }
-
-  # exception - between target undef or not number3
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = 1;
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('between' => [1, 'a']);
-    eval { $validation->validate($input) };
-    like($@, qr/\Qbetween' needs two numeric arguments/);
-  }
+  is_deeply($validation->failed, ['k12', 'k3']);
 }
 
 # trim;
 {
   my $vc = Validator::Custom->new;
-    int_param => ' 123 ';
-    collapse  => "  \n a \r\n b\nc  \t";
-    left      => '  abc  ';
-    right     => '  def  ';
-    
+  my $int_param = ' 123 ';
+  my $collapse  = "  \n a \r\n b\nc  \t";
+  my $left      = '  abc  ';
+  my $right     = '  def  ';
 
   my $validation = $vc->validation;
     $validation->add_failed('int_param')->filter('trim');
@@ -972,45 +495,12 @@ $vc_common->add_filter(
     $validation->add_failed('left')->filter('trim_lead');
     $validation->add_failed('right')->filter('trim_trail');
 
-  my $validation_data= $validation->validate($input)->output;
+  my $validation_data= $validation->output;
 
   is_deeply(
       $validation_data, 
-    { int_param => '123'; left => "abc  "; right => '  def'; collapse => "a b c";
+    { int_param => '123', left => "abc  ", right => '  def', collapse => "a b c"}
   );
-}
-
-# duplication result value
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 'a'; my $k2 ='a';
-  my $validation = $vc->validation;
-    $validation->add_failed(['k1', 'k2'])->name('k3');$vc->check('duplication');
-  is_deeply($validation->output, {my $k1 = 'a', 'k2' => 'a'});
-}
-
-# message option
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 'a'};
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('int')->message('error');
-
-  is($validation->message('k1'), 'error');
-}
-
-# is_valid
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 'a'; my $k2 ='b'; my $k3 =2};
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('int');
-    $validation->add_failed('k2');$vc->check('int');
-    $validation->add_failed('k3');$vc->check('int');
-
-  ok(!$validation->is_valid('k1'));
-  ok(!$validation->is_valid('k2'));
-  ok($validation->is_valid('k3'));
 }
 
 # space
@@ -1023,21 +513,6 @@ $vc_common->add_filter(
     $validation->add_failed('k3');$vc->check('space');
 
   is_deeply($validation->failed, ['k3']);
-}
-
-# to_array filter
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 1; my $k2 =[1, 2]; my $k3 =undef;
-  my $validation = $vc->validation;
-    $validation->add_failed('k1')->filter('to_array');
-    $validation->add_failed('k2')->filter('to_array');
-    $validation->add_failed('k3')->filter('to_array');
-    $validation->add_failed('key4')->filter('to_array');
-  is_deeply($validation->output->{k1}, [1]);
-  is_deeply($validation->output->{k2}, [1, 2]);
-  is_deeply($validation->output->{k3}, [undef]);
-  is_deeply($validation->output->{key4}, []);
 }
 
 # undefined value
@@ -1055,7 +530,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 ='2';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check(between => [1, 3]);
@@ -1068,7 +543,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 ='';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('blank');
@@ -1079,7 +554,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 ='2.1';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check(decimal => 1);
@@ -1092,8 +567,13 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
-  my $k1 = 'a'; my $k2 ='a'; my $k3 =''; my $key4 = ''; key5 => undef; key6 => undef;
+  my $vc = Validator::Custom->new;
+  my $k1 = 'a';
+  my $k2 ='a';
+  my $k3 ='';
+  my $key4 = '';
+  my $key5 = undef;
+  my $key6 = undef;
   my $validation = $vc->validation;
     $validation->add_failed(['k1', 'k2']);$vc->check('duplication')->name('k1-2');
     $validation->add_failed(['k3', 'key4']);$vc->check('duplication')->name('k3-4');
@@ -1109,7 +589,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 ='1';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check(equal_to => 1);
@@ -1122,7 +602,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 ='5';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check(greater_than => 1);
@@ -1135,7 +615,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 ='http://aaa.com';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('http_url');
@@ -1148,7 +628,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 ='1';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('int');
@@ -1161,20 +641,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
-  my $k1 = undef; my $k2 =''; my $k3 ='1';
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('in_array' => [1, 2]);
-    $validation->add_failed('k2');$vc->check('in_array' => [1, 2]);
-    $validation->add_failed('k3');$vc->check('in_array' => [1, 2]);
-
-  ok(!$validation->is_valid('k1'));
-  ok(!$validation->is_valid('k2'));
-  ok($validation->is_valid('k3'));
-}
-
-{
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 ='aaa';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('length' => [1, 4]);
@@ -1187,7 +654,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 =3;
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('less_than' => 4);
@@ -1200,7 +667,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 =3;
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('not_blank');
@@ -1213,7 +680,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 =3;
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('not_space');
@@ -1226,7 +693,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 =3;
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('uint');
@@ -1239,7 +706,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 =3;
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('regex' => qr/3/);
@@ -1252,7 +719,7 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = undef; my $k2 =''; my $k3 =' ';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('space');
@@ -1265,62 +732,17 @@ $vc_common->add_filter(
 }
 
 {
-  my $vc = $vc_common;
-  my $k2 =2};
+  my $vc = Validator::Custom->new;
+  my $k2 = 2;
   my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('defined')->message('k1 is undefined');
+    $validation->add_failed('k1');$vc->check('defined');
 
-  is_deeply($validation->messages, ['k1 is undefined']);
   ok(!$validation->is_valid('k1'));
-}
-
-# between 0-9
-{
-  my $vc = $vc_common;
-  my $k1 = 0; my $k2 =9;
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check(between => [0, 9]);
-    $validation->add_failed('k2');$vc->check(between => [0, 9]);
-
-  ok($validation->is_valid);
-}
-
-# between decimal
-{
-  my $vc = $vc_common;
-  my $k1 = '-1.5'; my $k2 ='+1.5'; my $k3 =3.5;
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check(between => [-2.5, 1.9]);
-    $validation->add_failed('k2');$vc->check(between => ['-2.5', '+1.9']);
-    $validation->add_failed('k3');$vc->check(between => ['-2.5', '+1.9']);
-
-  ok($validation->is_valid('k1'));
-  ok($validation->is_valid('k2'));
-  ok(!$validation->is_valid('k3'));
-}
-
-# equal_to decimal
-{
-  my $vc = $vc_common;
-  my $k1 = '+0.9'};
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check(equal_to => '0.9');
-
-  ok($validation->is_valid('k1'));
-}
-
-# greater_than decimal
-{
-  my $vc = $vc_common;
-  my $k1 = '+10.9'};
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check(greater_than => '9.1');
-  ok($validation->is_valid('k1'));
 }
 
 # int unicode
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = 0; my $k2 =9; my $k3 ='２';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('int');
@@ -1332,19 +754,9 @@ $vc_common->add_filter(
   ok(!$validation->is_valid('k3'));
 }
 
-# less_than decimal
-{
-  my $vc = $vc_common;
-  my $k1 = '+0.9'};
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check(less_than => '10.1');
-
-  ok($validation->is_valid('k1'));
-}
-
 # uint unicode
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = 0; my $k2 =9; my $k3 ='２';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('uint');
@@ -1358,7 +770,7 @@ $vc_common->add_filter(
 
 # space unicode
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = ' '; my $k2 ='　';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('space');
@@ -1370,7 +782,7 @@ $vc_common->add_filter(
 
 # not_space unicode
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = ' '; my $k2 ='　';
   my $validation = $vc->validation;
     $validation->add_failed('k1');$vc->check('not_space');
@@ -1382,7 +794,7 @@ $vc_common->add_filter(
 
 # not_space unicode
 {
-  my $vc = $vc_common;
+  my $vc = Validator::Custom->new;
   my $k1 = '　'; my $k2 ='　'; my $k3 ='　'; my $key4 = '　';
   my $validation = $vc->validation;
     $validation->add_failed('k1')->filter('trim');
@@ -1398,18 +810,18 @@ $vc_common->add_filter(
 
 # lenght {min => ..., max => ...}
 {
-  my $vc = $vc_common;
-    k1_1 => 'a';
-    k1_2 => 'aa';
-    k1_3 => 'aaa';
-    k1_4 => 'aaaa';
-    k1_5 => 'aaaaa';
-    k2_1 => 'a';
-    k2_2 => 'aa';
-    k2_3 => 'aaa';
-    k3_1 => 'aaa';
-    k3_2 => 'aaaa';
-    k3_3 => 'aaaaa';
+  my $vc = Validator::Custom->new;
+  my $k1_1 = 'a';
+  my $k1_2 = 'aa';
+  my $k1_3 = 'aaa';
+  my $k1_4 = 'aaaa';
+  my $k1_5 = 'aaaaa';
+  my $k2_1 = 'a';
+  my $k2_2 = 'aa';
+  my $k2_3 = 'aaa';
+  my $k3_1 = 'aaa';
+  my $k3_2 = 'aaaa';
+  my $k3_3 = 'aaaaa';
     
   my $validation = $vc->validation;
     $validation->add_failed('k1_1');$vc->check('length' => {min => 2, max => 4});
@@ -1450,38 +862,8 @@ $vc_common->add_filter(
     $validation->add_failed('left')->filter('trim_uni_lead');
     $validation->add_failed('right')->filter('trim_uni_trail');
 
-  my $validation_data= $validation->validate($input)->output;
-
   is_deeply(
-      $validation_data, 
-    { int_param => '123'; left => "abc　　"; right => '　　def'; collapse => "a b c"};
+      {}, 
+    { int_param => '123', left => "abc　　", right => '　　def', collapse => "a b c"}
   );
 }
-
-# string check
-{
-  my $vc = Validator::Custom->new;
-
-  {
-    my $k1 = '';
-    my $k2 = 'abc';
-    my $k3 = 3.1;
-    my $k4 =  undef;
-    my $k5 = [];
-      
-    my $validation = $vc->validation;
-      $validation->add_failed('k1');$vc->check('string');
-      $validation->add_failed('k2');$vc->check('string');
-      $validation->add_failed('k3');$vc->check('string');
-      $validation->add_failed('k4');$vc->check('string');
-      $validation->add_failed('k5');$vc->check('string');
-    
-    my $vresult = $validation->validate($input);
-    ok($vresult->is_valid('k1'));
-    ok($vresult->is_valid('k2'));
-    ok($vresult->is_valid('k3'));
-    ok(!$vresult->is_valid('k4'));
-    ok(!$vresult->is_valid('k5'));
-  }
-}
-

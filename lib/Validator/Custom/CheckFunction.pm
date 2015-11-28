@@ -7,26 +7,10 @@ use Carp 'croak';
 
 my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 
-sub space {
-  my ($vc, $value, $arg) = @_;
-  
-  my $is_valid = defined $value && $value =~ '^[ \t\n\r\f]*$';
-  
-  return $is_valid;
-}
-
 sub ascii {
   my ($vc, $value, $arg) = @_;
   
-  my $is_valid = $value && $value =~ /^[\x21-\x7E]+$/;
-  
-  return $is_valid;
-}
-
-sub blank {
-  my ($vc, $value, $arg) = @_;
-  
-  my $is_valid = defined $value && $value eq '';
+  my $is_valid = $value =~ /^[\x21-\x7E]+$/;
   
   return $is_valid;
 }
@@ -66,7 +50,7 @@ sub decimal {
   }
   
   # 値をチェック
-  if (defined $value && $value =~ /$re/) {
+  if ($value =~ /$re/) {
     return 1;
   }
   else {
@@ -74,18 +58,10 @@ sub decimal {
   }
 }
 
-sub http_url {
-  my ($vc, $value, $arg) = @_;
-  
-  my $is_valid = defined $value && $value =~ /^s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/;
-  
-  return $is_valid
-}
-
 sub int {
   my ($vc, $value, $arg) = @_;
   
-  my $is_valid = defined $value && $value =~ /^\-?[0-9]+$/;
+  my $is_valid = $value =~ /^\-?[0-9]+$/;
   
   return $is_valid;
 }
@@ -95,7 +71,6 @@ sub in {
   
   my $valid_values = $arg;
   
-  $value = '' unless defined $value;
   my $match = grep { $_ eq $value } @$valid_values;
   return $match > 0 ? 1 : 0;
 }
@@ -103,7 +78,7 @@ sub in {
 sub uint {
   my ($vc, $value, $arg) = @_;
   
-  my $is_valid = defined $value && $value =~ /^[0-9]+$/;
+  my $is_valid = $value =~ /^[0-9]+$/;
   
   return $is_valid;
 }

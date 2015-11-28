@@ -5,11 +5,13 @@ use warnings;
 
 use Carp 'croak';
 
+### Note
+# Filter function return undef if value is undefined
+
 sub remove_blank {
   my ($vc, $values, $arg) = @_;
   
-  croak "filter \"remove_blank\" need array reference"
-    unless ref $values eq 'ARRAY';
+  return $values unless ref $values eq 'ARRAY';
   
   $values = [grep { defined $_ && CORE::length $_} @$values];
   
@@ -19,7 +21,9 @@ sub remove_blank {
 sub trim {
   my ($vc, $value, $arg) = @_;
   
-  $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms if defined $value;
+  return undef unless defined $value;
+  
+  $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
 
   return $value;
 }
@@ -27,10 +31,10 @@ sub trim {
 sub trim_collapse {
   my ($vc, $value, $arg) = @_;
   
-  if (defined $value) {
-    $value =~ s/[ \t\n\r\f]+/ /g;
-    $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
-  }
+  return undef unless defined $value;
+  
+  $value =~ s/[ \t\n\r\f]+/ /g;
+  $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
 
   return $value;
 }
@@ -38,7 +42,9 @@ sub trim_collapse {
 sub trim_lead {
   my ($vc, $value, $arg) = @_;
   
-  $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms if defined $value;
+  return undef unless defined $value;
+
+  $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms;
 
   return $value;
 }
@@ -46,7 +52,9 @@ sub trim_lead {
 sub trim_trail {
   my ($vc, $value, $arg) = @_;
   
-  $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms if defined $value;
+  return undef unless defined $value;
+
+  $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms;
 
   return $value;
 }
@@ -54,18 +62,20 @@ sub trim_trail {
 sub trim_uni {
   my ($vc, $value, $arg) = @_;
   
-  $value =~ s/^\s*(.*?)\s*$/$1/ms if defined $value;
+  return undef unless defined $value;
+
+  $value =~ s/^\s*(.*?)\s*$/$1/ms;
 
   return $value;
 }
 
 sub trim_uni_collapse {
   my ($vc, $value, $arg) = @_;
+
+  return undef unless defined $value;
   
-  if (defined $value) {
-    $value =~ s/\s+/ /g;
-    $value =~ s/^\s*(.*?)\s*$/$1/ms;
-  }
+  $value =~ s/\s+/ /g;
+  $value =~ s/^\s*(.*?)\s*$/$1/ms;
 
   return $value;
 }
@@ -73,7 +83,9 @@ sub trim_uni_collapse {
 sub trim_uni_lead {
   my ($vc, $value, $arg) = @_;
   
-  $value =~ s/^\s+(.*)$/$1/ms if defined $value;
+  return undef unless defined $value;
+  
+  $value =~ s/^\s+(.*)$/$1/ms;
   
   return $value;
 }
@@ -81,7 +93,9 @@ sub trim_uni_lead {
 sub trim_uni_trail {
   my ($vc, $value, $arg) = @_;
   
-  $value =~ s/^(.*?)\s+$/$1/ms if defined $value;
+  return undef unless defined $value;
+
+  $value =~ s/^(.*?)\s+$/$1/ms;
 
   return $value;
 }
