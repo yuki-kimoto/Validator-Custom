@@ -32,7 +32,7 @@ sub new {
     greater_than      => \&Validator::Custom::CheckFunction::greater_than,
     http_url          => \&Validator::Custom::CheckFunction::http_url,
     int               => \&Validator::Custom::CheckFunction::int,
-    in_array          => \&Validator::Custom::CheckFunction::in_array,
+    in                => \&Validator::Custom::CheckFunction::in,
     length            => \&Validator::Custom::CheckFunction::length,
     less_than         => \&Validator::Custom::CheckFunction::less_than,
     not_defined       => \&Validator::Custom::CheckFunction::not_defined,

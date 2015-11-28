@@ -10,8 +10,6 @@ my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 sub space {
   my ($vc, $value, $arg) = @_;
   
-  my ($regex) = @$arg;  
-  
   my $is_valid = defined $value && $value =~ '^[ \t\n\r\f]*$';
   
   return $is_valid;
@@ -36,7 +34,7 @@ sub blank {
 sub decimal {
   my ($vc, $value, $arg) = @_;
   
-  my ($digits_tmp) = @$arg;
+  my $digits_tmp = $arg;
   
   # Œ…”î•ñ‚ð®—
   my $digits;
@@ -95,8 +93,10 @@ sub int {
 sub in {
   my ($vc, $value, $arg) = @_;
   
+  my $valid_values = $arg;
+  
   $value = '' unless defined $value;
-  my $match = grep { $_ eq $value } @$arg;
+  my $match = grep { $_ eq $value } @$valid_values;
   return $match > 0 ? 1 : 0;
 }
 
@@ -109,9 +109,9 @@ sub uint {
 }
 
 sub selected_at_least {
-  my ($vc, $arg, $values) = @_;
+  my ($vc, $values, $arg) = @_;
   
-  my ($num) = @$arg;
+  my $num = $arg;
   
   my $selected = ref $values ? $values : [$values];
   $num += 0;

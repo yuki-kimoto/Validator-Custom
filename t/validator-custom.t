@@ -194,74 +194,65 @@ use Validator::Custom;
   my $k2 = 'iii';
     
   my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('http_url');
-    $validation->add_failed('k2');$vc->check('http_url');
+  if (!$vc->check('http_url', $k1)) {
+    $validation->add_failed('k1');
+  }
+  if (!$vc->check('http_url', $k2)) {
+    $validation->add_failed('k2');
+  }
 
   is_deeply($validation->failed, ['k2']);
 }
 
-# greater_than
+# greater than
 {
   my $vc = Validator::Custom->new;
   my $k1 = 5;
   my $k2 = 5;
-  my $k3 = 'a';
     
   my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('greater_than' => 5);
-    $validation->add_failed('k2');$vc->check('greater_than' => 4);
-    $validation->add_failed('k3');$vc->check('greater_than' => 1);
+  if (!($k1 > 5)) {
+    $validation->add_failed('k1');;
+  }
+  if (!($k2 > 4)) {
+    $validation->add_failed('k2');
+  }
 
-  is_deeply($validation->failed, ['k1', 'k3']);
+  is_deeply($validation->failed, ['k1']);
 }
 
-# less_than
+# less than
 {
   my $vc = Validator::Custom->new;
   my $k1 = 5;
   my $k2 = 5;
-  my $k3 = 'a';
     
   my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('less_than' => 5);
-    $validation->add_failed('k2');$vc->check('less_than' => 6);
-    $validation->add_failed('k3');$vc->check('less_than' => 1);
+  if (!($k1 < 5)) {
+    $validation->add_failed('k1');
+  }
+  if (!($k2 < 6)) {
+    $validation->add_failed('k2');
+  }
 
-  is_deeply($validation->failed, ['k1', 'k3']);
+  is_deeply($validation->failed, ['k1']);
 }
 
-# less_than
+# equal
 {
   my $vc = Validator::Custom->new;
   my $k1 = 5;
   my $k2 = 5;
-  my $k3 = 'a';
     
   my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('equal_to' => 5);
-    $validation->add_failed('k2');$vc->check('equal_to' => 4);
-    $validation->add_failed('k3');$vc->check('equal_to' => 1);
+  if (!($k1 == 5)) {
+    $validation->add_failed('k1');
+  }
+  if (!($k1 == 4)) {
+    $validation->add_failed('k2');
+  }
 
-  is_deeply($validation->failed, ['k2', 'k3']);
-}
-
-# between
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 5;
-  my $k2 = 5;
-  my $k3 = 5;
-  my $k4 =  5;
-  my $k5 = 'a';
-    
-  my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('between' => [5, 6]);
-    $validation->add_failed('k2');$vc->check('between' => [4, 5]);
-    $validation->add_failed('k3');$vc->check('between' => [6, 7]);
-    $validation->add_failed('k4');$vc->check('between' => [5, 5]);
-    $validation->add_failed('k5');$vc->check('between' => [5, 5]);
-
-  is_deeply($validation->failed, ['k3', 'k5']);
+  is_deeply($validation->failed, ['k2']);
 }
 
 # decimal
@@ -282,58 +273,64 @@ use Validator::Custom;
   my $k13 = '123.1111111';
     
   my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('decimal' => [2,3]);
-    $validation->add_failed('k2');$vc->check('decimal' => [1,3]);
-    $validation->add_failed('k3');$vc->check('decimal' => [2,2]);
-    $validation->add_failed('k4');$vc->check('decimal' => [2]);
-    $validation->add_failed('k5');$vc->check('decimal' => 2);
-    $validation->add_failed('k6');$vc->check('decimal' => 2);
-    $validation->add_failed('k7');$vc->check('decimal');
-    $validation->add_failed('k8');$vc->check('decimal');
-    $validation->add_failed('k9');$vc->check('decimal');
-    $validation->add_failed('k10');$vc->check('decimal' => [undef, 2]);
-    $validation->add_failed('k11');$vc->check('decimal' => [undef, 2]);
-    $validation->add_failed('k12');$vc->check('decimal' => [2, undef]);
-    $validation->add_failed('k13');$vc->check('decimal' => [2, undef]);
+  if (!$vc->check('decimal', $k1, [2,3])) {
+    $validation->add_failed('k1');
+  }
+  if (!$vc->check('decimal', $k2,  [1,3])) {
+    $validation->add_failed('k2');
+  }
+  if (!$vc->check('decimal', $k3, [2,2])) {
+    $validation->add_failed('k3');
+  }
+  if (!$vc->check('decimal', $k4, [2])) {
+    $validation->add_failed('k4');
+  }
+  if (!$vc->check('decimal', $k5, 2)) {
+    $validation->add_failed('k5');
+  }
+  if (!$vc->check('decimal', $k6, 2)) {
+    $validation->add_failed('k6');
+  }
+  if (!$vc->check('decimal', $k7)) {
+    $validation->add_failed('k7');
+  }
+  if (!$vc->check('decimal', $k8)) {
+    $validation->add_failed('k8');
+  }
+  if (!$vc->check('decimal', $k9)) {
+    $validation->add_failed('k9');
+  }
+  if (!$vc->check('decimal', $k10, [undef, 2])) {
+    $validation->add_failed('k10');
+  }
+  if (!$vc->check('decimal', $k11, [undef, 2])) {
+    $validation->add_failed('k11');
+  }
+  if (!$vc->check('decimal', $k12, [2, undef])) {
+    $validation->add_failed('k12');
+  }
+  if (!$vc->check('decimal', $k13, [2, undef])) {
+    $validation->add_failed('k13');
+  }
 
   is_deeply($validation->failed, [qw/k2 k3 k5 k6 k8 k9 k11 k13/]);
 }
 
-# in_array
+# in
 {
   my $vc = Validator::Custom->new;
   my $k1 = 'a';
   my $k2 = 'a';
-  my $k3 = undef;
-    
+  
   my $validation = $vc->validation;
-    $validation->add_failed('k1');$vc->check('in_array' => [qw/a b/]);
-    $validation->add_failed('k2');$vc->check('in_array' => [qw/b c/]);
-    $validation->add_failed('k3');$vc->check('in_array' => [qw/b c/]);
-
-  is_deeply($validation->failed, ['k2', 'k3']);
-}
-
-# first
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = [1, 2];
-    
-  my $validation = $vc->validation;
-    $validation->add_failed('k1')->filter('first');
-
-  is_deeply($validation->output, {k1 => 1});
-}
-
-# first
-{
-  my $vc = Validator::Custom->new;
-  my $k1 = 1;
-    
-  my $validation = $vc->validation;
-    $validation->add_failed('k1')->filter('first');
-
-  is_deeply($validation->output, {k1 => 1});
+  if (!($vc->check('in', $k1, [qw/a b/]))) {
+    $validation->add_failed('k1');
+  }
+  if (!($vc->check('in', $k2, [qw/b c/]))) {
+    $validation->add_failed('k2');
+  }
+  
+  is_deeply($validation->failed, ['k2']);
 }
 
 __END__
