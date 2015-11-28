@@ -109,6 +109,10 @@ sub new {
 sub check_each {
   my ($self, $name, $values, $arg) = @_;
   
+  if (@_ < 3) {
+    croak "value must be passed";
+  }
+  
   my $checks = $self->{checks} || {};
   
   croak "Can't call \"$name\" check"
@@ -132,6 +136,10 @@ sub check_each {
 sub filter_each {
   my ($self, $name, $values, $arg) = @_;
   
+  if (@_ < 3) {
+    croak "value must be passed";
+  }
+  
   my $filters = $self->{filters} || {};
   
   croak "Can't call \"$name\" filter"
@@ -152,6 +160,9 @@ sub filter_each {
 sub check {
   my ($self, $name, $value, $arg) = @_;
 
+  if (@_ < 3) {
+    croak "value must be passed";
+  }
   
   my $checks = $self->{checks} || {};
   
@@ -163,6 +174,10 @@ sub check {
 
 sub filter {
   my ($self, $name, $value, $arg) = @_;
+  
+  if (@_ < 3) {
+    croak "value must be passed";
+  }
   
   my $filters = $self->{filters} || {};
   
