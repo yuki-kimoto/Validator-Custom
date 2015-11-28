@@ -7,8 +7,18 @@ use Carp 'croak';
 
 my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 
+sub space {
+  my ($vc, $value, $arg) = @_;
+  
+  my ($regex) = @$arg;  
+  
+  my $is_valid = defined $value && $value =~ '^[ \t\n\r\f]*$';
+  
+  return $is_valid;
+}
+
 sub ascii {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   my $is_valid = $value && $value =~ /^[\x21-\x7E]+$/;
   
@@ -16,7 +26,7 @@ sub ascii {
 }
 
 sub blank {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   my $is_valid = defined $value && $value eq '';
   
@@ -24,7 +34,7 @@ sub blank {
 }
 
 sub decimal {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   my ($digits_tmp) = @$arg;
   
@@ -67,7 +77,7 @@ sub decimal {
 }
 
 sub http_url {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   my $is_valid = defined $value && $value =~ /^s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/;
   
@@ -75,7 +85,7 @@ sub http_url {
 }
 
 sub int {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   my $is_valid = defined $value && $value =~ /^\-?[0-9]+$/;
   
@@ -83,7 +93,7 @@ sub int {
 }
 
 sub in {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   $value = '' unless defined $value;
   my $match = grep { $_ eq $value } @$arg;
@@ -91,7 +101,7 @@ sub in {
 }
 
 sub uint {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   my $is_valid = defined $value && $value =~ /^[0-9]+$/;
   
@@ -99,7 +109,7 @@ sub uint {
 }
 
 sub selected_at_least {
-  my ($rule, $arg, $values) = @_;
+  my ($vc, $arg, $values) = @_;
   
   my ($num) = @$arg;
   
@@ -110,6 +120,8 @@ sub selected_at_least {
   
   return $is_valid;
 }
+
+
 
 1;
 

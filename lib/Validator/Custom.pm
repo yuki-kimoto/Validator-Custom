@@ -119,7 +119,7 @@ sub check_each {
   
   my $is_invalid;
   for my $value (@$values) {
-    my $is_valid = $checks->{$name}->($value, $arg);
+    my $is_valid = $checks->{$name}->($self, $value, $arg);
     unless ($is_valid) {
       $is_invalid = 1;
       last;
@@ -142,22 +142,23 @@ sub filter_each {
   
   my $new_values = [];
   for my $value (@$values) {
-    my $new_value = $filters->{$name}->($value, $arg);
+    my $new_value = $filters->{$name}->($self, $value, $arg);
     push @$new_values, $new_value;
   }
   
-  retrun $new_values;
+  return $new_values;
 }
 
 sub check {
   my ($self, $name, $value, $arg) = @_;
+
   
   my $checks = $self->{checks} || {};
   
   croak "Can't call \"$name\" check"
     unless $checks->{$name};
   
-  retrun $checks->{$name}->($value, $arg);
+  return $checks->{$name}->($self, $value, $arg);
 }
 
 sub filter {
@@ -168,7 +169,7 @@ sub filter {
   croak "Can't call \"$name\" filter"
     unless $filters->{$name};
   
-  retrun $filters->{$name}->($value, $arg);
+  return $filters->{$name}->($self, $value, $arg);
 }
 
 sub add_check {
@@ -1151,6 +1152,22 @@ Filter function is registered by C<add_filter> method.
   );
 
 =head1 CHECKS
+
+=head2 blank
+
+  Input: {name => ''}
+  Rule:  $rule->topic('name')->check('blank')
+
+Blank.
+
+=head2 space
+
+  Input: {name => '   '}
+  Rule:  $rule->topic('name')->check('space') # '', ' ', '   '
+
+White space or empty string.
+Not that space is only C<[ \t\n\r\f]>
+which don't contain unicode space character.
 
 =head2 ascii
   

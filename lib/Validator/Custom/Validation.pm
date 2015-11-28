@@ -48,6 +48,10 @@ sub add_failed {
   }
   
   $failed_infos->{$name}{pos} = $pos;
+  
+  unless (defined $message) {
+    $message = "$name is invalid";
+  }
   $failed_infos->{$name}{message} = $message;
   
   return $self;

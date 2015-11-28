@@ -5,6 +5,17 @@ use warnings;
 use utf8;
 use Validator::Custom;
 
+# create new validation object
+{
+  my $vc = Validator::Custom->new;
+  my $validation1 = $vc->validation;
+  my $validation2 = $vc->validation;
+  
+  is(ref $validation1, 'Validator::Custom::Validation');
+  is(ref $validation2, 'Validator::Custom::Validation');
+  isnt($validation1, $validation2);
+}
+
 # not defined
 {
   my $vc = Validator::Custom->new;
@@ -62,24 +73,29 @@ use Validator::Custom;
   is_deeply($validation->failed, ['k1']);
 }
 
-__END__
-
 # blank
 {
   my $vc = Validator::Custom->new;
                        
-  my $k1 = '',
-  my $k2 = 'a',
-  my $k3 = ' '
+  my $k1 = '';
+  my $k2 = 'a';
+  my $k3 = ' ';
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('blank');
-  $validation->add_failed('k2')->check('blank');
-  $validation->add_failed('k3')->check('blank');
-
+  if (!$vc->check('blank', $k1)) {
+    $validation->add_failed('k1');
+  }
+  if (!$vc->check('blank', $k2)) {
+    $validation->add_failed('k2');
+  }
+  if (!$vc->check('blank', $k3)) {
+    $validation->add_failed('k3');
+  }
   
   is_deeply($validation->failed, ['k2', 'k3']);
 }
+
+__END__
 
 # uint
 {
@@ -91,10 +107,10 @@ __END__
     k4 => '10.0',
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('uint');
-  $validation->add_failed('k2')->check('uint');
-  $validation->add_failed('k3')->check('uint');
-  $validation->add_failed('k4')->check('uint');
+  $validation->add_failed('k1')$vc->check('uint');
+  $validation->add_failed('k2')$vc->check('uint');
+  $validation->add_failed('k3')$vc->check('uint');
+  $validation->add_failed('k4')$vc->check('uint');
 
   
   is_deeply($validation->failed, ['k2', 'k3', 'k4']);
@@ -109,9 +125,9 @@ __END__
   my $k3 = "\0x7f",
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('ascii');
-  $validation->add_failed('k2')->check('ascii');
-  $validation->add_failed('k3')->check('ascii');
+  $validation->add_failed('k1')$vc->check('ascii');
+  $validation->add_failed('k2')$vc->check('ascii');
+  $validation->add_failed('k3')$vc->check('ascii');
 
   
   is_deeply($validation->failed, ['k2', 'k3']);
@@ -126,11 +142,11 @@ __END__
     
   my $validation = $vc->validation;
   $validation->add_failed('k1')
-    ->check('length' => [3, 4])
-    ->check('length' => [2, 3])
-    ->check('length' => [3])
-    ->check('length' => 3);
-  $validation->add_failed('k2')->check('length' => [4, 5]);
+    $vc->check('length' => [3, 4])
+    $vc->check('length' => [2, 3])
+    $vc->check('length' => [3])
+    $vc->check('length' => 3);
+  $validation->add_failed('k2')$vc->check('length' => [4, 5]);
 
   
   is_deeply($validation->failed, ['k2']);
@@ -147,8 +163,8 @@ __END__
     k2_2 => 'b'
     
   my $validation = $vc->validation;
-  $validation->add_failed([qw/k1_1 k1_2/])->check('duplication')->name('k1');
-  $validation->add_failed([qw/k2_1 k2_2/])->check('duplication')->name('k2');
+  $validation->add_failed([qw/k1_1 k1_2/])$vc->check('duplication')->name('k1');
+  $validation->add_failed([qw/k2_1 k2_2/])$vc->check('duplication')->name('k2');
 
   
   is_deeply($validation->failed, ['k2']);
@@ -162,8 +178,8 @@ __END__
   my $k2 = 'aa',
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('regex' => "a{3}");
-  $validation->add_failed('k2')->check('regex' => "a{4}");
+  $validation->add_failed('k1')$vc->check('regex' => "a{3}");
+  $validation->add_failed('k2')$vc->check('regex' => "a{4}");
 
   
   is_deeply($validation->failed, ['k2']);
@@ -177,8 +193,8 @@ __END__
   my $k2 = 'iii',
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('http_url');
-  $validation->add_failed('k2')->check('http_url');
+  $validation->add_failed('k1')$vc->check('http_url');
+  $validation->add_failed('k2')$vc->check('http_url');
 
   
   is_deeply($validation->failed, ['k2']);
@@ -193,9 +209,9 @@ __END__
   my $k3 = 'a',
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('greater_than' => 5);
-  $validation->add_failed('k2')->check('greater_than' => 4);
-  $validation->add_failed('k3')->check('greater_than' => 1);
+  $validation->add_failed('k1')$vc->check('greater_than' => 5);
+  $validation->add_failed('k2')$vc->check('greater_than' => 4);
+  $validation->add_failed('k3')$vc->check('greater_than' => 1);
 
   
   is_deeply($validation->failed, ['k1', 'k3']);
@@ -210,9 +226,9 @@ __END__
   my $k3 = 'a',
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('less_than' => 5);
-  $validation->add_failed('k2')->check('less_than' => 6);
-  $validation->add_failed('k3')->check('less_than' => 1);
+  $validation->add_failed('k1')$vc->check('less_than' => 5);
+  $validation->add_failed('k2')$vc->check('less_than' => 6);
+  $validation->add_failed('k3')$vc->check('less_than' => 1);
 
   
   is_deeply($validation->failed, ['k1', 'k3']);
@@ -227,9 +243,9 @@ __END__
   my $k3 = 'a',
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('equal_to' => 5);
-  $validation->add_failed('k2')->check('equal_to' => 4);
-  $validation->add_failed('k3')->check('equal_to' => 1);
+  $validation->add_failed('k1')$vc->check('equal_to' => 5);
+  $validation->add_failed('k2')$vc->check('equal_to' => 4);
+  $validation->add_failed('k3')$vc->check('equal_to' => 1);
 
   
   is_deeply($validation->failed, ['k2', 'k3']);
@@ -246,11 +262,11 @@ __END__
     k5 => 'a',
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('between' => [5, 6]);
-  $validation->add_failed('k2')->check('between' => [4, 5]);
-  $validation->add_failed('k3')->check('between' => [6, 7]);
-  $validation->add_failed('k4')->check('between' => [5, 5]);
-  $validation->add_failed('k5')->check('between' => [5, 5]);
+  $validation->add_failed('k1')$vc->check('between' => [5, 6]);
+  $validation->add_failed('k2')$vc->check('between' => [4, 5]);
+  $validation->add_failed('k3')$vc->check('between' => [6, 7]);
+  $validation->add_failed('k4')$vc->check('between' => [5, 5]);
+  $validation->add_failed('k5')$vc->check('between' => [5, 5]);
 
   
   is_deeply($validation->failed, ['k3', 'k5']);
@@ -275,19 +291,19 @@ __END__
     k13 => '123.1111111'
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('decimal' => [2,3]);
-  $validation->add_failed('k2')->check('decimal' => [1,3]);
-  $validation->add_failed('k3')->check('decimal' => [2,2]);
-  $validation->add_failed('k4')->check('decimal' => [2]);
-  $validation->add_failed('k5')->check('decimal' => 2);
-  $validation->add_failed('k6')->check('decimal' => 2);
-  $validation->add_failed('k7')->check('decimal');
-  $validation->add_failed('k8')->check('decimal');
-  $validation->add_failed('k9')->check('decimal');
-  $validation->add_failed('k10')->check('decimal' => [undef, 2]);
-  $validation->add_failed('k11')->check('decimal' => [undef, 2]);
-  $validation->add_failed('k12')->check('decimal' => [2, undef]);
-  $validation->add_failed('k13')->check('decimal' => [2, undef]);
+  $validation->add_failed('k1')$vc->check('decimal' => [2,3]);
+  $validation->add_failed('k2')$vc->check('decimal' => [1,3]);
+  $validation->add_failed('k3')$vc->check('decimal' => [2,2]);
+  $validation->add_failed('k4')$vc->check('decimal' => [2]);
+  $validation->add_failed('k5')$vc->check('decimal' => 2);
+  $validation->add_failed('k6')$vc->check('decimal' => 2);
+  $validation->add_failed('k7')$vc->check('decimal');
+  $validation->add_failed('k8')$vc->check('decimal');
+  $validation->add_failed('k9')$vc->check('decimal');
+  $validation->add_failed('k10')$vc->check('decimal' => [undef, 2]);
+  $validation->add_failed('k11')$vc->check('decimal' => [undef, 2]);
+  $validation->add_failed('k12')$vc->check('decimal' => [2, undef]);
+  $validation->add_failed('k13')$vc->check('decimal' => [2, undef]);
 
   
   is_deeply($validation->failed, [qw/k2 k3 k5 k6 k8 k9 k11 k13/]);
@@ -302,9 +318,9 @@ __END__
   my $k3 = undef
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('in_array' => [qw/a b/]);
-  $validation->add_failed('k2')->check('in_array' => [qw/b c/]);
-  $validation->add_failed('k3')->check('in_array' => [qw/b c/]);
+  $validation->add_failed('k1')$vc->check('in_array' => [qw/a b/]);
+  $validation->add_failed('k2')$vc->check('in_array' => [qw/b c/]);
+  $validation->add_failed('k3')$vc->check('in_array' => [qw/b c/]);
 
   
   is_deeply($validation->failed, ['k2', 'k3']);
@@ -391,11 +407,11 @@ $vc_common->add_filter(
     k5 => [1,2]
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check(selected_at_least => 1);
-  $validation->add_failed('k2')->check(selected_at_least => 1);
-  $validation->add_failed('k3')->check(selected_at_least => 2);
-  $validation->add_failed('k4')->check('selected_at_least');
-  $validation->add_failed('k5')->check('selected_at_least' => 3);
+  $validation->add_failed('k1')$vc->check(selected_at_least => 1);
+  $validation->add_failed('k2')$vc->check(selected_at_least => 1);
+  $validation->add_failed('k3')$vc->check(selected_at_least => 2);
+  $validation->add_failed('k4')$vc->check('selected_at_least');
+  $validation->add_failed('k5')$vc->check('selected_at_least' => 3);
 
   
   is_deeply($validation->failed, ['k5']);
@@ -419,11 +435,11 @@ $vc_common->add_filter(
     my $vc = Validator::Custom->new;
     my $validation = $vc->validation;
                 my $k1 = 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a', k5 => []};
-    $validation->add_failed('k1')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k1Error1');
-    $validation->add_failed('k2')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k2Error1');
-    $validation->add_failed('k3')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k3Error1');
-    $validation->add_failed('k4')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k4Error1');
-    $validation->add_failed('k5')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k5Error1');
+    $validation->add_failed('k1')->filter('to_array')$vc->check(selected_at_least => 1)$vc->check_each('int')->message('k1Error1');
+    $validation->add_failed('k2')->filter('to_array')$vc->check(selected_at_least => 1)$vc->check_each('int')->message('k2Error1');
+    $validation->add_failed('k3')->filter('to_array')$vc->check(selected_at_least => 1)$vc->check_each('int')->message('k3Error1');
+    $validation->add_failed('k4')->filter('to_array')$vc->check(selected_at_least => 1)$vc->check_each('int')->message('k4Error1');
+    $validation->add_failed('k5')->filter('to_array')$vc->check(selected_at_least => 1)$vc->check_each('int')->message('k5Error1');
     
     my $messages = $validation->validate($input)->messages;
 
@@ -436,15 +452,15 @@ $vc_common->add_filter(
                  key1 => ['a', 'a'], key2 => [1, 1]};
     my $validation = $vc->validation;
     $validation->add_failed('key1')
-      ->check_each('not_blank')
-      ->check_each(sub {
+      $vc->check_each('not_blank')
+      $vc->check_each(sub {
         my ($validation, $args, $key, $params) = @_;
         
         return !$validation->run_check('int', [], $key, $params);
       });
     $validation->add_failed('key2')
-      ->check_each('not_blank')
-      ->check_each(sub {
+      $vc->check_each('not_blank')
+      $vc->check_each(sub {
         my ($validation, $args, $key, $params) = @_;
         
         return !$validation->run_check('int', [], $key, $params);
@@ -480,7 +496,7 @@ $vc_common->add_filter(
     
   
   my $validation = $vc->validation;
-  $validation->add_failed(['k1', 'k2'])->name('k1_2')->check($check)->message('error_k1_2');
+  $validation->add_failed(['k1', 'k2'])->name('k1_2')$vc->check($check)->message('error_k1_2');
   my $messages = $validation->validate($input)->messages;
   is_deeply($messages, ['error_k1_2']);
 }
@@ -493,7 +509,7 @@ $vc_common->add_filter(
   {
     my $validation = $vc->validation;
                  key1 => 'a'};
-    $validation->add_failed('key1')->check('not_blank');
+    $validation->add_failed('key1')$vc->check('not_blank');
     eval { $validation->validate($input) };
     ok(!$@);
   }
@@ -502,7 +518,7 @@ $vc_common->add_filter(
   {
     my $validation = $vc->validation;
                  key1 => 'a'};
-    $validation->add_failed('key1')->name('k2')->check('not_blank');
+    $validation->add_failed('key1')->name('k2')$vc->check('not_blank');
     eval { $validation->validate($input) };
     ok(!$@);
   }
@@ -511,7 +527,7 @@ $vc_common->add_filter(
   {
     my $validation = $vc->validation;
                  key1 => 'a', key2 => 'b'};
-    $validation->add_failed(['key1', 'key2'])->name('key12')->check('not_blank');
+    $validation->add_failed(['key1', 'key2'])->name('key12')$vc->check('not_blank');
     eval { $validation->validate($input) };
     ok(!$@);  
   }
@@ -520,7 +536,7 @@ $vc_common->add_filter(
   {
     my $validation = $vc->validation;
                  key1 => 'a', key2 => 'b'};
-    $validation->add_failed(['key1', 'key2'])->check('not_blank');
+    $validation->add_failed(['key1', 'key2'])$vc->check('not_blank');
     eval { $validation->validate($input) };
     like($@, qr/name is needed for multiple topic values/);
   }
@@ -564,10 +580,10 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                      my $k1 = 1, k2 => 'a', k3 => 3.1, k4 => 'a'};
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('Int')->message("k1Error1");
-  $validation->add_failed('k2')->check('Int')->message("k2Error1");
-  $validation->add_failed('k3')->check('Num')->message("k3Error1");
-  $validation->add_failed('k4')->check('Num')->message("k4Error1");
+  $validation->add_failed('k1')$vc->check('Int')->message("k1Error1");
+  $validation->add_failed('k2')$vc->check('Int')->message("k2Error1");
+  $validation->add_failed('k3')$vc->check('Num')->message("k3Error1");
+  $validation->add_failed('k4')$vc->check('Num')->message("k4Error1");
   my $validation= $validation->validate($input);
   is_deeply($validation->messages, [qw/k2Error1 k4Error1/]);
   is_deeply($validation->failed, [qw/k2 k4/]);
@@ -584,10 +600,10 @@ $vc_common->add_filter(
     k4 => '10.0',
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('int');
-  $validation->add_failed('k2')->check('int');
-  $validation->add_failed('k3')->check('int');
-  $validation->add_failed('k4')->check('int');
+  $validation->add_failed('k1')$vc->check('int');
+  $validation->add_failed('k2')$vc->check('int');
+  $validation->add_failed('k3')$vc->check('int');
+  $validation->add_failed('k4')$vc->check('int');
 
   
   is_deeply($validation->failed, ['k3', 'k4']);
@@ -601,9 +617,9 @@ $vc_common->add_filter(
     k2  => undef
     
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('exists');
-  $validation->add_failed('k2')->check('exists');
-  $validation->add_failed('k3')->check('exists');
+  $validation->add_failed('k1')$vc->check('exists');
+  $validation->add_failed('k2')$vc->check('exists');
+  $validation->add_failed('k3')$vc->check('exists');
 
   
   is_deeply($validation->failed, ['k3']);
@@ -645,21 +661,21 @@ $vc_common->add_filter(
                      my $k1 = 1, k2 => 2, k3 => 3};
   my $validation = $vc->validation;
   $validation->add_failed('k1')
-    ->check(sub{
+    $vc->check(sub{
       my ($validation, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
       return $value == 1;
     })->message("k1Error1")
-    ->check(sub {
+    $vc->check(sub {
       my ($validation, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
 
       return $value == 2;
     })->message("k1Error2")
-    ->check(sub{
+    $vc->check(sub{
       my ($validation, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
@@ -667,14 +683,14 @@ $vc_common->add_filter(
       return $value == 3;
     })->message("k1Error3");
   $validation->add_failed('k2')
-    ->check(sub{
+    $vc->check(sub{
       my ($validation, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
 
       return $value == 2;
     })->message("k2Error1")
-    ->check(sub{
+    $vc->check(sub{
       my ($validation, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
@@ -711,10 +727,10 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                       my $k1 = 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('Int')->message("k1Error1");
-  $validation->add_failed('k2')->check('Int')->message("k2Error1");
-  $validation->add_failed('k3')->check('Num')->message("k3Error1");
-  $validation->add_failed('k4')->check('Num')->message("k4Error1");
+  $validation->add_failed('k1')$vc->check('Int')->message("k1Error1");
+  $validation->add_failed('k2')$vc->check('Int')->message("k2Error1");
+  $validation->add_failed('k3')$vc->check('Num')->message("k3Error1");
+  $validation->add_failed('k4')$vc->check('Num')->message("k4Error1");
   
   my $messages = $validation->validate($input)->messages;
   is_deeply($messages, [qw/k2Error1 k4Error1/]);
@@ -728,7 +744,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
                      my $k1 = 1};
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('No')->message("k1Error1");
+  $validation->add_failed('k1')$vc->check('No')->message("k1Error1");
   eval { $validation->validate($input) };
   like($@, qr/Can't find "No" check/);
 }
@@ -747,7 +763,7 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                       my $k1 = 1};
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('Int')->message("k1Error1");
+  $validation->add_failed('k1')$vc->check('Int')->message("k1Error1");
   my $messages = $validation->validate($input)->messages;
   is(scalar @$messages, 0);
 }
@@ -791,7 +807,7 @@ $vc_common->add_filter(
     
   
   my $validation = $vc->validation;
-  $validation->add_failed('name')->check(length => [1, 2]);
+  $validation->add_failed('name')$vc->check(length => [1, 2]);
   
   my $vresult = $validation->validate($input);
   my $failed = $vresult->failed;
@@ -835,10 +851,10 @@ $vc_common->add_filter(
                        k1_1 => 1, k1_2 => 2, k2_1 => 5, k2_2 => 6};
   
   my $validation = $vc->validation;
-  $validation->add_failed('k1_1')->check('C1');
-  $validation->add_failed('k1_2')->check('C1');
-  $validation->add_failed('k2_1')->check('C2');
-  $validation->add_failed('k2_2')->check('C2');
+  $validation->add_failed('k1_1')$vc->check('C1');
+  $validation->add_failed('k1_2')$vc->check('C1');
+  $validation->add_failed('k2_1')$vc->check('C2');
+  $validation->add_failed('k2_2')$vc->check('C2');
   
   is_deeply($validation->validate($input)->failed, [qw/k1_1 k2_1/]);
 }
@@ -863,9 +879,9 @@ $vc_common->add_filter(
   
                      my $k1 = 1, k2 => 2, k3 => 3, k4 => 1};
   my $validation = $vc->validation;
-  $validation->add_failed(['k1', 'k2'])->name('k12')->check('p');
-  $validation->add_failed('k3')->check('q');
-  $validation->add_failed('k4')->check('q');
+  $validation->add_failed(['k1', 'k2'])->name('k12')$vc->check('p');
+  $validation->add_failed('k3')$vc->check('q');
+  $validation->add_failed('k4')$vc->check('q');
   my $vresult = $validation->validate($input);
 
   is_deeply($vresult->failed, ['k12', 'k3']);
@@ -880,7 +896,7 @@ $vc_common->add_filter(
     my $k1 = 'a',
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('length');
+    $validation->add_failed('k1')$vc->check('length');
     eval { $validation->validate($input) };
     like($@, qr/\QConstraint 'length' needs one or two arguments/);
   }
@@ -892,7 +908,7 @@ $vc_common->add_filter(
     my $k1 = 1
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('greater_than');
+    $validation->add_failed('k1')$vc->check('greater_than');
     eval { $validation->validate($input) };
     like($@, qr/\QConstraint 'greater_than' needs a numeric argument/);
   }
@@ -904,7 +920,7 @@ $vc_common->add_filter(
     my $k1 = 1
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('greater_than' => 'a');
+    $validation->add_failed('k1')$vc->check('greater_than' => 'a');
     eval { $validation->validate($input) };
     like($@, qr/\QConstraint 'greater_than' needs a numeric argument/);
   }
@@ -916,7 +932,7 @@ $vc_common->add_filter(
     my $k1 = 1
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('less_than');
+    $validation->add_failed('k1')$vc->check('less_than');
     eval { $validation->validate($input) };
     like($@, qr/\QConstraint 'less_than' needs a numeric argument/);
   }
@@ -928,7 +944,7 @@ $vc_common->add_filter(
     my $k1 = 1
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('less_than' => 'a');
+    $validation->add_failed('k1')$vc->check('less_than' => 'a');
     eval { $validation->validate($input) };
     like($@, qr/\QConstraint 'less_than' needs a numeric argument/);
   }
@@ -940,7 +956,7 @@ $vc_common->add_filter(
     my $k1 = 1
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('equal_to');
+    $validation->add_failed('k1')$vc->check('equal_to');
     eval { $validation->validate($input) };
     like($@, qr/\QConstraint 'equal_to' needs a numeric argument/);
   }
@@ -952,7 +968,7 @@ $vc_common->add_filter(
     my $k1 = 1
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('equal_to' => 'a');
+    $validation->add_failed('k1')$vc->check('equal_to' => 'a');
     eval { $validation->validate($input) };
     like($@, qr/\QConstraint 'equal_to' needs a numeric argument/);
   }
@@ -964,7 +980,7 @@ $vc_common->add_filter(
     my $k1 = 1
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('between' => [undef, 1]);
+    $validation->add_failed('k1')$vc->check('between' => [undef, 1]);
     eval { $validation->validate($input) };
     like($@, qr/\QConstraint 'between' needs two numeric arguments/);
   }
@@ -976,7 +992,7 @@ $vc_common->add_filter(
     my $k1 = 1
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('between' => ['a', 1]);
+    $validation->add_failed('k1')$vc->check('between' => ['a', 1]);
     eval { $validation->validate($input) };
     like($@, qr/\QConstraint 'between' needs two numeric arguments/);
   }
@@ -988,7 +1004,7 @@ $vc_common->add_filter(
     my $k1 = 1
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('between' => [1, undef]);
+    $validation->add_failed('k1')$vc->check('between' => [1, undef]);
     eval { $validation->validate($input) };
     like($@, qr/\QConstraint 'between' needs two numeric arguments/);
   }
@@ -1000,7 +1016,7 @@ $vc_common->add_filter(
     my $k1 = 1
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('between' => [1, 'a']);
+    $validation->add_failed('k1')$vc->check('between' => [1, 'a']);
     eval { $validation->validate($input) };
     like($@, qr/\Qbetween' needs two numeric arguments/);
   }
@@ -1035,7 +1051,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
                        key1 => 'a', key2 => 'a'};
   my $validation = $vc->validation;
-  $validation->add_failed(['key1', 'key2'])->name('key3')->check('duplication');
+  $validation->add_failed(['key1', 'key2'])->name('key3')$vc->check('duplication');
   
   
   is_deeply($validation->output, {key1 => 'a', 'key2' => 'a'});
@@ -1046,7 +1062,7 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
                        key1 => 'a'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('int')->message('error');
+  $validation->add_failed('key1')$vc->check('int')->message('error');
 
   
   is($validation->message('key1'), 'error');
@@ -1057,9 +1073,9 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
                        key1 => 'a', key2 => 'b', key3 => 2};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('int');
-  $validation->add_failed('key2')->check('int');
-  $validation->add_failed('key3')->check('int');
+  $validation->add_failed('key1')$vc->check('int');
+  $validation->add_failed('key2')$vc->check('int');
+  $validation->add_failed('key3')$vc->check('int');
 
   
   ok(!$validation->is_valid('key1'));
@@ -1072,9 +1088,9 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
                        key1 => '', key2 => ' ', key3 => 'a'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('space');
-  $validation->add_failed('key2')->check('space');
-  $validation->add_failed('key3')->check('space');
+  $validation->add_failed('key1')$vc->check('space');
+  $validation->add_failed('key2')$vc->check('space');
+  $validation->add_failed('key3')$vc->check('space');
 
   
   is_deeply($validation->failed, ['key3']);
@@ -1102,9 +1118,9 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
                        key1 => undef, key2 => '', key3 => 'a'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('ascii');
-  $validation->add_failed('key2')->check('ascii');
-  $validation->add_failed('key3')->check('ascii');
+  $validation->add_failed('key1')$vc->check('ascii');
+  $validation->add_failed('key2')$vc->check('ascii');
+  $validation->add_failed('key3')$vc->check('ascii');
 
   
   ok(!$validation->is_valid('key1'));
@@ -1116,9 +1132,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => '2'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check(between => [1, 3]);
-  $validation->add_failed('key2')->check(between => [1, 3]);
-  $validation->add_failed('key3')->check(between => [1, 3]);
+  $validation->add_failed('key1')$vc->check(between => [1, 3]);
+  $validation->add_failed('key2')$vc->check(between => [1, 3]);
+  $validation->add_failed('key3')$vc->check(between => [1, 3]);
 
   
   ok(!$validation->is_valid('key1'));
@@ -1130,8 +1146,8 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => ''};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('blank');
-  $validation->add_failed('key2')->check('blank');
+  $validation->add_failed('key1')$vc->check('blank');
+  $validation->add_failed('key2')$vc->check('blank');
 
   
   ok(!$validation->is_valid('key1'));
@@ -1142,9 +1158,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => '2.1'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check(decimal => 1);
-  $validation->add_failed('key2')->check(decimal => 1);
-  $validation->add_failed('key3')->check(decimal => [1, 1]);
+  $validation->add_failed('key1')$vc->check(decimal => 1);
+  $validation->add_failed('key2')$vc->check(decimal => 1);
+  $validation->add_failed('key3')$vc->check(decimal => [1, 1]);
 
   
   ok(!$validation->is_valid('key1'));
@@ -1156,11 +1172,11 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => 'a', key2 => 'a', key3 => '', key4 => '', key5 => undef, key6 => undef};
   my $validation = $vc->validation;
-  $validation->add_failed(['key1', 'key2'])->check('duplication')->name('key1-2');
-  $validation->add_failed(['key3', 'key4'])->check('duplication')->name('key3-4');
-  $validation->add_failed(['key1', 'key5'])->check('duplication')->name('key1-5');
-  $validation->add_failed(['key5', 'key1'])->check('duplication')->name('key5-1');
-  $validation->add_failed(['key5', 'key6'])->check('duplication')->name('key5-6');
+  $validation->add_failed(['key1', 'key2'])$vc->check('duplication')->name('key1-2');
+  $validation->add_failed(['key3', 'key4'])$vc->check('duplication')->name('key3-4');
+  $validation->add_failed(['key1', 'key5'])$vc->check('duplication')->name('key1-5');
+  $validation->add_failed(['key5', 'key1'])$vc->check('duplication')->name('key5-1');
+  $validation->add_failed(['key5', 'key6'])$vc->check('duplication')->name('key5-6');
 
   
   ok($validation->is_valid('key1-2'));
@@ -1174,9 +1190,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => '1'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check(equal_to => 1);
-  $validation->add_failed('key2')->check(equal_to => 1);
-  $validation->add_failed('key3')->check(equal_to => 1);
+  $validation->add_failed('key1')$vc->check(equal_to => 1);
+  $validation->add_failed('key2')$vc->check(equal_to => 1);
+  $validation->add_failed('key3')$vc->check(equal_to => 1);
 
   
   ok(!$validation->is_valid('key1'));
@@ -1188,9 +1204,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => '5'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check(greater_than => 1);
-  $validation->add_failed('key2')->check(greater_than => 1);
-  $validation->add_failed('key3')->check(greater_than => 1);
+  $validation->add_failed('key1')$vc->check(greater_than => 1);
+  $validation->add_failed('key2')$vc->check(greater_than => 1);
+  $validation->add_failed('key3')$vc->check(greater_than => 1);
 
   
   ok(!$validation->is_valid('key1'));
@@ -1202,9 +1218,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => 'http://aaa.com'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('http_url');
-  $validation->add_failed('key2')->check('http_url');
-  $validation->add_failed('key3')->check('http_url');
+  $validation->add_failed('key1')$vc->check('http_url');
+  $validation->add_failed('key2')$vc->check('http_url');
+  $validation->add_failed('key3')$vc->check('http_url');
 
   
   ok(!$validation->is_valid('key1'));
@@ -1216,9 +1232,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => '1'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('int');
-  $validation->add_failed('key2')->check('int');
-  $validation->add_failed('key3')->check('int');
+  $validation->add_failed('key1')$vc->check('int');
+  $validation->add_failed('key2')$vc->check('int');
+  $validation->add_failed('key3')$vc->check('int');
 
   
   ok(!$validation->is_valid('key1'));
@@ -1230,9 +1246,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => '1'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('in_array' => [1, 2]);
-  $validation->add_failed('key2')->check('in_array' => [1, 2]);
-  $validation->add_failed('key3')->check('in_array' => [1, 2]);
+  $validation->add_failed('key1')$vc->check('in_array' => [1, 2]);
+  $validation->add_failed('key2')$vc->check('in_array' => [1, 2]);
+  $validation->add_failed('key3')$vc->check('in_array' => [1, 2]);
 
   
   ok(!$validation->is_valid('key1'));
@@ -1244,9 +1260,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => 'aaa'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('length' => [1, 4]);
-  $validation->add_failed('key2')->check('length' => [1, 4]);
-  $validation->add_failed('key3')->check('length' => [1, 4]);
+  $validation->add_failed('key1')$vc->check('length' => [1, 4]);
+  $validation->add_failed('key2')$vc->check('length' => [1, 4]);
+  $validation->add_failed('key3')$vc->check('length' => [1, 4]);
 
   
   ok(!$validation->is_valid('key1'));
@@ -1258,9 +1274,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => 3};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('less_than' => 4);
-  $validation->add_failed('key2')->check('less_than' => 4);
-  $validation->add_failed('key3')->check('less_than' => 4);
+  $validation->add_failed('key1')$vc->check('less_than' => 4);
+  $validation->add_failed('key2')$vc->check('less_than' => 4);
+  $validation->add_failed('key3')$vc->check('less_than' => 4);
 
   
   ok(!$validation->is_valid('key1'));
@@ -1272,9 +1288,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => 3};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('not_blank');
-  $validation->add_failed('key2')->check('not_blank');
-  $validation->add_failed('key3')->check('not_blank');
+  $validation->add_failed('key1')$vc->check('not_blank');
+  $validation->add_failed('key2')$vc->check('not_blank');
+  $validation->add_failed('key3')$vc->check('not_blank');
 
   
   ok(!$validation->is_valid('key1'));
@@ -1286,9 +1302,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => 3};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('not_space');
-  $validation->add_failed('key2')->check('not_space');
-  $validation->add_failed('key3')->check('not_space');
+  $validation->add_failed('key1')$vc->check('not_space');
+  $validation->add_failed('key2')$vc->check('not_space');
+  $validation->add_failed('key3')$vc->check('not_space');
 
   
   ok(!$validation->is_valid('key1'));
@@ -1300,9 +1316,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => 3};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('uint');
-  $validation->add_failed('key2')->check('uint');
-  $validation->add_failed('key3')->check('uint');
+  $validation->add_failed('key1')$vc->check('uint');
+  $validation->add_failed('key2')$vc->check('uint');
+  $validation->add_failed('key3')$vc->check('uint');
 
   
   ok(!$validation->is_valid('key1'));
@@ -1314,9 +1330,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => 3};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('regex' => qr/3/);
-  $validation->add_failed('key2')->check('regex' => qr/3/);
-  $validation->add_failed('key3')->check('regex' => qr/3/);
+  $validation->add_failed('key1')$vc->check('regex' => qr/3/);
+  $validation->add_failed('key2')$vc->check('regex' => qr/3/);
+  $validation->add_failed('key3')$vc->check('regex' => qr/3/);
 
   
   ok(!$validation->is_valid('key1'));
@@ -1328,9 +1344,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => undef, key2 => '', key3 => ' '};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('space');
-  $validation->add_failed('key2')->check('space');
-  $validation->add_failed('key3')->check('space');
+  $validation->add_failed('key1')$vc->check('space');
+  $validation->add_failed('key2')$vc->check('space');
+  $validation->add_failed('key3')$vc->check('space');
 
   
   ok(!$validation->is_valid('key1'));
@@ -1342,7 +1358,7 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key2 => 2};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('defined')->message('key1 is undefined');
+  $validation->add_failed('key1')$vc->check('defined')->message('key1 is undefined');
 
   
   is_deeply($validation->messages, ['key1 is undefined']);
@@ -1354,8 +1370,8 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => 0, key2 => 9};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check(between => [0, 9]);
-  $validation->add_failed('key2')->check(between => [0, 9]);
+  $validation->add_failed('key1')$vc->check(between => [0, 9]);
+  $validation->add_failed('key2')$vc->check(between => [0, 9]);
 
   
   ok($validation->is_valid);
@@ -1366,9 +1382,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => '-1.5', key2 => '+1.5', key3 => 3.5};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check(between => [-2.5, 1.9]);
-  $validation->add_failed('key2')->check(between => ['-2.5', '+1.9']);
-  $validation->add_failed('key3')->check(between => ['-2.5', '+1.9']);
+  $validation->add_failed('key1')$vc->check(between => [-2.5, 1.9]);
+  $validation->add_failed('key2')$vc->check(between => ['-2.5', '+1.9']);
+  $validation->add_failed('key3')$vc->check(between => ['-2.5', '+1.9']);
 
   
   ok($validation->is_valid('key1'));
@@ -1381,7 +1397,7 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => '+0.9'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check(equal_to => '0.9');
+  $validation->add_failed('key1')$vc->check(equal_to => '0.9');
 
   
   ok($validation->is_valid('key1'));
@@ -1392,7 +1408,7 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => '+10.9'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check(greater_than => '9.1');
+  $validation->add_failed('key1')$vc->check(greater_than => '9.1');
   
   ok($validation->is_valid('key1'));
 }
@@ -1402,9 +1418,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => 0, key2 => 9, key3 => '２'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('int');
-  $validation->add_failed('key2')->check('int');
-  $validation->add_failed('key3')->check('int');
+  $validation->add_failed('key1')$vc->check('int');
+  $validation->add_failed('key2')$vc->check('int');
+  $validation->add_failed('key3')$vc->check('int');
 
   
   ok($validation->is_valid('key1'));
@@ -1417,7 +1433,7 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => '+0.9'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check(less_than => '10.1');
+  $validation->add_failed('key1')$vc->check(less_than => '10.1');
 
   
   ok($validation->is_valid('key1'));
@@ -1428,9 +1444,9 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => 0, key2 => 9, key3 => '２'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('uint');
-  $validation->add_failed('key2')->check('uint');
-  $validation->add_failed('key3')->check('uint');
+  $validation->add_failed('key1')$vc->check('uint');
+  $validation->add_failed('key2')$vc->check('uint');
+  $validation->add_failed('key3')$vc->check('uint');
 
   
   ok($validation->is_valid('key1'));
@@ -1443,8 +1459,8 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => ' ', key2 => '　'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('space');
-  $validation->add_failed('key2')->check('space');
+  $validation->add_failed('key1')$vc->check('space');
+  $validation->add_failed('key2')$vc->check('space');
 
   
   ok($validation->is_valid('key1'));
@@ -1456,8 +1472,8 @@ $vc_common->add_filter(
   my $vc = $vc_common;
                        key1 => ' ', key2 => '　'};
   my $validation = $vc->validation;
-  $validation->add_failed('key1')->check('not_space');
-  $validation->add_failed('key2')->check('not_space');
+  $validation->add_failed('key1')$vc->check('not_space');
+  $validation->add_failed('key2')$vc->check('not_space');
 
   
   ok(!$validation->is_valid('key1'));
@@ -1498,17 +1514,17 @@ $vc_common->add_filter(
     key3_3 => 'aaaaa'
     
   my $validation = $vc->validation;
-  $validation->add_failed('key1_1')->check('length' => {min => 2, max => 4});
-  $validation->add_failed('key1_2')->check('length' => {min => 2, max => 4});
-  $validation->add_failed('key1_3')->check('length' => {min => 2, max => 4});
-  $validation->add_failed('key1_4')->check('length' => {min => 2, max => 4});
-  $validation->add_failed('key1_5')->check('length' => {min => 2, max => 4});
-  $validation->add_failed('key2_1')->check('length' => {min => 2});
-  $validation->add_failed('key2_2')->check('length' => {min => 2});
-  $validation->add_failed('key2_3')->check('length' => {min => 2});
-  $validation->add_failed('key3_1')->check('length' => {max => 4});
-  $validation->add_failed('key3_2')->check('length' => {max => 4});
-  $validation->add_failed('key3_3')->check('length' => {max => 4});
+  $validation->add_failed('key1_1')$vc->check('length' => {min => 2, max => 4});
+  $validation->add_failed('key1_2')$vc->check('length' => {min => 2, max => 4});
+  $validation->add_failed('key1_3')$vc->check('length' => {min => 2, max => 4});
+  $validation->add_failed('key1_4')$vc->check('length' => {min => 2, max => 4});
+  $validation->add_failed('key1_5')$vc->check('length' => {min => 2, max => 4});
+  $validation->add_failed('key2_1')$vc->check('length' => {min => 2});
+  $validation->add_failed('key2_2')$vc->check('length' => {min => 2});
+  $validation->add_failed('key2_3')$vc->check('length' => {min => 2});
+  $validation->add_failed('key3_1')$vc->check('length' => {max => 4});
+  $validation->add_failed('key3_2')$vc->check('length' => {max => 4});
+  $validation->add_failed('key3_3')$vc->check('length' => {max => 4});
   
   
   ok(!$validation->is_valid('key1_1'));
@@ -1577,8 +1593,8 @@ $vc_common->add_filter(
     }
   );
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->check('c1');
-  $validation->add_failed('k2')->check_each('c2');
+  $validation->add_failed('k1')$vc->check('c1');
+  $validation->add_failed('k2')$vc->check_each('c2');
   my $vresult = $validation->validate({k1 => 'a', k2 => ['a']});
   ok($vresult->is_valid);
   $vresult = $validation->validate({k1 => 'b', k2 => ['b']});
@@ -1594,10 +1610,10 @@ $vc_common->add_filter(
   {
                my $k1 = 'aaa', k2 => '', k3 => '', k4 => ''};
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('not_blank');
-    $validation->add_failed('k2')->check('not_blank');
-    $validation->add_failed('k3')->check('not_blank')->message('k3 is empty');
-    $validation->add_failed('k4')->optional->default(5)->check('not_blank');
+    $validation->add_failed('k1')$vc->check('not_blank');
+    $validation->add_failed('k2')$vc->check('not_blank');
+    $validation->add_failed('k3')$vc->check('not_blank')->message('k3 is empty');
+    $validation->add_failed('k4')->optional->default(5)$vc->check('not_blank');
     my $vresult = $validation->validate($input);
     ok($vresult->is_valid('k1'));
     is($vresult->output->{k1}, 'aaa');
@@ -1610,7 +1626,7 @@ $vc_common->add_filter(
   # new rule syntax - message option
   {
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('not_blank')->message('k1 is invalid');
+    $validation->add_failed('k1')$vc->check('not_blank')->message('k1 is invalid');
 
     my $vresult = $validation->validate({k1 => ''});
     ok(!$vresult->is_valid('k1'));
@@ -1631,11 +1647,11 @@ $vc_common->add_filter(
       k5 => []
       
     my $validation = $vc->validation;
-    $validation->add_failed('k1')->check('string');
-    $validation->add_failed('k2')->check('string');
-    $validation->add_failed('k3')->check('string');
-    $validation->add_failed('k4')->check('string');
-    $validation->add_failed('k5')->check('string');
+    $validation->add_failed('k1')$vc->check('string');
+    $validation->add_failed('k2')$vc->check('string');
+    $validation->add_failed('k3')$vc->check('string');
+    $validation->add_failed('k4')$vc->check('string');
+    $validation->add_failed('k5')$vc->check('string');
     
     my $vresult = $validation->validate($input);
     ok($vresult->is_valid('k1'));
@@ -1653,13 +1669,13 @@ $vc_common->add_filter(
   {
     my $validation = $vc->validation;
     $validation->add_failed('k1')
-      ->check('string')->message('k1_string_error')
-      ->check('not_blank')->message('k1_not_blank_error')
-      ->check('length' => {max => 3})->message('k1_length_error');
+      $vc->check('string')->message('k1_string_error')
+      $vc->check('not_blank')->message('k1_not_blank_error')
+      $vc->check('length' => {max => 3})->message('k1_length_error');
     
     $validation->add_failed('k2')
-      ->check('int')->message('k2_int_error')
-      ->check('greater_than' => 3)->message('k2_greater_than_error');
+      $vc->check('int')->message('k2_int_error')
+      $vc->check('greater_than' => 3)->message('k2_greater_than_error');
     
     my $vresult = $validation->validate({k1 => 'aaaa', k2 => 2});
     ok(!$vresult->is_valid('k1'));
@@ -1703,10 +1719,10 @@ $vc_common->add_filter(
   {
     my $validation = $vc->validation;
     $validation->add_failed('k1')
-      ->check('not_blank')->message('k1_not_blank_error')
-      ->check('int')->message('k1_int_error');
+      $vc->check('not_blank')->message('k1_not_blank_error')
+      $vc->check('int')->message('k1_int_error');
     $validation->add_failed('k2')
-      ->check('int')->message('k2_int_error');
+      $vc->check('int')->message('k2_int_error');
     my $vresult1 = $validation->validate({k1 => '', k2 => 4});
     is_deeply($vresult1->messages_to_hash,{k1 => 'k1_not_blank_error'});
     my $vresult2 = $validation->validate({k1 => 'aaa', k2 => 'aaa'});
@@ -1726,8 +1742,8 @@ $vc_common->add_filter(
   {
     my $validation = $vc->validation;
     $validation->add_failed('k1')
-      ->check('not_blank')
-      ->check('int')->message('k1_int_not_blank_error');
+      $vc->check('not_blank')
+      $vc->check('int')->message('k1_int_not_blank_error');
     my $vresult1 = $validation->validate({k1 => ''});
     is_deeply($vresult1->messages_to_hash,{k1 => 'k1_int_not_blank_error'});
     my $vresult2 = $validation->validate({k1 => 'aaa'});
@@ -1748,10 +1764,10 @@ $vc_common->add_filter(
   );
                       my $k1 = 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a'};
   my $validation = $vc->validation;
-  $validation->add_failed('k1')->filter('to_array')->check_each('Int')->message("k1Error1");
-  $validation->add_failed('k2')->check_each('Int')->message("k2Error1");
-  $validation->add_failed('k3')->check_each('Int')->message("k3Error1");
-  $validation->add_failed('k4')->filter('to_array')->check_each('Int')->message("k4Error1");
+  $validation->add_failed('k1')->filter('to_array')$vc->check_each('Int')->message("k1Error1");
+  $validation->add_failed('k2')$vc->check_each('Int')->message("k2Error1");
+  $validation->add_failed('k3')$vc->check_each('Int')->message("k3Error1");
+  $validation->add_failed('k4')->filter('to_array')$vc->check_each('Int')->message("k4Error1");
 
   my $messages = $validation->validate($input)->messages;
 
@@ -1765,7 +1781,7 @@ $vc_common->add_filter(
     my $vc = Validator::Custom->new;
                  };
     my $validation = $vc->validation;
-    $validation->add_failed('key1')->check('int')->fallback;
+    $validation->add_failed('key1')$vc->check('int')->fallback;
 
     
     ok($validation->is_valid);
@@ -1777,8 +1793,8 @@ $vc_common->add_filter(
     my $vc = Validator::Custom->new;
                  key1 => 'a'};
     my $validation = $vc->validation;
-    $validation->add_failed('key1')->check('int')->fallback->default(2);
-    $validation->add_failed('key2')->check('int');
+    $validation->add_failed('key1')$vc->check('int')->fallback->default(2);
+    $validation->add_failed('key2')$vc->check('int');
     
     
     ok(!$validation->is_valid);
@@ -1791,9 +1807,9 @@ $vc_common->add_filter(
     my $vc = Validator::Custom->new;
                  key1 => 'a', key3 => 'b'};
     my $validation = $vc->validation;
-    $validation->add_failed('key1')->check('int')->fallback->default(sub { return $_[0] });
-    $validation->add_failed('key2')->check('int')->fallback->default(sub { return 5 });
-    $validation->add_failed('key3')->check('int')->fallback->default(undef);
+    $validation->add_failed('key1')$vc->check('int')->fallback->default(sub { return $_[0] });
+    $validation->add_failed('key2')$vc->check('int')->fallback->default(sub { return 5 });
+    $validation->add_failed('key3')$vc->check('int')->fallback->default(undef);
     
     
     is($validation->output->{key1}, $validation);

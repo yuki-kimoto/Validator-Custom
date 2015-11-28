@@ -6,7 +6,7 @@ use warnings;
 use Carp 'croak';
 
 sub remove_blank {
-  my ($rule, $values, $arg) = @_;
+  my ($vc, $values, $arg) = @_;
   
   croak "filter \"remove_blank\" need array reference"
     unless ref $values eq 'ARRAY';
@@ -17,7 +17,7 @@ sub remove_blank {
 }
 
 sub trim {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms if defined $value;
 
@@ -25,7 +25,7 @@ sub trim {
 }
 
 sub trim_collapse {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   if (defined $value) {
     $value =~ s/[ \t\n\r\f]+/ /g;
@@ -36,7 +36,7 @@ sub trim_collapse {
 }
 
 sub trim_lead {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms if defined $value;
 
@@ -44,7 +44,7 @@ sub trim_lead {
 }
 
 sub trim_trail {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms if defined $value;
 
@@ -52,7 +52,7 @@ sub trim_trail {
 }
 
 sub trim_uni {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   $value =~ s/^\s*(.*?)\s*$/$1/ms if defined $value;
 
@@ -60,7 +60,7 @@ sub trim_uni {
 }
 
 sub trim_uni_collapse {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   if (defined $value) {
     $value =~ s/\s+/ /g;
@@ -71,7 +71,7 @@ sub trim_uni_collapse {
 }
 
 sub trim_uni_lead {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   $value =~ s/^\s+(.*)$/$1/ms if defined $value;
   
@@ -79,7 +79,7 @@ sub trim_uni_lead {
 }
 
 sub trim_uni_trail {
-  my ($rule, $value, $arg) = @_;
+  my ($vc, $value, $arg) = @_;
   
   $value =~ s/^(.*?)\s+$/$1/ms if defined $value;
 
