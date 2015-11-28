@@ -17,6 +17,35 @@ use Validator::Custom;
 
 # check
 {
+  # check - int
+  {
+    my $vc = Validator::Custom->new;
+    my $k1 = '19';
+    my $k2 = '-10';
+    my $k3 = 'a';
+    my $k4 =  '10.0';
+    my $k5 ='２';
+      
+    my $validation = $vc->validation;
+    if (!$vc->check($k1, 'int')) {
+        $validation->add_failed('k1');
+    }
+    if (!$vc->check($k2, 'int')) {
+      $validation->add_failed('k2');
+    }
+    if (!$vc->check($k3, 'int')) {
+      $validation->add_failed('k3');
+    }
+    if (!$vc->check($k4, 'int')) {
+      $validation->add_failed('k4');
+    }
+    if (!$vc->check($k5, 'int')) {
+      $validation->add_failed('k5');
+    }
+
+    is_deeply($validation->failed, ['k3', 'k4', 'k5']);
+  }
+  
   # check - uint
   {
     my $vc = Validator::Custom->new;
@@ -276,3 +305,4 @@ use Validator::Custom;
   
   is($k1, 'ab');
 }
+
