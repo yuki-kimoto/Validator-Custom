@@ -24,7 +24,7 @@ sub decimal {
   
   my $digits_tmp = $arg;
   
-  # 桁数情報を整理
+  # Digit
   my $digits;
   if (defined $digits_tmp) {
     if (ref $digits_tmp eq 'ARRAY') {
@@ -38,7 +38,7 @@ sub decimal {
     $digits = [undef, undef];
   }
   
-  # 正規表現を作成
+  # Regex
   my $re;
   if (defined $digits->[0] && defined $digits->[1]) {
     $re = qr/^[0-9]{1,$digits->[0]}(\.[0-9]{0,$digits->[1]})?$/;
@@ -53,7 +53,7 @@ sub decimal {
     $re = qr/^[0-9]+(\.[0-9]*)?$/;
   }
   
-  # 値をチェック
+  # Check value
   if ($value =~ /$re/) {
     return 1;
   }
