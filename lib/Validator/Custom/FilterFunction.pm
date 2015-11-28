@@ -5,9 +5,6 @@ use warnings;
 
 use Carp 'croak';
 
-### Note
-# Filter function return undef if value is undefined
-
 sub remove_blank {
   my ($vc, $values, $arg) = @_;
   

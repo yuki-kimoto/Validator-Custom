@@ -1026,7 +1026,7 @@ Invalid example:
 
 =head2 decimal
   
-  Input: {num1 => '123', num2 => '1.45'}
+  my $value = {num1 => '123', num2 => '1.45'};
   Rule: $vc->check($value, 'decimal', 3)
         $vc->check($value, 'decimal', [1, 2])
 
@@ -1035,29 +1035,29 @@ and after '.'.
 
 If you set undef value or don't set any value, that means there is no maximum limit.
   
-  Input: {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'}
+  my $value = {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'};
   Rule: $vc->->check($value, 'decimal')
         $vc->check($value, 'decimal', [undef, 2])
         $vc->check($value, 'decimal', [2, undef])
 
 =head2 int
 
-  Input: {age => 19};
-  Rule:  $vc->check($value, 'int')
+  my $value = 19;
+  $vc->check($value, 'int');
 
 Integer.
 
 =head2 in
-
-  Input: {food => 'sushi'};
-  Rule:  $vc->check($value, 'in', [qw/sushi bread apple/])
+  
+  my $value = 'sushi';
+  my $is_valid = $vc->check($value, 'in', [qw/sushi bread apple/]);
 
 Check if the values is in array.
 
 =head2 uint
 
-  Input: {age => 19}
-  Rule:  $vc->check($value, 'uint')
+  my $value = 19
+  $vc->check($value, 'uint');
 
 Unsigned integer(contain zero).
   
@@ -1067,8 +1067,8 @@ You can use the following filter by default.
 
 =head2 trim
 
-  Input: {name => '  Ken  '}
-  Rule:  $vc->filter($value, 'trim')
+  my $value = '  Ken  ';
+  $vc->filter($value, 'trim')
   Output:{name => 'Ken'}
 
 Trim leading and trailing white space.
@@ -1077,8 +1077,8 @@ which don't contain unicode space character.
 
 =head2 trim_collapse
 
-  Input: {name => '  Ken   Takagi  '}
-  Rule:  $vc->filter($value, 'trim_collapse') # 
+  my $value = '  Ken   Takagi  ';
+  $vc->filter($value, 'trim_collapse') # 
   Output:{name => 'Ken Takagi'}
 
 Trim leading and trailing white space,
@@ -1088,8 +1088,8 @@ which don't contain unicode space character.
 
 =head2 trim_lead
 
-  Input: {name => '  Ken  '}
-  Rule:  $vc->filter($value, 'trim_lead')
+  my $value = '  Ken  ';
+  $vc->filter($value, 'trim_lead')
   Output:{name => 'Ken  '}
 
 Trim leading white space.
@@ -1098,9 +1098,8 @@ which don't contain unicode space character.
 
 =head2 trim_trail
 
-  Input: {name => '  Ken  '}
-  Rule:  $vc->filter($value, 'trim_trail')
-  Output:{name => '  Ken'}
+  my $value = '  Ken  ';
+  $vc->filter($value, 'trim_trail'); # '  Ken'
 
 Trim trailing white space.
 Not that trim only C<[ \t\n\r\f]>
@@ -1108,33 +1107,30 @@ which don't contain unicode space character.
 
 =head2 trim_uni
 
-  Input: {name => '  Ken  '}
-  Rule:  $vc->filter($value, 'trim_uni')
+  my $value = '  Ken  ';
+  $vc->filter($value, 'trim_uni')
   Output:{name => 'Ken'}
 
 Trim leading and trailing white space, which contain unicode space character.
 
 =head2 trim_uni_collapse
 
-  Input: {name => '  Ken   Takagi  '};
-  Rule:  $vc->filter($value, 'trim_uni_collapse')
-  Output:{name => 'Ken Takagi'}
-
+  # Convert "  Ken   Takagi  " to "Ken Takagi"
+  my $new_value = $vc->filter($value, 'trim_uni_collapse');
+  
 Trim leading and trailing white space, which contain unicode space character.
 
 =head2 trim_uni_lead
 
-  Input: {name => '  Ken  '};
-  Rule:  $vc->filter($value, 'trim_uni_lead')
-  Output:{name => 'Ken  '}
+  my $value = '  Ken  ';
+  my $new_value = $vc->filter($value, 'trim_uni_lead'); #'Ken  '
 
 Trim leading white space, which contain unicode space character.
 
 =head2 trim_uni_trail
   
-  Input: {name => '  Ken  '};
-  Rule:  $vc->filter($value, 'trim_uni_trail')
-  Output:{name => '  Ken'}
+  my $value = '  Ken  ';
+  $vc->filter($value, 'trim_uni_trail'); # '  Ken'
 
 Trim trailing white space, which contain unicode space character.
 
@@ -1161,25 +1157,11 @@ current key name, and parameters
   
   $vc->add_check(
     int => sub {
-      my ($vc, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
+      my ($vc, $value, $args) = @_;
       
       my $is_valid = $value =~ /^\-?[\d]+$/;
       
       return $is_valid;
-    },
-    greater_than => sub {
-      my ($vc, $args, $key, $params) = @_;
-      
-      my ($arg_value) = @$args;
-      
-      if ($value > $arg_value) {
-        return 1;
-      }
-      else {
-        return 0;
-      }
     }
   );
 
@@ -1192,9 +1174,7 @@ current key name, and parameters,
 
   $vc->add_filter(
     trim => sub {
-      my ($vc, $args, $key, $params) = @_;
-      
-      my $value = $params->{$key};
+      my ($vc, $value, $args) = @_;
       
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
