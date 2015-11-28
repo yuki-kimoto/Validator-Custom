@@ -4,16 +4,17 @@ use 5.008001;
 our $VERSION = '1.00';
 
 use Carp 'croak';
-use Validator::Custom::Result;
-use Validator::Custom::Rule;
+use Validator::Custom::Validation;
 use Validator::Custom::FilterFunction;
 use Validator::Custom::CheckFunction;
 
 # Version 0 modules(Not used now)
 use Validator::Custom::Constraints;
 use Validator::Custom::Constraint;
+use Validator::Custom::Result;
+use Validator::Custom::Rule;
 
-sub create_rule { Validator::Custom::Rule->new(validator => shift) }
+sub validation { Validator::Custom::Validation->new }
 
 sub new {
   my $self = shift->SUPER::new(@_);
@@ -103,6 +104,71 @@ sub new {
   );
   
   return $self;
+}
+
+sub check_each {
+  my ($self, $name, $values, $arg) = @_;
+  
+  my $checks = $self->{checks} || {};
+  
+  croak "Can't call \"$name\" check"
+    unless $checks->{$name};
+  
+  croak "values must be array refernce"
+    unless ref $values eq 'ARRAY';
+  
+  my $is_invalid;
+  for my $value (@$values) {
+    my $is_valid = $checks->{$name}->($value, $arg);
+    unless ($is_valid) {
+      $is_invalid = 1;
+      last;
+    }
+  }
+  
+  return $is_invalid ? 0 : 1;
+}
+
+sub filter_each {
+  my ($self, $name, $values, $arg) = @_;
+  
+  my $filters = $self->{filters} || {};
+  
+  croak "Can't call \"$name\" filter"
+    unless $filters->{$name};
+  
+  croak "values must be array refernce"
+    unless ref $values eq 'ARRAY';
+  
+  my $new_values = [];
+  for my $value (@$values) {
+    my $new_value = $filters->{$name}->($value, $arg);
+    push @$new_values, $new_value;
+  }
+  
+  retrun $new_values;
+}
+
+sub check {
+  my ($self, $name, $value, $arg) = @_;
+  
+  my $checks = $self->{checks} || {};
+  
+  croak "Can't call \"$name\" check"
+    unless $checks->{$name};
+  
+  retrun $checks->{$name}->($value, $arg);
+}
+
+sub filter {
+  my ($self, $name, $value, $arg) = @_;
+  
+  my $filters = $self->{filters} || {};
+  
+  croak "Can't call \"$name\" filter"
+    unless $filters->{$name};
+  
+  retrun $filters->{$name}->($value, $arg);
 }
 
 sub add_check {
@@ -219,6 +285,9 @@ has shared_rule => sub { [] };
 # DEPRECATED!
 __PACKAGE__->dual_attr('constraints',
   default => sub { {} }, inherit => 'hash_copy');
+
+# Version method(Not used now)
+sub create_rule { Validator::Custom::Rule->new(validator => shift) }
 
 # Version 0 method(Not used now)
 sub register_constraint {
@@ -1418,24 +1487,6 @@ current key name, and parameters
     }
   );
 
-You can return a error message when the validation fail.
-Return hash reference which constains C<message>.
-
-  $vc->add_check(
-    foo => sub {
-      my $is_valid;
-      
-      ...
-      
-      if ($is_valid) {
-        return 1;
-      }
-      else {
-        return {message => "Validation fail"};
-      }
-    }
-  );
-
 =head2 add_filter
 
 Add filter function. 
@@ -1452,11 +1503,38 @@ current key name, and parameters,
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
       
-      return [$key, {$key => $value}];
+      return $value;
     }
   );
 
-you must retrun array reference which contains a new key and parameter.
+=head2 check
+
+  my $is_valid = $vc->check('int', $value);
+  my $is_valid = $vc->check('length', $value, $arg);
+
+Run check.
+
+=head2 check_each
+
+  my $is_valid = $vc->check_each('int', $values);
+  my $is_valid = $vc->check_each('length', $values, $arg);
+
+Run check all elements of array refernce.
+If more than one element is invalid, check_each reterun false.
+
+=head2 filter
+
+  my $new_value = $vc->filter('trim', $value);
+  my $new_value = $vc->filter('trim', $value, $arg);
+
+Run filter.
+
+=head2 filter_each
+
+  my $new_values = $vc->filter_each('trim', $values);
+  my $new_values = $vc->filter_each('trim', $values, $arg);
+
+Run filter all elements of array reference.
 
 =head1 FAQ
 

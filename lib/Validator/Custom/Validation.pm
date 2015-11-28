@@ -23,20 +23,20 @@ sub is_valid {
 }
 
 sub add_failed {
-  my ($self, $key, $message) = @_;
+  my ($self, $name, $message) = @_;
   
   my $failed_infos = $self->{_failed_infos};
   
-  if ($failed_infos->{$key}) {
-    croak "\"$key\" is already exists";
+  if ($failed_infos->{$name}) {
+    croak "\"$name\" is already exists";
   }
   
-  my $failed_keys = keys %$failed_infos;
-  
-  if (@$failed_keys) {
-    my $max_pos = 0
-    for my $key (@$failed_keys) {
-      my $pos = $failed_infos->{$key}{position};
+  my $failed_names = keys %$failed_infos;
+  my $pos;
+  if (@$failed_names) {
+    my $max_pos = 0;
+    for my $failed_name (@$failed_names) {
+      my $pos = $failed_infos->{$failed_name}{position};
       if ($pos > $max_pos) {
         $max_pos = $pos;
       }
@@ -47,8 +47,8 @@ sub add_failed {
     $pos = 0;
   }
   
-  $failed_infos->{$key}{pos} = $pos;
-  $failed_infos->{$key}{message} = $message;
+  $failed_infos->{$name}{pos} = $pos;
+  $failed_infos->{$name}{message} = $message;
   
   return $self;
 }
@@ -56,12 +56,11 @@ sub add_failed {
 sub failed {
   my $self = shift;
   
-  # Invalid rule keys
   my $failed_infos = $self->{_failed_infos};
-  my @invalid_rule_keys = sort { $failed_infos->{$a}{position} <=>
+  my @failed = sort { $failed_infos->{$a}{position} <=>
     $failed_infos->{$b}{position} } keys %$failed_infos;
   
-  return \@invalid_rule_keys;
+  return \@failed;
 }
 
 sub message {
@@ -82,9 +81,9 @@ sub messages {
   # Error messages
   my @messages;
   my $failed_infos = $self->{_failed_infos};
-  my @keys = sort { $failed_infos->{$a}{position} <=>
+  my @names = sort { $failed_infos->{$a}{position} <=>
     $failed_infos->{$b}{position} } keys %$failed_infos;
-  foreach my $name (@keys) {
+  foreach my $name (@names) {
     my $message = $self->message($name);
     push @messages, $message;
   }
@@ -104,6 +103,8 @@ sub messages_to_hash {
   return $messages;
 }
 
+1;
+
 =head1 NAME
 
 Validator::Custom::Validation - Validation result
@@ -119,7 +120,7 @@ Validator::Custom::Validation - Validation result
   my $is_valid = $validation->is_valid;
   my $title_is_valid = $validation->is_valid('title');
   
-  # Failed keys
+  # Failed key names
   my $failed = $validation->failed;
   
   # Message
