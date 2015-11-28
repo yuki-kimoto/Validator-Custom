@@ -22,117 +22,120 @@ use Validator::Custom;
   is_deeply($validation->failed, ['k2']);
 }
 
-__END__
-
 # defined
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => undef,
-    k2 => 'a',
-  };
+                       
+  my $k1 = undef;
+  my $k2 = 'a';
+    
   my $validation = $vc->validation;
-  $validation->topic('k1')->check('defined');
-  $validation->topic('k2')->check('defined');
-
-  my $validation = $validation->validate($input);
+  if (!defined $k1) {
+    $validation->add_failed('k1');
+  }
+  if (!defined $k2) {
+    $validation->add_failed('k2');
+  }
+  
   is_deeply($validation->failed, ['k1']);
 }
+
+__END__
 
 # not_space
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => '',
-    k2 => ' ',
+                       
+  my $k1 = '',
+  my $k2 = ' ',
     k3 => ' a '
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('not_space');
   $validation->topic('k2')->check('not_space');
   $validation->topic('k3')->check('not_space');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k1', 'k2']);
 }
 
 # not_blank
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => '',
-    k2 => 'a',
+                       
+  my $k1 = '',
+  my $k2 = 'a',
     k3 => ' '
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('not_blank');
   $validation->topic('k2')->check('not_blank');
   $validation->topic('k3')->check('not_blank');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k1']);
 }
 
 # blank
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => '',
-    k2 => 'a',
+                       
+  my $k1 = '',
+  my $k2 = 'a',
     k3 => ' '
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('blank');
   $validation->topic('k2')->check('blank');
   $validation->topic('k3')->check('blank');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k2', 'k3']);
 }
 
 # uint
 {
   my $vc = Validator::Custom->new;
-  my $input = {
+                       
     k1  => '19',
     k2  => '-10',
     k3 => 'a',
     k4 => '10.0',
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('uint');
   $validation->topic('k2')->check('uint');
   $validation->topic('k3')->check('uint');
   $validation->topic('k4')->check('uint');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k2', 'k3', 'k4']);
 }
 
 # uint
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => '!~',
-    k2 => ' ',
+                       
+  my $k1 = '!~',
+  my $k2 = ' ',
     k3 => "\0x7f",
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('ascii');
   $validation->topic('k2')->check('ascii');
   $validation->topic('k3')->check('ascii');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k2', 'k3']);
 }
 
 # length
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => '111',
-    k2 => '111',
-  };
+                       
+  my $k1 = '111',
+  my $k2 = '111',
+    
   my $validation = $vc->validation;
   $validation->topic('k1')
     ->check('length' => [3, 4])
@@ -141,119 +144,119 @@ __END__
     ->check('length' => 3);
   $validation->topic('k2')->check('length' => [4, 5]);
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k2']);
 }
 
 # duplication
 {
   my $vc = Validator::Custom->new;
-  my $input = {
+                       
     k1_1 => 'a',
     k1_2 => 'a',
     
     k2_1 => 'a',
     k2_2 => 'b'
-  };
+    
   my $validation = $vc->validation;
   $validation->topic([qw/k1_1 k1_2/])->check('duplication')->name('k1');
   $validation->topic([qw/k2_1 k2_2/])->check('duplication')->name('k2');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k2']);
 }
 
 # regex
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => 'aaa',
-    k2 => 'aa',
-  };
+                       
+  my $k1 = 'aaa',
+  my $k2 = 'aa',
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('regex' => "a{3}");
   $validation->topic('k2')->check('regex' => "a{4}");
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k2']);
 }
 
 # http_url
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => 'http://www.lost-season.jp/mt/',
-    k2 => 'iii',
-  };
+                       
+  my $k1 = 'http://www.lost-season.jp/mt/',
+  my $k2 = 'iii',
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('http_url');
   $validation->topic('k2')->check('http_url');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k2']);
 }
 
 # greater_than
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => 5,
-    k2 => 5,
+                       
+  my $k1 = 5,
+  my $k2 = 5,
     k3 => 'a',
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('greater_than' => 5);
   $validation->topic('k2')->check('greater_than' => 4);
   $validation->topic('k3')->check('greater_than' => 1);
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k1', 'k3']);
 }
 
 # less_than
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => 5,
-    k2 => 5,
+                       
+  my $k1 = 5,
+  my $k2 = 5,
     k3 => 'a',
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('less_than' => 5);
   $validation->topic('k2')->check('less_than' => 6);
   $validation->topic('k3')->check('less_than' => 1);
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k1', 'k3']);
 }
 
 # less_than
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => 5,
-    k2 => 5,
+                       
+  my $k1 = 5,
+  my $k2 = 5,
     k3 => 'a',
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('equal_to' => 5);
   $validation->topic('k2')->check('equal_to' => 4);
   $validation->topic('k3')->check('equal_to' => 1);
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k2', 'k3']);
 }
 
 # between
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => 5,
-    k2 => 5,
+                       
+  my $k1 = 5,
+  my $k2 = 5,
     k3 => 5,
     k4 => 5,
     k5 => 'a',
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('between' => [5, 6]);
   $validation->topic('k2')->check('between' => [4, 5]);
@@ -261,16 +264,16 @@ __END__
   $validation->topic('k4')->check('between' => [5, 5]);
   $validation->topic('k5')->check('between' => [5, 5]);
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k3', 'k5']);
 }
 
 # decimal
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => '12.123',
-    k2 => '12.123',
+                       
+  my $k1 = '12.123',
+  my $k2 = '12.123',
     k3 => '12.123',
     k4 => '12',
     k5 => '123',
@@ -282,7 +285,7 @@ __END__
     k11 => '1111111.123',
     k12 => '12.1111111',
     k13 => '123.1111111'
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('decimal' => [2,3]);
   $validation->topic('k2')->check('decimal' => [1,3]);
@@ -298,50 +301,50 @@ __END__
   $validation->topic('k12')->check('decimal' => [2, undef]);
   $validation->topic('k13')->check('decimal' => [2, undef]);
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, [qw/k2 k3 k5 k6 k8 k9 k11 k13/]);
 }
 
 # in_array
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => 'a',
-    k2 => 'a',
+                       
+  my $k1 = 'a',
+  my $k2 = 'a',
     k3 => undef
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('in_array' => [qw/a b/]);
   $validation->topic('k2')->check('in_array' => [qw/b c/]);
   $validation->topic('k3')->check('in_array' => [qw/b c/]);
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k2', 'k3']);
 }
 
 # first
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => [1, 2]
-  };
+                       
+  my $k1 = [1, 2]
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->filter('first');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->output, {k1 => 1});
 }
 
 # first
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => 1
-  };
+                       
+  my $k1 = 1
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->filter('first');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->output, {k1 => 1});
 }
 
@@ -392,13 +395,13 @@ $vc_common->add_filter(
 # selected_at_least
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => 1,
+                       
+  my $k1 = 1,
     k2 =>[1],
     k3 => [1, 2],
     k4 => [],
     k5 => [1,2]
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check(selected_at_least => 1);
   $validation->topic('k2')->check(selected_at_least => 1);
@@ -406,18 +409,18 @@ $vc_common->add_filter(
   $validation->topic('k4')->check('selected_at_least');
   $validation->topic('k5')->check('selected_at_least' => 3);
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k5']);
 }
 
 # merge
 {
   my $vc = Validator::Custom->new;
-  my $input = {key1 => 'a', key2 => 'b', key3 => 'c'};
+                       key1 => 'a', key2 => 'b', key3 => 'c'};
   my $validation = $vc->validation;
   $validation->topic(['key1', 'key2', 'key3'])->name('key123')->filter('merge' => 'key');
   
-  my $validation = $validation->validate($input);
+  
   is($validation->output->{key}, 'abc');
 }
 
@@ -427,7 +430,7 @@ $vc_common->add_filter(
   {
     my $vc = Validator::Custom->new;
     my $validation = $vc->validation;
-    my $input = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a', k5 => []};
+                my $k1 = 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a', k5 => []};
     $validation->topic('k1')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k1Error1');
     $validation->topic('k2')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k2Error1');
     $validation->topic('k3')->filter('to_array')->check(selected_at_least => 1)->check_each('int')->message('k3Error1');
@@ -442,7 +445,7 @@ $vc_common->add_filter(
   # check_each - repeat
   {
     my $vc = Validator::Custom->new;
-    my $input = {key1 => ['a', 'a'], key2 => [1, 1]};
+                 key1 => ['a', 'a'], key2 => [1, 1]};
     my $validation = $vc->validation;
     $validation->topic('key1')
       ->check_each('not_blank')
@@ -459,7 +462,7 @@ $vc_common->add_filter(
         return !$validation->run_check('int', [], $key, $params);
       });
     
-    my $validation = $validation->validate($input);
+    
     is_deeply($validation->failed, ['key2']);
   }
 }
@@ -467,7 +470,7 @@ $vc_common->add_filter(
 # filter_each
 {
   my $vc = $vc_common;
-  my $input = {k1 => [1,2]};
+                     my $k1 = [1,2]};
   my $validation = $vc->validation;
   $validation->topic('k1')->filter_each('C1')->filter_each('C1');
 
@@ -479,14 +482,14 @@ $vc_common->add_filter(
 # check - code reference
 {
   my $vc = Validator::Custom->new;
-  my $input = { k1 => 1, k2 => 2};
+                      my $k1 = 1, k2 => 2};
   my $check = sub {
     my ($self, $args, $key, $params) = @_;
     
     my $values = $params->{$key};
     
     return defined $values->[0] && defined $values->[1] && $values->[0] eq $values->[1];
-  };
+    
   
   my $validation = $vc->validation;
   $validation->topic(['k1', 'k2'])->name('k1_2')->check($check)->message('error_k1_2');
@@ -501,7 +504,7 @@ $vc_common->add_filter(
   # validate exception - allow a key
   {
     my $validation = $vc->validation;
-    my $input = {key1 => 'a'};
+                 key1 => 'a'};
     $validation->topic('key1')->check('not_blank');
     eval { $validation->validate($input) };
     ok(!$@);
@@ -510,7 +513,7 @@ $vc_common->add_filter(
   # validate exception - allow a key and name
   {
     my $validation = $vc->validation;
-    my $input = {key1 => 'a'};
+                 key1 => 'a'};
     $validation->topic('key1')->name('k2')->check('not_blank');
     eval { $validation->validate($input) };
     ok(!$@);
@@ -519,7 +522,7 @@ $vc_common->add_filter(
   # validate exception - allow multiple keys and name
   {
     my $validation = $vc->validation;
-    my $input = {key1 => 'a', key2 => 'b'};
+                 key1 => 'a', key2 => 'b'};
     $validation->topic(['key1', 'key2'])->name('key12')->check('not_blank');
     eval { $validation->validate($input) };
     ok(!$@);  
@@ -528,7 +531,7 @@ $vc_common->add_filter(
   # validate exception - deny only multiple keys
   {
     my $validation = $vc->validation;
-    my $input = {key1 => 'a', key2 => 'b'};
+                 key1 => 'a', key2 => 'b'};
     $validation->topic(['key1', 'key2'])->check('not_blank');
     eval { $validation->validate($input) };
     like($@, qr/name is needed for multiple topic values/);
@@ -571,7 +574,7 @@ $vc_common->add_filter(
 # Cuastom validator
 {
   my $vc = $vc_common;
-  my $input = {k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a'};
+                     my $k1 = 1, k2 => 'a', k3 => 3.1, k4 => 'a'};
   my $validation = $vc->validation;
   $validation->topic('k1')->check('Int')->message("k1Error1");
   $validation->topic('k2')->check('Int')->message("k2Error1");
@@ -586,42 +589,42 @@ $vc_common->add_filter(
 # int
 {
   my $vc = Validator::Custom->new;
-  my $input = {
+                       
     k1  => '19',
     k2  => '-10',
     k3 => 'a',
     k4 => '10.0',
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('int');
   $validation->topic('k2')->check('int');
   $validation->topic('k3')->check('int');
   $validation->topic('k4')->check('int');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k3', 'k4']);
 }
 
 # exists
 {
   my $vc = Validator::Custom->new;
-  my $input = {
+                       
     k1  => 1,
     k2  => undef
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->check('exists');
   $validation->topic('k2')->check('exists');
   $validation->topic('k3')->check('exists');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['k3']);
 }
 
 # remove_blank filter
 {
   my $vc = Validator::Custom->new;
-  my $input = {key1 => 1, key2 => [1, 2], key3 => '', key4 => [1, 3, '', '']};
+                       key1 => 1, key2 => [1, 2], key3 => '', key4 => [1, 3, '', '']};
   my $validation = $vc->validation;
   $validation->topic('key1')->filter('to_array')->filter('remove_blank');
   $validation->topic('key2')->filter('to_array')->filter('remove_blank');
@@ -638,9 +641,9 @@ $vc_common->add_filter(
 # Validator::Custom::Resut filter method
 {
   my $vc = Validator::Custom->new;
-  my $input = {
-    k1 => ' 123 ',
-  };
+                       
+  my $k1 = ' 123 ',
+    
   my $validation = $vc->validation;
   $validation->topic('k1')->filter('trim');
 
@@ -651,7 +654,7 @@ $vc_common->add_filter(
 
 {
   my $vc = Validator::Custom->new;
-  my $input = {k1 => 1, k2 => 2, k3 => 3};
+                     my $k1 = 1, k2 => 2, k3 => 3};
   my $validation = $vc->validation;
   $validation->topic('k1')
     ->check(sub{
@@ -718,7 +721,7 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = { k1 => 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
+                      my $k1 = 1, k2 => 'a', k3 => 3.1, k4 => 'a' };
   my $validation = $vc->validation;
   $validation->topic('k1')->check('Int')->message("k1Error1");
   $validation->topic('k2')->check('Int')->message("k2Error1");
@@ -735,7 +738,7 @@ $vc_common->add_filter(
 # Check function not found
 {
   my $vc = Validator::Custom->new;
-  my $input = {k1 => 1};
+                     my $k1 = 1};
   my $validation = $vc->validation;
   $validation->topic('k1')->check('No')->message("k1Error1");
   eval { $validation->validate($input) };
@@ -745,7 +748,7 @@ $vc_common->add_filter(
 # Filter function not found
 {
   my $vc = Validator::Custom->new;
-  my $input = {k1 => 1};
+                     my $k1 = 1};
   my $validation = $vc->validation;
   $validation->topic('k1')->filter('No')->message("k1Error1");
   eval { $validation->validate($input) };
@@ -754,7 +757,7 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = { k1 => 1};
+                      my $k1 = 1};
   my $validation = $vc->validation;
   $validation->topic('k1')->check('Int')->message("k1Error1");
   my $messages = $validation->validate($input)->messages;
@@ -794,10 +797,10 @@ $vc_common->add_filter(
       return $min <= $length && $length <= $max ? 1 : 0;
     }
   );
-  my $input = {
+                       
     name => 'zz' x 30,
     age => 'zz',
-  };
+    
   
   my $validation = $vc->validation;
   $validation->topic('name')->check(length => [1, 2]);
@@ -841,7 +844,7 @@ $vc_common->add_filter(
     }
   );
   
-  my $input = {k1_1 => 1, k1_2 => 2, k2_1 => 5, k2_2 => 6};
+                       k1_1 => 1, k1_2 => 2, k2_1 => 5, k2_2 => 6};
   
   my $validation = $vc->validation;
   $validation->topic('k1_1')->check('C1');
@@ -870,7 +873,7 @@ $vc_common->add_filter(
     return $value eq 1;
   });
   
-  my $input = {k1 => 1, k2 => 2, k3 => 3, k4 => 1};
+                     my $k1 = 1, k2 => 2, k3 => 3, k4 => 1};
   my $validation = $vc->validation;
   $validation->topic(['k1', 'k2'])->name('k12')->check('p');
   $validation->topic('k3')->check('q');
@@ -885,9 +888,9 @@ $vc_common->add_filter(
   # exception - length need parameter
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 'a',
-    };
+                 
+    my $k1 = 'a',
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('length');
     eval { $validation->validate($input) };
@@ -897,9 +900,9 @@ $vc_common->add_filter(
   # exception - greater_than target undef
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 1
-    };
+                 
+    my $k1 = 1
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('greater_than');
     eval { $validation->validate($input) };
@@ -909,9 +912,9 @@ $vc_common->add_filter(
   # exception - greater_than not number
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 1
-    };
+                 
+    my $k1 = 1
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('greater_than' => 'a');
     eval { $validation->validate($input) };
@@ -921,9 +924,9 @@ $vc_common->add_filter(
   # exception - less_than target undef
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 1
-    };
+                 
+    my $k1 = 1
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('less_than');
     eval { $validation->validate($input) };
@@ -933,9 +936,9 @@ $vc_common->add_filter(
   # exception - less_than not number
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 1
-    };
+                 
+    my $k1 = 1
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('less_than' => 'a');
     eval { $validation->validate($input) };
@@ -945,9 +948,9 @@ $vc_common->add_filter(
   # exception - equal_to target undef
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 1
-    };
+                 
+    my $k1 = 1
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('equal_to');
     eval { $validation->validate($input) };
@@ -957,9 +960,9 @@ $vc_common->add_filter(
   # exception - equal_to not number
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 1
-    };
+                 
+    my $k1 = 1
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('equal_to' => 'a');
     eval { $validation->validate($input) };
@@ -969,9 +972,9 @@ $vc_common->add_filter(
   # exception - between undef
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 1
-    };
+                 
+    my $k1 = 1
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('between' => [undef, 1]);
     eval { $validation->validate($input) };
@@ -981,9 +984,9 @@ $vc_common->add_filter(
   # exception - between target undef or not number1
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 1
-    };
+                 
+    my $k1 = 1
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('between' => ['a', 1]);
     eval { $validation->validate($input) };
@@ -993,9 +996,9 @@ $vc_common->add_filter(
   # exception - between target undef or not number2
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 1
-    };
+                 
+    my $k1 = 1
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('between' => [1, undef]);
     eval { $validation->validate($input) };
@@ -1005,9 +1008,9 @@ $vc_common->add_filter(
   # exception - between target undef or not number3
   {
     my $vc = Validator::Custom->new;
-    my $input = {
-      k1 => 1
-    };
+                 
+    my $k1 = 1
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('between' => [1, 'a']);
     eval { $validation->validate($input) };
@@ -1018,12 +1021,12 @@ $vc_common->add_filter(
 # trim;
 {
   my $vc = Validator::Custom->new;
-  my $input = {
+                       
     int_param => ' 123 ',
     collapse  => "  \n a \r\n b\nc  \t",
     left      => '  abc  ',
     right     => '  def  '
-  };
+    
 
   my $validation = $vc->validation;
   $validation->topic('int_param')->filter('trim');
@@ -1042,35 +1045,35 @@ $vc_common->add_filter(
 # duplication result value
 {
   my $vc = Validator::Custom->new;
-  my $input = {key1 => 'a', key2 => 'a'};
+                       key1 => 'a', key2 => 'a'};
   my $validation = $vc->validation;
   $validation->topic(['key1', 'key2'])->name('key3')->check('duplication');
   
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->output, {key1 => 'a', 'key2' => 'a'});
 }
 
 # message option
 {
   my $vc = Validator::Custom->new;
-  my $input = {key1 => 'a'};
+                       key1 => 'a'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('int')->message('error');
 
-  my $validation = $validation->validate($input);
+  
   is($validation->message('key1'), 'error');
 }
 
 # is_valid
 {
   my $vc = Validator::Custom->new;
-  my $input = {key1 => 'a', key2 => 'b', key3 => 2};
+                       key1 => 'a', key2 => 'b', key3 => 2};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('int');
   $validation->topic('key2')->check('int');
   $validation->topic('key3')->check('int');
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1079,27 +1082,27 @@ $vc_common->add_filter(
 # space
 {
   my $vc = Validator::Custom->new;
-  my $input = {key1 => '', key2 => ' ', key3 => 'a'};
+                       key1 => '', key2 => ' ', key3 => 'a'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('space');
   $validation->topic('key2')->check('space');
   $validation->topic('key3')->check('space');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->failed, ['key3']);
 }
 
 # to_array filter
 {
   my $vc = Validator::Custom->new;
-  my $input = {key1 => 1, key2 => [1, 2], key3 => undef};
+                       key1 => 1, key2 => [1, 2], key3 => undef};
   my $validation = $vc->validation;
   $validation->topic('key1')->filter('to_array');
   $validation->topic('key2')->filter('to_array');
   $validation->topic('key3')->filter('to_array');
   $validation->topic('key4')->filter('to_array');
   
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->output->{key1}, [1]);
   is_deeply($validation->output->{key2}, [1, 2]);
   is_deeply($validation->output->{key3}, [undef]);
@@ -1109,13 +1112,13 @@ $vc_common->add_filter(
 # undefined value
 {
   my $vc = Validator::Custom->new;
-  my $input = {key1 => undef, key2 => '', key3 => 'a'};
+                       key1 => undef, key2 => '', key3 => 'a'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('ascii');
   $validation->topic('key2')->check('ascii');
   $validation->topic('key3')->check('ascii');
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1123,13 +1126,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => '2'};
+                       key1 => undef, key2 => '', key3 => '2'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check(between => [1, 3]);
   $validation->topic('key2')->check(between => [1, 3]);
   $validation->topic('key3')->check(between => [1, 3]);
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1137,25 +1140,25 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => ''};
+                       key1 => undef, key2 => ''};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('blank');
   $validation->topic('key2')->check('blank');
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok($validation->is_valid('key2'));
 }
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => '2.1'};
+                       key1 => undef, key2 => '', key3 => '2.1'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check(decimal => 1);
   $validation->topic('key2')->check(decimal => 1);
   $validation->topic('key3')->check(decimal => [1, 1]);
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1163,7 +1166,7 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => 'a', key2 => 'a', key3 => '', key4 => '', key5 => undef, key6 => undef};
+                       key1 => 'a', key2 => 'a', key3 => '', key4 => '', key5 => undef, key6 => undef};
   my $validation = $vc->validation;
   $validation->topic(['key1', 'key2'])->check('duplication')->name('key1-2');
   $validation->topic(['key3', 'key4'])->check('duplication')->name('key3-4');
@@ -1171,7 +1174,7 @@ $vc_common->add_filter(
   $validation->topic(['key5', 'key1'])->check('duplication')->name('key5-1');
   $validation->topic(['key5', 'key6'])->check('duplication')->name('key5-6');
 
-  my $validation = $validation->validate($input);
+  
   ok($validation->is_valid('key1-2'));
   ok($validation->is_valid('key3-4'));
   ok(!$validation->is_valid('key1-5'));
@@ -1181,13 +1184,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => '1'};
+                       key1 => undef, key2 => '', key3 => '1'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check(equal_to => 1);
   $validation->topic('key2')->check(equal_to => 1);
   $validation->topic('key3')->check(equal_to => 1);
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1195,13 +1198,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => '5'};
+                       key1 => undef, key2 => '', key3 => '5'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check(greater_than => 1);
   $validation->topic('key2')->check(greater_than => 1);
   $validation->topic('key3')->check(greater_than => 1);
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1209,13 +1212,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => 'http://aaa.com'};
+                       key1 => undef, key2 => '', key3 => 'http://aaa.com'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('http_url');
   $validation->topic('key2')->check('http_url');
   $validation->topic('key3')->check('http_url');
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1223,13 +1226,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => '1'};
+                       key1 => undef, key2 => '', key3 => '1'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('int');
   $validation->topic('key2')->check('int');
   $validation->topic('key3')->check('int');
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1237,13 +1240,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => '1'};
+                       key1 => undef, key2 => '', key3 => '1'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('in_array' => [1, 2]);
   $validation->topic('key2')->check('in_array' => [1, 2]);
   $validation->topic('key3')->check('in_array' => [1, 2]);
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1251,13 +1254,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => 'aaa'};
+                       key1 => undef, key2 => '', key3 => 'aaa'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('length' => [1, 4]);
   $validation->topic('key2')->check('length' => [1, 4]);
   $validation->topic('key3')->check('length' => [1, 4]);
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1265,13 +1268,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => 3};
+                       key1 => undef, key2 => '', key3 => 3};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('less_than' => 4);
   $validation->topic('key2')->check('less_than' => 4);
   $validation->topic('key3')->check('less_than' => 4);
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1279,13 +1282,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => 3};
+                       key1 => undef, key2 => '', key3 => 3};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('not_blank');
   $validation->topic('key2')->check('not_blank');
   $validation->topic('key3')->check('not_blank');
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1293,13 +1296,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => 3};
+                       key1 => undef, key2 => '', key3 => 3};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('not_space');
   $validation->topic('key2')->check('not_space');
   $validation->topic('key3')->check('not_space');
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1307,13 +1310,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => 3};
+                       key1 => undef, key2 => '', key3 => 3};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('uint');
   $validation->topic('key2')->check('uint');
   $validation->topic('key3')->check('uint');
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1321,13 +1324,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => 3};
+                       key1 => undef, key2 => '', key3 => 3};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('regex' => qr/3/);
   $validation->topic('key2')->check('regex' => qr/3/);
   $validation->topic('key3')->check('regex' => qr/3/);
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1335,13 +1338,13 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key1 => undef, key2 => '', key3 => ' '};
+                       key1 => undef, key2 => '', key3 => ' '};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('space');
   $validation->topic('key2')->check('space');
   $validation->topic('key3')->check('space');
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok($validation->is_valid('key2'));
   ok($validation->is_valid('key3'));
@@ -1349,11 +1352,11 @@ $vc_common->add_filter(
 
 {
   my $vc = $vc_common;
-  my $input = {key2 => 2};
+                       key2 => 2};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('defined')->message('key1 is undefined');
 
-  my $validation = $validation->validate($input);
+  
   is_deeply($validation->messages, ['key1 is undefined']);
   ok(!$validation->is_valid('key1'));
 }
@@ -1361,25 +1364,25 @@ $vc_common->add_filter(
 # between 0-9
 {
   my $vc = $vc_common;
-  my $input = {key1 => 0, key2 => 9};
+                       key1 => 0, key2 => 9};
   my $validation = $vc->validation;
   $validation->topic('key1')->check(between => [0, 9]);
   $validation->topic('key2')->check(between => [0, 9]);
 
-  my $validation = $validation->validate($input);
+  
   ok($validation->is_valid);
 }
 
 # between decimal
 {
   my $vc = $vc_common;
-  my $input = {key1 => '-1.5', key2 => '+1.5', key3 => 3.5};
+                       key1 => '-1.5', key2 => '+1.5', key3 => 3.5};
   my $validation = $vc->validation;
   $validation->topic('key1')->check(between => [-2.5, 1.9]);
   $validation->topic('key2')->check(between => ['-2.5', '+1.9']);
   $validation->topic('key3')->check(between => ['-2.5', '+1.9']);
 
-  my $validation = $validation->validate($input);
+  
   ok($validation->is_valid('key1'));
   ok($validation->is_valid('key2'));
   ok(!$validation->is_valid('key3'));
@@ -1388,34 +1391,34 @@ $vc_common->add_filter(
 # equal_to decimal
 {
   my $vc = $vc_common;
-  my $input = {key1 => '+0.9'};
+                       key1 => '+0.9'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check(equal_to => '0.9');
 
-  my $validation = $validation->validate($input);
+  
   ok($validation->is_valid('key1'));
 }
 
 # greater_than decimal
 {
   my $vc = $vc_common;
-  my $input = {key1 => '+10.9'};
+                       key1 => '+10.9'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check(greater_than => '9.1');
-  my $validation = $validation->validate($input);
+  
   ok($validation->is_valid('key1'));
 }
 
 # int unicode
 {
   my $vc = $vc_common;
-  my $input = {key1 => 0, key2 => 9, key3 => '２'};
+                       key1 => 0, key2 => 9, key3 => '２'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('int');
   $validation->topic('key2')->check('int');
   $validation->topic('key3')->check('int');
 
-  my $validation = $validation->validate($input);
+  
   ok($validation->is_valid('key1'));
   ok($validation->is_valid('key2'));
   ok(!$validation->is_valid('key3'));
@@ -1424,24 +1427,24 @@ $vc_common->add_filter(
 # less_than decimal
 {
   my $vc = $vc_common;
-  my $input = {key1 => '+0.9'};
+                       key1 => '+0.9'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check(less_than => '10.1');
 
-  my $validation = $validation->validate($input);
+  
   ok($validation->is_valid('key1'));
 }
 
 # uint unicode
 {
   my $vc = $vc_common;
-  my $input = {key1 => 0, key2 => 9, key3 => '２'};
+                       key1 => 0, key2 => 9, key3 => '２'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('uint');
   $validation->topic('key2')->check('uint');
   $validation->topic('key3')->check('uint');
 
-  my $validation = $validation->validate($input);
+  
   ok($validation->is_valid('key1'));
   ok($validation->is_valid('key2'));
   ok(!$validation->is_valid('key3'));
@@ -1450,12 +1453,12 @@ $vc_common->add_filter(
 # space unicode
 {
   my $vc = $vc_common;
-  my $input = {key1 => ' ', key2 => '　'};
+                       key1 => ' ', key2 => '　'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('space');
   $validation->topic('key2')->check('space');
 
-  my $validation = $validation->validate($input);
+  
   ok($validation->is_valid('key1'));
   ok(!$validation->is_valid('key2'));
 }
@@ -1463,12 +1466,12 @@ $vc_common->add_filter(
 # not_space unicode
 {
   my $vc = $vc_common;
-  my $input = {key1 => ' ', key2 => '　'};
+                       key1 => ' ', key2 => '　'};
   my $validation = $vc->validation;
   $validation->topic('key1')->check('not_space');
   $validation->topic('key2')->check('not_space');
 
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1'));
   ok($validation->is_valid('key2'));
 }
@@ -1476,14 +1479,14 @@ $vc_common->add_filter(
 # not_space unicode
 {
   my $vc = $vc_common;
-  my $input = {key1 => '　', key2 => '　', key3 => '　', key4 => '　'};
+                       key1 => '　', key2 => '　', key3 => '　', key4 => '　'};
   my $validation = $vc->validation;
   $validation->topic('key1')->filter('trim');
   $validation->topic('key2')->filter('trim_lead');
   $validation->topic('key3')->filter('trim_collapse');
   $validation->topic('key4')->filter('trim_trail');
 
-  my $validation = $validation->validate($input);
+  
   is($validation->output->{key1}, '　');
   is($validation->output->{key2}, '　');
   is($validation->output->{key3}, '　');
@@ -1493,7 +1496,7 @@ $vc_common->add_filter(
 # lenght {min => ..., max => ...}
 {
   my $vc = $vc_common;
-  my $input = {
+                       
     key1_1 => 'a',
     key1_2 => 'aa',
     key1_3 => 'aaa',
@@ -1505,7 +1508,7 @@ $vc_common->add_filter(
     key3_1 => 'aaa',
     key3_2 => 'aaaa',
     key3_3 => 'aaaaa'
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('key1_1')->check('length' => {min => 2, max => 4});
   $validation->topic('key1_2')->check('length' => {min => 2, max => 4});
@@ -1519,7 +1522,7 @@ $vc_common->add_filter(
   $validation->topic('key3_2')->check('length' => {max => 4});
   $validation->topic('key3_3')->check('length' => {max => 4});
   
-  my $validation = $validation->validate($input);
+  
   ok(!$validation->is_valid('key1_1'));
   ok($validation->is_valid('key1_2'));
   ok($validation->is_valid('key1_3'));
@@ -1536,12 +1539,12 @@ $vc_common->add_filter(
 # trim_uni
 {
   my $vc = Validator::Custom->new;
-  my $input = {
+                       
     int_param => '　　123　　',
     collapse  => "　　\n a \r\n b\nc  \t　　",
     left      => '　　abc　　',
     right     => '　　def　　'
-  };
+    
   my $validation = $vc->validation;
   $validation->topic('int_param')->filter('trim_uni');
   $validation->topic('collapse')->filter('trim_uni_collapse');
@@ -1601,7 +1604,7 @@ $vc_common->add_filter(
 
   # new rule syntax - basic
   {
-    my $input = {k1 => 'aaa', k2 => '', k3 => '', k4 => ''};
+               my $k1 = 'aaa', k2 => '', k3 => '', k4 => ''};
     my $validation = $vc->validation;
     $validation->topic('k1')->check('not_blank');
     $validation->topic('k2')->check('not_blank');
@@ -1632,13 +1635,13 @@ $vc_common->add_filter(
   my $vc = Validator::Custom->new;
 
   {
-    my $input = {
-      k1 => '',
-      k2 => 'abc',
+                 
+    my $k1 = '',
+    my $k2 = 'abc',
       k3 => 3.1,
       k4 => undef,
       k5 => []
-    };
+      
     my $validation = $vc->validation;
     $validation->topic('k1')->check('string');
     $validation->topic('k2')->check('string');
@@ -1686,7 +1689,7 @@ $vc_common->add_filter(
   # No check - valid
   {
     my $validation = $vc->validation;
-    my $input = {k1 => 1, k2 => undef};
+               my $k1 = 1, k2 => undef};
     $validation->topic('k1');
     $validation->topic('k2');
     my $vresult = $validation->validate($input);
@@ -1695,7 +1698,7 @@ $vc_common->add_filter(
   
   # No check - invalid
   {
-    my $input = {k1 => 1};
+               my $k1 = 1};
     my $validation = $vc->validation;
     $validation->topic('k1');
     $validation->topic('k2');
@@ -1717,16 +1720,11 @@ $vc_common->add_filter(
     $validation->topic('k2')
       ->check('int')->message('k2_int_error');
     my $vresult1 = $validation->validate({k1 => '', k2 => 4});
-    is_deeply(
-      $vresult1->messages_to_hash,
-      {k1 => 'k1_not_blank_error'}
-    );
+    is_deeply($vresult1->messages_to_hash,{k1 => 'k1_not_blank_error'});
     my $vresult2 = $validation->validate({k1 => 'aaa', k2 => 'aaa'});
-    is_deeply(
-      $vresult2->messages_to_hash,
-      {
-        k1 => 'k1_int_error',
-        k2 => 'k2_int_error'
+    is_deeply($vresult2->messages_to_hash,{
+      my $k1 = 'k1_int_error',
+      my $k2 = 'k2_int_error'
       }
     );
   }
@@ -1743,15 +1741,9 @@ $vc_common->add_filter(
       ->check('not_blank')
       ->check('int')->message('k1_int_not_blank_error');
     my $vresult1 = $validation->validate({k1 => ''});
-    is_deeply(
-      $vresult1->messages_to_hash,
-      {k1 => 'k1_int_not_blank_error'}
-    );
+    is_deeply($vresult1->messages_to_hash,{k1 => 'k1_int_not_blank_error'});
     my $vresult2 = $validation->validate({k1 => 'aaa'});
-    is_deeply(
-      $vresult2->messages_to_hash,
-      {k1 => 'k1_int_not_blank_error'}
-    );
+    is_deeply($vresult2->messages_to_hash, {k1 => 'k1_int_not_blank_error'});
   }
 }
 
@@ -1766,7 +1758,7 @@ $vc_common->add_filter(
       return $value =~ /^\d+$/;
     }
   );
-  my $input = { k1 => 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a'};
+                      my $k1 = 1, k2 => [1,2], k3 => [1,'a', 'b'], k4 => 'a'};
   my $validation = $vc->validation;
   $validation->topic('k1')->filter('to_array')->check_each('Int')->message("k1Error1");
   $validation->topic('k2')->check_each('Int')->message("k2Error1");
@@ -1783,11 +1775,11 @@ $vc_common->add_filter(
   # fallback - basic
   {
     my $vc = Validator::Custom->new;
-    my $input = {};
+                 };
     my $validation = $vc->validation;
     $validation->topic('key1')->check('int')->fallback;
 
-    my $validation = $validation->validate($input);
+    
     ok($validation->is_valid);
     is_deeply($validation->output, {});
   }
@@ -1795,12 +1787,12 @@ $vc_common->add_filter(
   # fallback - invalid
   {
     my $vc = Validator::Custom->new;
-    my $input = {key1 => 'a'};
+                 key1 => 'a'};
     my $validation = $vc->validation;
     $validation->topic('key1')->check('int')->fallback->default(2);
     $validation->topic('key2')->check('int');
     
-    my $validation = $validation->validate($input);
+    
     ok(!$validation->is_valid);
     is_deeply($validation->failed, ['key2']);
     is_deeply($validation->output, {key1 => 2});
@@ -1809,13 +1801,13 @@ $vc_common->add_filter(
   # fallback
   {
     my $vc = Validator::Custom->new;
-    my $input = {key1 => 'a', key3 => 'b'};
+                 key1 => 'a', key3 => 'b'};
     my $validation = $vc->validation;
     $validation->topic('key1')->check('int')->fallback->default(sub { return $_[0] });
     $validation->topic('key2')->check('int')->fallback->default(sub { return 5 });
     $validation->topic('key3')->check('int')->fallback->default(undef);
     
-    my $validation = $validation->validate($input);
+    
     is($validation->output->{key1}, $validation);
     is($validation->output->{key2}, 5);
     ok(exists $validation->output->{key3} && !defined $validation->output->{key3});
