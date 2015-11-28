@@ -21,37 +21,16 @@ sub new {
   
   # Add checks
   $self->add_check(
-    exists            => \&Validator::Custom::CheckFunction::exists,
     ascii             => \&Validator::Custom::CheckFunction::ascii,
-    between           => \&Validator::Custom::CheckFunction::between,
-    blank             => \&Validator::Custom::CheckFunction::blank,
     decimal           => \&Validator::Custom::CheckFunction::decimal,
-    defined           => \&Validator::Custom::CheckFunction::defined,
-    duplication       => \&Validator::Custom::CheckFunction::duplication,
-    equal_to          => \&Validator::Custom::CheckFunction::equal_to,
-    greater_than      => \&Validator::Custom::CheckFunction::greater_than,
-    http_url          => \&Validator::Custom::CheckFunction::http_url,
     int               => \&Validator::Custom::CheckFunction::int,
     in                => \&Validator::Custom::CheckFunction::in,
-    length            => \&Validator::Custom::CheckFunction::length,
-    less_than         => \&Validator::Custom::CheckFunction::less_than,
-    not_defined       => \&Validator::Custom::CheckFunction::not_defined,
-    not_space         => \&Validator::Custom::CheckFunction::not_space,
-    not_blank         => \&Validator::Custom::CheckFunction::not_blank,
     uint              => \&Validator::Custom::CheckFunction::uint,
     regex             => \&Validator::Custom::CheckFunction::regex,
-    selected_at_least => \&Validator::Custom::CheckFunction::selected_at_least,
-    space             => \&Validator::Custom::CheckFunction::space,
-    string            => \&Validator::Custom::CheckFunction::string,
-    date              => \&Validator::Custom::CheckFunction::date,
-    datetime          => \&Validator::Custom::CheckFunction::datetime,
   );
   
   # Add filters
   $self->add_filter(
-    first             => \&Validator::Custom::FilterFunction::first,
-    merge             => \&Validator::Custom::FilterFunction::merge,
-    to_array          => \&Validator::Custom::FilterFunction::to_array,
     remove_blank      => \&Validator::Custom::FilterFunction::remove_blank,
     trim              => \&Validator::Custom::FilterFunction::trim,
     trim_collapse     => \&Validator::Custom::FilterFunction::trim_collapse,
@@ -802,57 +781,57 @@ EOS
 
 =head1 NAME
 
-Validator::Custom - HTML form Validation, easy and flexibly
+Validator::Custom - HTML form Validation, simple and good flexibility
 
 =head1 SYNOPSYS
 
   use Validator::Custom;
   my $vc = Validator::Custom->new;
   
-  # Data
-  my $input = {id => 1, name => 'Ken Suzuki', age => ' 19 '};
-
-  # Create Rule
-  my $rule = $vc->create_rule;
+  # Input
+  my $id = 1;
+  my $name = 'Ken Suzuki';
+  my $age = ' 19 ';
+  my $favorite = ['apple', 'orange'];
   
-  # Rule syntax - integer, have error message
-  $rule->topic('id')->check('int')->message('id should be integer');
+  # Create validation object
+  my $validation = $vc->validation;
   
-  # Rule syntax - string, not blank, length is 1 to 5, have error messages
-  $rule->topic('name')
-    ->check('string')->message('name should be string')
-    ->check('not_blank')->message('name should be not blank')
-    ->check(length => [1, 5])->message('name is too long');
+  # Check id and set failed message
+  if (!(length $id && $vc->check('int', $id))) {
+    $validation->add_failed(id => 'id must be integer');
+  }
   
-  # Rule syntax - value is optional, default is 20
-  $rule->topic('age')->optional->default(20)
-    ->filter('trim')->check('int');
+  # Check name and set failed message
+  if (!(length $name)) {
+    $validation->add_failed(name => 'name must have length');
+  }
+  elsif (!(length $name < 30)) {
+    $validation->add_failed(name => 'name is too long');
+  }
   
-  # Validation
-  my $result = $rule->validate($input);
-  if ($result->is_valid) {
-    # Output
-    my $output = $vresult->data;
+  # Filter and check age, and set default value
+  $age = $vc->filter('trim', $age);
+  if (!(length $id && $vc->check('int', $id))) {
+    $age = 20;
+  
+  # Filter and check each favorite value
+  $favorite = $vc->filter_each('trim', $fovorite);
+  if (@$favorite == 0) {
+    $validation->add_failed(favorite => 'favorite must be selected more than one');
+  }
+  elsif (!($vc->check_each('in', $favorite, ['apple', 'ornge', 'peach']))) {
+    $validation->add_failed(favorite => 'favorite is invalid');
+  }
+  
+  # Get result
+  if ($validation->is_valid) {
+    # ...
   }
   else {
     # Error messgaes
     my $messages = $vresult->messages;
   }
-  
-  # You can create your original check
-  my $blank_or_number = sub {
-    my ($rule, $args, $key, $params) = @_;
-    
-    my $value = $params->{$key};
-    
-    my $is_valid
-      = $vc->run_check('blank') || $vc->run_check('regex');
-    
-    return $is_valid;
-  };
-  
-  $rule->topic('age')
-    ->check($blank_or_number)->message('age must be blank or number')
   
 =head1 DESCRIPTION
 
@@ -923,15 +902,15 @@ Rule details is explained in L</"3. Rule syntax"> section.
 
 B<4. Validate data>
   
-  my $result = $vc->validate($input, $rule);
+  my $validation = $vc->validate($input, $rule);
 
 use C<validate()> to validate the data applying the rule.
 C<validate()> return L<Validator::Custom::Result> object.
 
 B<5. Manipulate the validation result>
   
-  if ($result->is_ok) {
-    my $output = $result->data;
+  if ($validation->is_ok) {
+    my $output = $validation->data;
   }
   else {
     # Handle error
@@ -963,7 +942,7 @@ The following ones is often used methods.
 
 B<output> method
 
-  my $output = $result->data;
+  my $output = $validation->data;
 
 Get the data in the end state. L<Validator::Custom> has filtering ability.
 The parameter values in data passed to C<validate()>
@@ -972,14 +951,14 @@ You can get filtered data using C<data()>.
 
 B<messages()>
 
-  my $messages = $result->messages;
+  my $messages = $validation->messages;
 
 Get messages corresponding to the parameter names which value is invalid.
 Messages keep the order of parameter names of the rule.
 
 B<message()>
 
-  my $message = $result->message('name');
+  my $message = $validation->message('name');
 
 Get a message corresponding to the parameter name which value is invalid.
 

@@ -354,4 +354,8 @@ sub trim_uni_trail {
   return [1, $value];
 }
 
+=head1 NAME
+
+Validator::Custom::Constraint - removed
+
 1;
