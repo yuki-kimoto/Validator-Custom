@@ -34,9 +34,10 @@ sub add_failed {
   my @failed_names = keys %$failed_infos;
   my $pos;
   if (@failed_names) {
+    $DB::single = 1;
     my $max_pos = 0;
     for my $failed_name (@failed_names) {
-      my $pos = $failed_infos->{$failed_name}{position};
+      my $pos = $failed_infos->{$failed_name}{pos};
       if ($pos > $max_pos) {
         $max_pos = $pos;
       }
@@ -53,6 +54,7 @@ sub add_failed {
     $message = "$name is invalid";
   }
   $failed_infos->{$name}{message} = $message;
+  $failed_infos->{$name}{pos} = $pos;
   
   return $self;
 }
@@ -61,8 +63,8 @@ sub failed {
   my $self = shift;
   
   my $failed_infos = $self->{_failed_infos};
-  my @failed = sort { $failed_infos->{$a}{position} <=>
-    $failed_infos->{$b}{position} } keys %$failed_infos;
+  my @failed = sort { $failed_infos->{$a}{pos} <=>
+    $failed_infos->{$b}{pos} } keys %$failed_infos;
   
   return \@failed;
 }
@@ -85,8 +87,8 @@ sub messages {
   # Error messages
   my @messages;
   my $failed_infos = $self->{_failed_infos};
-  my @names = sort { $failed_infos->{$a}{position} <=>
-    $failed_infos->{$b}{position} } keys %$failed_infos;
+  my @names = sort { $failed_infos->{$a}{pos} <=>
+    $failed_infos->{$b}{pos} } keys %$failed_infos;
   foreach my $name (@names) {
     my $message = $self->message($name);
     push @messages, $message;
