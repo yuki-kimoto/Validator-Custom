@@ -1153,26 +1153,19 @@ Filter function is registered by C<add_filter> method.
 =head1 CHECKS
 
 =head2 ascii
-
-  Input: {name => 'Ken'}
-  Rule:  $rule->topic('name')->check('ascii')
-
+  
+  my $is_valid = $vc->check('ascii', $value);
+  
 Ascii graphic characters(hex 21-7e).
 
-=head2 between
+Valid example:
 
-  # Check (1, 2, .. 19, 20)
-  Input: {age => 19}
-  Rule:  $rule->topic('age')->check(between => [1, 20])
+  "Ken"
 
-Between A and B.
-
-=head2 blank
-
-  Input: {name => ''}
-  Rule:  $rule->topic('name')->check('blank')
-
-Blank.
+Invalid example:
+  
+  "aa aa"
+  "\taaa"
 
 =head2 decimal
   
@@ -1190,41 +1183,6 @@ If you set undef value or don't set any value, that means there is no maximum li
         $rule->topic('num2')->check('decimal' => [undef, 2])
         $rule->topic('num2')->check('decimal' => [2, undef])
 
-=head2 defined
-
-  Input: {name => 'Ken'}
-  Rule:  $rule->topic('name')->check('defined')
-
-Defined.
-
-=head2 duplication
-
-  Input: {mail1 => 'a@somehost.com', mail2 => 'a@somehost.com'};
-  Rule:  $rule->topic(['mail1', 'mail2'])->name('mail')->check('duplication)
-
-Check if the two data are same or not.
-
-You can get result value
-
-  my $mail = $vresult->data->{mail};
-
-Note that if one value is not defined or both values are not defined,
-result of validation is false.
-
-=head2 equal_to
-
-  Input: {price => 1000}
-  Rule:  $rule->topic('price')->check('equal_to' => 1000)
-
-Numeric equal comparison.
-
-=head2 greater_than
-
-  Input: {price => 1000}
-  Rule:  $rule->topic('price')->check('greater_than' => 900)
-
-Numeric "greater than" comparison
-
 =head2 http_url
 
   Input: {url => 'http://somehost.com'};
@@ -1239,78 +1197,12 @@ HTTP(or HTTPS) URL.
 
 Integer.
 
-=head2 in_array
+=head2 in
 
   Input: {food => 'sushi'};
-  Rule:  $rule->topic('food')->check('in_array' => [qw/sushi bread apple/])
+  Rule:  $rule->topic('food')->check('in' => [qw/sushi bread apple/])
 
 Check if the values is in array.
-
-=head2 length
-
-  Input: {value1 => 'aaa', value2 => 'bbbbb'};
-  Rule:  # length is equal to 3
-        $rule->topic('value1')->check('length' => 3) 
-        # length is greater than or equal to 2 and lower than or equeal to 5
-        $rule->topic('value2')->check('length' => [2, 5]) 
-        # length is greater than or equal to 2 and lower than or equeal to 5
-        $rule->topic('value3')->check('length' => {min => 2, max => 5}) 
-        # greater than or equal to 2
-        $rule->topic('value4')->check('length' => {min => 2}) 
-        # lower than or equal to 5
-        $rule->topic('value5')->check('length' => {max => 5}) 
-
-Length of the value.
-
-Not that if value is internal string, length is character length.
-if value is byte string, length is byte length.
-
-=head2 less_than
-
-  Input: {num => 20}
-  Rule:  $rule->topic('num')->check('less_than' => 25);
-
-Numeric "less than" comparison.
-
-=head2 not_blank
-
-  Input: {name => 'Ken'}
-  Rule:  $rule->topic('name')->check('not_blank') # Except for ''
-
-Not blank.
-
-=head2 not_defined
-
-  Input: {name => 'Ken'}
-  Rule:  $rule->topic('name')->check('not_defined')
-
-Not defined.
-
-=head2 not_space
-
-  Input: {name => 'Ken'}
-  Rule:  $rule->topic('name')->check('not_space') # Except for '', ' ', '   '
-
-Not contain only space characters. 
-Not that space is only C<[ \t\n\r\f]>
-which don't contain unicode space character.
-
-=head2 space
-
-  Input: {name => '   '}
-  Rule:  $rule->topic('name')->check('space') # '', ' ', '   '
-
-White space or empty string.
-Not that space is only C<[ \t\n\r\f]>
-which don't contain unicode space character.
-
-=head2 string
-
-  Input: {name => 'abc'}
-  Rule:  $rule->topic('name')->check('string') # '', 'abc', 0, 1, 1.23
-
-Check if the value is string, which contain numeric value.
-if value is not defined or reference, this check return false.
 
 =head2 uint
 
@@ -1319,13 +1211,6 @@ if value is not defined or reference, this check return false.
 
 Unsigned integer(contain zero).
   
-=head2 regex
-
-  Input: {num => '123'}
-  Rule:  $rule->topic('num')->check('regex' => qr/\d{0,3}/)
-
-Match a regular expression.
-
 =head2 selected_at_least
 
   Input: {hobby => ['music', 'movie' ]}
@@ -1337,37 +1222,6 @@ In other word, the array contains at least specified count element.
 =head1 FILTERS
 
 You can use the following filter by default.
-
-=head2 merge
-
-  Input: {name1 => 'Ken', name2 => 'Rika', name3 => 'Taro'}
-  Rule:  $rule->topic(['name1', 'name2', 'name3'])->name('mergd_name')
-          ->filter('merge' => 'all_name')
-  Output:{all_name => 'KenRikaTaro'}
-
-Merge the values. you must set the key for merged value.
-
-You can get result value.
-
-  my $merged_name = $vresult->data->{merged_name};
-
-Note that if one value is not defined, merged value become undefined.
-
-=head2 first
-
-  Input: {names => ['Ken', 'Taro']}
-  Rule:  $rule->topic('names')->filter('first')
-  Output:{names => 'Ken'}
-Get fisrt element of array.
-
-=head2 to_array
-
-  Input: {languages => 'Japanese'}
-  Rule:  $rule->topic('languages')->filter('to_array')
-  Output:{languages => ['Japanese']}
-  
-Convert non array reference data to array reference.
-This is useful to check checkbox values or select multiple values.
 
 =head2 trim
 
