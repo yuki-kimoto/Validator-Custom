@@ -186,8 +186,8 @@ sub add_filter {
   return $self;
 }
 
+# Version 0 method(Not used now)
 our %VALID_OPTIONS = map {$_ => 1} qw/message default copy require optional/;
-
 sub _parse_constraint {
   my ($self, $c) = @_;
 
@@ -788,7 +788,7 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   use Validator::Custom;
   my $vc = Validator::Custom->new;
   
-  # Input
+  # Input data
   my $id = 1;
   my $name = 'Ken Suzuki';
   my $age = ' 19 ';
@@ -798,7 +798,7 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   my $validation = $vc->validation;
   
   # Check id and set failed message
-  if (!(length $id && $vc->check('int', $id))) {
+  if (!(length $id && $vc->check($id, 'int'))) {
     $validation->add_failed(id => 'id must be integer');
   }
   
@@ -811,16 +811,16 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   }
   
   # Filter and check age, and set default value
-  $age = $vc->filter('trim', $age);
-  if (!(length $id && $vc->check('int', $id))) {
+  $age = $vc->filter($age, 'trim');
+  if (!(length $id && $vc->check($age, 'int'))) {
     $age = 20;
   
   # Filter and check each favorite value
-  $favorite = $vc->filter_each('trim', $fovorite);
+  $favorite = $vc->filter_each($favorite, 'trim');
   if (@$favorite == 0) {
     $validation->add_failed(favorite => 'favorite must be selected more than one');
   }
-  elsif (!($vc->check_each('in', $favorite, ['apple', 'ornge', 'peach']))) {
+  elsif (!($vc->check_each($favorite, 'in',  ['apple', 'ornge', 'peach']))) {
     $validation->add_failed(favorite => 'favorite is invalid');
   }
   
@@ -829,39 +829,47 @@ Validator::Custom - HTML form Validation, simple and good flexibility
     # ...
   }
   else {
-    # Error messgaes
-    my $messages = $vresult->messages;
+    
+    # Know what is failed
+    unless ($validation->is_valid('name')) {
+      # ...
+    }
+    
+    # Get failed list
+    my $failed = $validation->failed;
+    
+    # Get messages
+    my $messages = $validation->messages;
+    
+    # Get messages as hash
+    my $messages_h = $validation->messages_to_hash;
   }
   
 =head1 DESCRIPTION
 
-L<Validator::Custom> validate HTML form data easy and flexibly.
+L<Validator::Custom> is validator class for validate HTML form.
+L<Validator::Custom> is simple and good flexibility.
+
 The features are the following ones.
 
 =over 4
 
 =item *
 
-Many check functions are available by default, such as C<not_blank>,
-C<int>, C<defined>, C<in_array>, C<length>.
+Sevral check functions are available by default, C<ascii>,
+C<int>, C<decimal>, C<uint> C<in>.
 
 =item *
 
-Several filter functions are available by default, such as C<trim>,
-C<datetime_to_timepiece>, C<date_to_timepiece>.
+Several filter functions are available by default, such as C<trim>.
 
 =item *
 
-You can add your check function.
+You can add your check and filter function.
 
 =item *
 
-You can set error messages for invalid parameter value.
-The order of messages is kept.
-
-=item *
-
-Support C<OR> condition check and negative check,
+You can add failed message keeping the order of validation.
 
 =back
 
@@ -874,35 +882,55 @@ B<1. Create a new Validator::Custom object>
   use Validator::Custom;
   my $vc = Validator::Custom->new;
 
-B<2. Prepare data for validation>
+B<2. Prepare input data for validation>
 
-  my $input = {age => 19, name => 'Ken Suzuki'};
+  my $id = 1;
+  my $name = 'Ken Suzuki';
+  my $age = ' 19 ';
+  my $favorite = ['apple', 'orange'];
 
-Data must be hash reference.
+B<3. Create validation object>
 
-B<3. Prepare a rule for validation>
+  my $validation = $vc->validation;
 
-  my $ruel = $vc->create_rule;
-  $rule->topic('age')
-    ->check('not_blank')
-    ->check('int')->message('age must be integer');
+B<4. Validate input data>
+
+  # Check id and set failed message
+  if (!(length $id && $vc->check($id, 'int'))) {
+    $validation->add_failed(id => 'id must be integer');
+  }
   
-  $rule->topic('name')
-    ->check('not_blank')->message('name is empty')
-    ->check(length => [1, 5])->message('name must be length 1 to 5');
+  # Check name and set failed message
+  if (!(length $name)) {
+    $validation->add_failed(name => 'name must have length');
+  }
+  elsif (!(length $name < 30)) {
+    $validation->add_failed(name => 'name is too long');
+  }
+  
+  # Filter and check age, and set default value
+  $age = $vc->filter($age, 'trim');
+  if (!(length $id && $vc->check($age, 'int'))) {
+    $age = 20;
+  
+  # Filter and check each favorite value
+  $favorite = $vc->filter_each($favorite, 'trim');
+  if (@$favorite == 0) {
+    $validation->add_failed(favorite => 'favorite must be selected more than one');
+  }
+  elsif (!($vc->check_each($favorite, 'in',  ['apple', 'ornge', 'peach']))) {
+    $validation->add_failed(favorite => 'favorite is invalid');
+  }
 
-Please see L<Validator::Custom/"RULE"> about rule syntax.
-
-You can use many check function,
-such as C<int>, C<not_blank>, C<length>.
-See L<Validator::Custom/"CONSTRAINTS">
-to know all check functions.
+You can use many check and filterfunction,
+such as C<int>, C<trim>.
+See L<Validator::Custom/"CHECKS"> and L<Validator::Custom/"FILTERS">.
 
 Rule details is explained in L</"3. Rule syntax"> section.
 
 B<4. Validate data>
   
-  my $validation = $vc->validate($input, $rule);
+  my $validation = $vc->validate($input, $vc);
 
 use C<validate()> to validate the data applying the rule.
 C<validate()> return L<Validator::Custom::Result> object.
@@ -965,130 +993,9 @@ Get a message corresponding to the parameter name which value is invalid.
 All L<Validator::Custom::Result>'s APIs is explained
 in the POD of L<Validator::Custom::Result>
 
-=head2 RULE
-
-  # Create Rule
-  my $rule = $vc->create_rule;
-  
-  # Rule syntax - integer, have error message
-  $rule->topic('id')->check('int')->message('id should be integer');
-  
-  # Rule syntax - not blank, length is 1 to 5, have error messages
-  $rule->topic('name')
-    ->check('not_blank')->message('name is emtpy')
-    ->check(length => [1, 5])->message('name is too long');
-  
-  # Rule syntax - value is optional, default is 20
-  $rule->topic('age')->optional->check('int')->default(20);
-
-Rule is L<Validator::Custom::Rule> ojbect.
-You can create C<create_rule> method of L<Validator::Custom>.
-
-  my $rule = $vc->create_rule
-
-At first you set topic by C<topic> method.
-If the value is not always required, you use C<optional> method after call C<topic> method.
-  
-  # Set topic
-  $rule->topic('age');
-  
-  # If value is optional, call optional methods
-  $rule->topic('age')->optional;
-
-If you set topic to multiple keys, you should set key name by C<name> method.
-
-  # Key name
-  $rule->topic(['mail1', 'mail2'])->name('mail');
-
-You can set options, C<message>, C<default>, and C<copy>.
-
-=over 4
-
-=item 1. message
-
- $rule->topic('age')->message('age is invalid');
-
-Message corresponding to the parameter name which value is invalid. 
-
-=item 2. default
-
-  $rule->topic('age')->default(5)
-
-Default value. 
-If the parameter value is invalid,
-This value is set to output.
-
-If you set not string or number value, you should the value which surrounded by code reference
-
-  $rule->topic('age')->default(sub { [] })
-  
-=item 3. copy
-
-  $rule->topic('age')->copy(0)
-
-If this value is 0, The parameter value is not copied to result data. 
-Default to 1. Parameter value is copied to the data.
-
-=back
-
-You set checks by C<check> method.
-
-  $rule->topic('age')->check('length' => [1, 5]);
-
-You can set message for each check function
-
-  $rule->topic('name')
-    ->check('not_blank')->message('name must be not blank')
-    ->check(length => [1, 5])->message('name must be 1 to 5 length');
-
-You can create original check function using
-original checks.
-you can call checks from $_ in subroutine.
-
-  # You original check(you can call check from $_)
-  my $blank_or_number = sub {
-    my $value = shift;
-    return $_->blank($value) || $_->regex($value, qr/[0-9]+/);
-  };
-  my $rule = [
-    name => [
-      [$blank_or_number => 'name must be blank or number']
-    ]
-  ];
-
-=head3 Multiple parameters validation
-
-Multiple parameters validation is available.
-
-  Input: {password1 => 'xxx', password2 => 'xxx'}
-  Rule:  $rule->topic(['password1', 'password2'])->name('password_check)
-          ->check('duplication')
-
-In this example, We check if 'password1' and 'password2' is same.
-The following value is passed to check function C<duplication>.
-
-  ['xxx', 'xxx']
-
-You must specify new key, such as C<password_check>.
-This is used by L<Validator::Result> object.
-
-All matched value is passed to check function as array reference.
-In this example, the following value is passed.
-
-  ['Taro', 'Rika', 'Ken']
-
-=head3 Array validation
-
-You can C<check_each> method if all the elements of array is valid.
-
-The following is old syntax. Please use above syntax.
-
-  Input: {nums => [1, 2, 3]}
-  Rule:  $rule->topic('nums')->check_each('int')
-
 =head2 4. Check functions
 
-=head3 Register check function
+=head3 Add check function
 
 L<Validator::Custom> has various check functions.
 You can see check functions added by default
@@ -1098,7 +1005,7 @@ and you can add your check function if you need.
 
   $vc->add_check(
     telephone => sub {
-      my $value = shift;
+      my ($vc, $value, $arg) = @_;
       
       my $is_valid;
       if ($value =~ /^[\d-]+$/) {
@@ -1118,7 +1025,7 @@ and L<Validator::Custom> object as third argument.
 
   $vc->add_check(
     telephone => sub {
-      my ($rule, $args, $key, $params) = @_;
+      my ($vc, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
@@ -1135,7 +1042,7 @@ Filter function is registered by C<add_filter> method.
 
   $vc->add_filter(
     to_upper_case => sub {
-      my ($rule, $args, $key, $params) = @_;
+      my ($vc, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
@@ -1147,25 +1054,9 @@ Filter function is registered by C<add_filter> method.
 
 =head1 CHECKS
 
-=head2 blank
-
-  Input: {name => ''}
-  Rule:  $rule->topic('name')->check('blank')
-
-Blank.
-
-=head2 space
-
-  Input: {name => '   '}
-  Rule:  $rule->topic('name')->check('space') # '', ' ', '   '
-
-White space or empty string.
-Not that space is only C<[ \t\n\r\f]>
-which don't contain unicode space character.
-
 =head2 ascii
   
-  my $is_valid = $vc->check('ascii', $value);
+  my $is_valid = $vc->check($value, 'ascii');
   
 Ascii graphic characters(hex 21-7e).
 
@@ -1181,8 +1072,8 @@ Invalid example:
 =head2 decimal
   
   Input: {num1 => '123', num2 => '1.45'}
-  Rule:  $rule->topic('num1')->check('decimal' => 3)
-        $rule->topic('num2')->check('decimal' => [1, 2])
+  Rule: $vc->check($value, 'decimal', 3)
+        $vc->check($value, 'decimal', [1, 2])
 
 Decimal. You can specify maximum digits number at before
 and after '.'.
@@ -1190,46 +1081,31 @@ and after '.'.
 If you set undef value or don't set any value, that means there is no maximum limit.
   
   Input: {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'}
-  Rule:  $rule->topic('num1')->check('decimal')
-        $rule->topic('num2')->check('decimal' => [undef, 2])
-        $rule->topic('num2')->check('decimal' => [2, undef])
-
-=head2 http_url
-
-  Input: {url => 'http://somehost.com'};
-  Rule:  $rule->topic('url')->check('http_url')
-
-HTTP(or HTTPS) URL.
+  Rule: $vc->->check($value, 'decimal')
+        $vc->check($value, 'decimal', [undef, 2])
+        $vc->check($value, 'decimal', [2, undef])
 
 =head2 int
 
   Input: {age => 19};
-  Rule:  $rule->topic('age')->check('int')
+  Rule:  $vc->check($value, 'int')
 
 Integer.
 
 =head2 in
 
   Input: {food => 'sushi'};
-  Rule:  $rule->topic('food')->check('in' => [qw/sushi bread apple/])
+  Rule:  $vc->check($value, 'in', [qw/sushi bread apple/])
 
 Check if the values is in array.
 
 =head2 uint
 
   Input: {age => 19}
-  Rule:  $rule->topic('age')->check('uint')
+  Rule:  $vc->check($value, 'uint')
 
 Unsigned integer(contain zero).
   
-=head2 selected_at_least
-
-  Input: {hobby => ['music', 'movie' ]}
-  Rule:  $rule->topic('hobby')->check(selected_at_least => 1)
-
-Selected at least specified count item.
-In other word, the array contains at least specified count element.
-
 =head1 FILTERS
 
 You can use the following filter by default.
@@ -1237,7 +1113,7 @@ You can use the following filter by default.
 =head2 trim
 
   Input: {name => '  Ken  '}
-  Rule:  $rule->topic('name')->filter('trim')
+  Rule:  $vc->filter($value, 'trim')
   Output:{name => 'Ken'}
 
 Trim leading and trailing white space.
@@ -1247,7 +1123,7 @@ which don't contain unicode space character.
 =head2 trim_collapse
 
   Input: {name => '  Ken   Takagi  '}
-  Rule:  $rule->topic('name')->filter('trim_collapse') # 
+  Rule:  $vc->filter($value, 'trim_collapse') # 
   Output:{name => 'Ken Takagi'}
 
 Trim leading and trailing white space,
@@ -1258,7 +1134,7 @@ which don't contain unicode space character.
 =head2 trim_lead
 
   Input: {name => '  Ken  '}
-  Rule:  $rule->topic('name')->filter('trim_lead')
+  Rule:  $vc->filter($value, 'trim_lead')
   Output:{name => 'Ken  '}
 
 Trim leading white space.
@@ -1268,7 +1144,7 @@ which don't contain unicode space character.
 =head2 trim_trail
 
   Input: {name => '  Ken  '}
-  Rule:  $rule->topic('name')->filter('trim_trail')
+  Rule:  $vc->filter($value, 'trim_trail')
   Output:{name => '  Ken'}
 
 Trim trailing white space.
@@ -1278,7 +1154,7 @@ which don't contain unicode space character.
 =head2 trim_uni
 
   Input: {name => '  Ken  '}
-  Rule:  $rule->topic('name')->filter('trim_uni')
+  Rule:  $vc->filter($value, 'trim_uni')
   Output:{name => 'Ken'}
 
 Trim leading and trailing white space, which contain unicode space character.
@@ -1286,7 +1162,7 @@ Trim leading and trailing white space, which contain unicode space character.
 =head2 trim_uni_collapse
 
   Input: {name => '  Ken   Takagi  '};
-  Rule:  $rule->topic('name')->filter('trim_uni_collapse')
+  Rule:  $vc->filter($value, 'trim_uni_collapse')
   Output:{name => 'Ken Takagi'}
 
 Trim leading and trailing white space, which contain unicode space character.
@@ -1294,7 +1170,7 @@ Trim leading and trailing white space, which contain unicode space character.
 =head2 trim_uni_lead
 
   Input: {name => '  Ken  '};
-  Rule:  $rule->topic('name')->filter('trim_uni_lead')
+  Rule:  $vc->filter($value, 'trim_uni_lead')
   Output:{name => 'Ken  '}
 
 Trim leading white space, which contain unicode space character.
@@ -1302,7 +1178,7 @@ Trim leading white space, which contain unicode space character.
 =head2 trim_uni_trail
   
   Input: {name => '  Ken  '};
-  Rule:  $rule->topic('name')->filter('trim_uni_trail')
+  Rule:  $vc->filter($value, 'trim_uni_trail')
   Output:{name => '  Ken'}
 
 Trim trailing white space, which contain unicode space character.
@@ -1330,7 +1206,7 @@ current key name, and parameters
   
   $vc->add_check(
     int => sub {
-      my ($rule, $args, $key, $params) = @_;
+      my ($vc, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
@@ -1339,7 +1215,7 @@ current key name, and parameters
       return $is_valid;
     },
     greater_than => sub {
-      my ($rule, $args, $key, $params) = @_;
+      my ($vc, $args, $key, $params) = @_;
       
       my ($arg_value) = @$args;
       
@@ -1361,7 +1237,7 @@ current key name, and parameters,
 
   $vc->add_filter(
     trim => sub {
-      my ($rule, $args, $key, $params) = @_;
+      my ($vc, $args, $key, $params) = @_;
       
       my $value = $params->{$key};
       
@@ -1374,70 +1250,32 @@ current key name, and parameters,
 
 =head2 check
 
-  my $is_valid = $vc->check('int', $value);
-  my $is_valid = $vc->check('length', $value, $arg);
+  my $is_valid = $vc->check($value, 'int');
+  my $is_valid = $vc->check($value, 'int', $arg);
 
 Run check.
 
 =head2 check_each
 
-  my $is_valid = $vc->check_each('int', $values);
-  my $is_valid = $vc->check_each('length', $values, $arg);
+  my $is_valid = $vc->check_each($values, 'int');
+  my $is_valid = $vc->check_each($values, 'int', $arg);
 
 Run check all elements of array refernce.
 If more than one element is invalid, check_each reterun false.
 
 =head2 filter
 
-  my $new_value = $vc->filter('trim', $value);
-  my $new_value = $vc->filter('trim', $value, $arg);
+  my $new_value = $vc->filter($value, 'trim');
+  my $new_value = $vc->filter($value, 'trim', $arg);
 
 Run filter.
 
 =head2 filter_each
 
-  my $new_values = $vc->filter_each('trim', $values);
-  my $new_values = $vc->filter_each('trim', $values, $arg);
+  my $new_values = $vc->filter_each($values, 'trim');
+  my $new_values = $vc->filter_each($values, 'trim', $arg);
 
 Run filter all elements of array reference.
-
-=head1 FAQ
-
-=head2 How to do check box validation?
-
-Check box validation is a little difficult because
-check box value is not exists or one or multiple.
-
-  # Data
-  my $input = {}
-  my $input = {feature => 1}
-  my $input = {feature => [1, 2]}
-
-You can do the following way.
-
-  $rule->topic('feature')
-    ->filter('to_array')
-    ->check(selected_at_least => 1)->message('feature should select at least 1')
-    ->check_each('int')->message('features should be integer');
-
-=head2 How to do validation of "or" condition
-
-You create your check code using code reference.
-You can use check function by C<run_check> method.
-
-  # Data
-  my $input = {age => ''};
-  my $input = {age => 3};
-  
-  # Check blank or int
-  $rule->topic('age')->check(sub {
-    my ($rule, $args, $key, $params) = @_;
-    
-    my $is_blank = $rule->run_check('blank', [], $key, $params);
-    my $is_int = $rule->run_check('int', [], $key, $params);
-    
-    return $is_blank || $is_int;
-  });
 
 =head1 AUTHOR
 
