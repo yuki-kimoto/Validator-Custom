@@ -102,6 +102,6 @@ sub trim_uni_trail {
 
 =head1 NAME
 
-Validator::Custom::FilterFunction - Filter functions
+Validator::Custom::FilterFunction - Filtering functions
 
 1;

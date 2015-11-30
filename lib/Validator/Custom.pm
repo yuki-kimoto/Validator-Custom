@@ -1212,6 +1212,52 @@ Run filter.
 
 Run filter all elements of array reference.
 
+=head1 EXAMPLES
+
+Password checking.
+  
+  my $password = 'abc';
+  my $password2 = 'abc';
+  
+  my $validation = $vc->validation;
+  
+  if (!length $password) {
+    $validation->add_failed(password => 'password must have length');
+  }
+  elsif (!$vc->check($password, 'ascii')) {
+    $validation->add_failed(password => 'password contains invalid characters');
+  }
+  elsif ($password ne $password2) {
+    $validation->add_failed(password => "two passwords don't match");
+  }
+  
+  if ($validation->is_valid) {
+    # ...
+  }
+  else {
+    # ...
+  }
+
+Check box, selected at least 1.
+
+  my $favorite = ['apple', 'orange'];
+
+  my $validation = $vc->validation;
+  
+  if (@$favorite == 0) {
+    $validation->add_failed(favorite => 'favorite must be selected at least 1');
+  }
+  elsif (!$vc->check($favorite, 'in', ['apple', 'orange', 'melon'])) {
+    $validation->add_failed(favorite => 'favorite have invalid value');
+  }
+  
+  if ($validtion->is_valid) {
+    # ...
+  }
+  else {
+    # ...
+  }
+
 =head1 FAQ
 
 =head2 I use Validator::Custom 0.xx yet. I want to see documentation of Version 0.xx.

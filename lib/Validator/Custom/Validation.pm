@@ -34,7 +34,6 @@ sub add_failed {
   my @failed_names = keys %$failed_infos;
   my $pos;
   if (@failed_names) {
-    $DB::single = 1;
     my $max_pos = 0;
     for my $failed_name (@failed_names) {
       my $pos = $failed_infos->{$failed_name}{pos};
@@ -76,34 +75,33 @@ sub message {
   croak 'Parameter name must be specified'
     unless $name;
   
-  return $self->{_failed_infos}->{$name}{message}
-    || $self->{_default_messages}{$name}
-    || 'Error message not specified';
+  return $self->{_failed_infos}{$name}{message};
 }
 
 sub messages {
   my $self = shift;
 
-  # Error messages
-  my @messages;
   my $failed_infos = $self->{_failed_infos};
-  my @names = sort { $failed_infos->{$a}{pos} <=>
-    $failed_infos->{$b}{pos} } keys %$failed_infos;
-  foreach my $name (@names) {
-    my $message = $self->message($name);
-    push @messages, $message;
+
+  # Messages
+  my $messages = [];
+  for my $name (@{$self->failed}) {
+    my $message = $failed_infos->{$name}{message};
+    push @$messages, $message;
   }
   
-  return \@messages;
+  return $messages;
 }
 
 sub messages_to_hash {
   my $self = shift;
-
-  # Error messages
+  
+  my $failed_infos = $self->{_failed_infos};
+  
+  # Name and message hash
   my $messages = {};
-  foreach my $name (keys %{$self->{_failed_infos}}) {
-    $messages->{$name} = $self->message($name);
+  for my $name (keys %$failed_infos) {
+    $messages->{$name} = $failed_infos->{$name}{message};
   }
   
   return $messages;
@@ -133,3 +131,58 @@ Validator::Custom::Validation - Validation result
   my $messages = $validation->messages;
   my $title_message = $validation->message('title');
   my $messages_h = $validation->messages_to_hash;
+
+=head1 METHODS
+
+L<Validator::Custom::Validation> inherits all methods from L<Object::Simple>
+and implements the following new ones.
+
+=head2 new
+
+  my $validation = Validator::Custom::Validation->new;
+  
+Create Validator::Custom::Validation object.
+
+Generally this method is not used. You should use validation method of Validator::Custom.
+
+  my $validation = $vc->validation;
+
+=head2 is_valid
+
+  my $is_valid = $validation->is_valid;
+  my $is_valid = $validation->is_valid('title');
+
+Check all values is valid. If name is specified, check the value is valid.
+
+=head2 add_failed
+
+  $validation->add_failed('title' => 'title is invalid value');
+  $validation->add_failed('title');
+
+Add failed name and message.
+If message is omitted, default message is set automatically.
+
+=head2 failed
+
+  my $failed = $validation->failed;
+
+Get failed names.
+
+=head2 message
+
+  my $message = $validation->message('title');
+
+Get a failed message.
+
+=head2 messages
+
+  my $messgaes = $validation->messages;
+
+Get failed messages.
+
+=head2 messages_to_hash
+
+  my $messages_h = $validation->messages_to_hash;
+
+Get failed names and messages as hash reference.
+
