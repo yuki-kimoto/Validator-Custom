@@ -183,4 +183,4 @@ sub remove_error_info {
 
 =head1 NAME
 
-Validator::Custom::Result - Removed
+Validator::Custom::Result - DEPRECATED

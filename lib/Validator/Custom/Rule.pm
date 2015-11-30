@@ -205,4 +205,5 @@ sub check_or {
 
 =head1 NAME
 
-Validator::Custom::Rule - Removed
+Validator::Custom::Rule - DEPRECATED
+

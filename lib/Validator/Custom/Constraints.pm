@@ -25,4 +25,4 @@ sub DESTROY { }
 
 =head1 NAME
 
-Validator::Custom::Constraints - removed
+Validator::Custom::Constraints - DEPRECATED

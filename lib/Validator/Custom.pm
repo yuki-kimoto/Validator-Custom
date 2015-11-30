@@ -1212,6 +1212,12 @@ Run filter.
 
 Run filter all elements of array reference.
 
+=head1 FAQ
+
+=head2 I use Validator::Custom 0.xx yet. I want to see documentation of Version 0.xx.
+
+See L<Validator::Custom::Document::Version0>.
+
 =head1 AUTHOR
 
 Yuki Kimoto, C<< <kimoto.yuki at gmail.com> >>

@@ -356,6 +356,6 @@ sub trim_uni_trail {
 
 =head1 NAME
 
-Validator::Custom::Constraint - removed
+Validator::Custom::Constraint - DEPRECATED
 
 1;
