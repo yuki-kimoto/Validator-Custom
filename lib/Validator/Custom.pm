@@ -797,12 +797,13 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   # Create validation object
   my $validation = $vc->validation;
   
-  # Check id and set failed message
+  # Check id
   if (!(length $id && $vc->check($id, 'int'))) {
+    # Set failed message
     $validation->add_failed(id => 'id must be integer');
   }
   
-  # Check name and set failed message
+  # Check name
   if (!(length $name)) {
     $validation->add_failed(name => 'name must have length');
   }
@@ -810,13 +811,18 @@ Validator::Custom - HTML form Validation, simple and good flexibility
     $validation->add_failed(name => 'name is too long');
   }
   
-  # Filter and check age, and set default value
+  # Filter age
   $age = $vc->filter($age, 'trim');
+
+  # Check age
   if (!(length $id && $vc->check($age, 'int'))) {
+    # Set default value if validation fail
     $age = 20;
   
-  # Filter and check each favorite value
+  # Filter each value of favorite
   $favorite = $vc->filter_each($favorite, 'trim');
+  
+  # Check each value of favorite
   if (@$favorite == 0) {
     $validation->add_failed(favorite => 'favorite must be selected more than one');
   }
@@ -824,24 +830,24 @@ Validator::Custom - HTML form Validation, simple and good flexibility
     $validation->add_failed(favorite => 'favorite is invalid');
   }
   
-  # Get result
+  # Check if validation result is valid
   if ($validation->is_valid) {
     # ...
   }
   else {
     
-    # Know what is failed
+    # Check what parameter fail
     unless ($validation->is_valid('name')) {
       # ...
     }
     
-    # Get failed list
+    # Get failed parameter names
     my $failed = $validation->failed;
     
-    # Get messages
+    # Get failed messages
     my $messages = $validation->messages;
     
-    # Get messages as hash
+    # Get failed messages as hash
     my $messages_h = $validation->messages_to_hash;
   }
   
@@ -1256,6 +1262,23 @@ Check box, selected at least 1.
   }
   else {
     # ...
+  }
+
+Convert date string to Time::Piece object.
+
+  my $date = '2014/05/16';
+  
+  my $validation = $vc->validation;
+  
+  my $date_tp;
+  if (!length $datetime) {
+    $validation->add_failed(date => 'date must have length');
+  }
+  else {
+    eval { $date_tp = Time::Piece->strptime($datetime_tp, '%Y/%m/%d') };
+    if (!$date_tp) {
+      $validation->add_failed(date => 'date value is invalid');
+    }
   }
 
 =head1 FAQ
