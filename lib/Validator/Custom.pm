@@ -799,7 +799,7 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   
   # Check id
   if (!(length $id && $vc->check($id, 'int'))) {
-    # Set failed message
+    # Add failed message
     $validation->add_failed(id => 'id must be integer');
   }
   
@@ -841,20 +841,23 @@ Validator::Custom - HTML form Validation, simple and good flexibility
       # ...
     }
     
-    # Get failed parameter names
+    # Get all failed parameter names
     my $failed = $validation->failed;
+
+    # Get a failed parameter message
+    my $name_message = $validation->message('name');
     
-    # Get failed messages
+    # Get all failed parameter messages
     my $messages = $validation->messages;
     
-    # Get failed messages as hash
+    # Get all failed parameter names and the messages as hash
     my $messages_h = $validation->messages_to_hash;
   }
   
 =head1 DESCRIPTION
 
-L<Validator::Custom> is validator class for validate HTML form.
-L<Validator::Custom> is simple and good flexibility.
+L<Validator::Custom> is a validator for HTML form
+with simple and good flexibility.
 
 The features are the following ones.
 
@@ -875,7 +878,9 @@ You can add your check and filter function.
 
 =item *
 
-You can add failed message keeping the order of validation.
+Simple validation object is available.
+You can add failed parameter names
+and the messages keeping the order of validation.
 
 =back
 
@@ -885,10 +890,14 @@ You can add failed message keeping the order of validation.
 
 B<1. Create a new Validator::Custom object>
 
+At first, create L<Validator::Custom> object.
+
   use Validator::Custom;
   my $vc = Validator::Custom->new;
 
 B<2. Prepare input data for validation>
+
+Next, prepare input data.
 
   my $id = 1;
   my $name = 'Ken Suzuki';
@@ -897,30 +906,36 @@ B<2. Prepare input data for validation>
 
 B<3. Create validation object>
 
+Next, create validation object.
+
   my $validation = $vc->validation;
+
+This is L<Validator::Custom::Validation> object
+to store failed parameter names and the messages.
 
 B<4. Validate input data>
 
-  # Check id and set failed message
+  # Check id
   if (!(length $id && $vc->check($id, 'int'))) {
+    # Add failed message
     $validation->add_failed(id => 'id must be integer');
   }
+
+You can use C<int> check function to check the value is integer.
+If the check fail, you can add failed parameter name and that message
+using C<add_failed> method.
   
-  # Check name and set failed message
-  if (!(length $name)) {
-    $validation->add_failed(name => 'name must have length');
-  }
-  elsif (!(length $name < 30)) {
-    $validation->add_failed(name => 'name is too long');
-  }
-  
-  # Filter and check age, and set default value
+  # Filter age
   $age = $vc->filter($age, 'trim');
-  if (!(length $id && $vc->check($age, 'int'))) {
-    $age = 20;
+
+You can use C<trim> filter function to trim left-rigth spaces.
   
-  # Filter and check each favorite value
+  # Filter each value of favorite
   $favorite = $vc->filter_each($favorite, 'trim');
+
+You can use C<filter_each> method to filter each value of favorite.
+  
+  # Check each value of favorite
   if (@$favorite == 0) {
     $validation->add_failed(favorite => 'favorite must be selected more than one');
   }
@@ -928,52 +943,55 @@ B<4. Validate input data>
     $validation->add_failed(favorite => 'favorite is invalid');
   }
 
-You can use many check and filter functions,
-such as C<int>, C<trim>.
-See L<Validator::Custom/"CHECKS"> and L<Validator::Custom/"FILTERS">.
+You can use C<check_each> method to check each value of favorite.
 
-If input data is invalid, you can add message by C<add_failed> method.
+If you see default checks and filter,
+see L<Validator::Custom/"CHECKS"> and L<Validator::Custom/"FILTERS">.
 
-B<5. Manipulate the validation result>
+B<5. Manipulate validation object>
+
+If you check all input data is valid, use C<is_valid> method.
   
   # Get result
   if ($validation->is_valid) {
-    # ...
+    # Success
   }
   else {
-    
-    # Know what is failed
-    unless ($validation->is_valid('name')) {
-      # ...
-    }
-    
-    # Get failed list
-    my $failed = $validation->failed;
-    
-    # Get a message
-    my $title_message = $validation->message('title');
-    
-    # Get messages
-    my $messages = $validation->messages;
-    
-    # Get messages as hash
-    my $messages_h = $validation->messages_to_hash;
+    # Failed
   }
 
-If there are no failed message, C<is_valid> method return true.
-You can get a message and messages by C<message>, C<messages>, C<messages_to_hash>.
+If you can check a input data is valid, use C<is_valid> method with parameter name.
+  
+  # Know what is failed
+  unless ($validation->is_valid('name')) {
+    # ...
+  }
+
+You can get all failed parameter names using C<failed> method.
+
+  # Get all failed parameter names
+  my $failed = $validation->failed;
+
+You can get a failed parameter message using C<message>.
+
+  # Get a failed parameter message
+  my $name_message = $validation->message('name');
+
+You can get all failed parameter messages.
+
+  # Get all failed parameter messages
+  my $messages = $validation->messages;
+
+You can get all failed names and the messages as hash.
+
+  # Get all failed parameter names and messages as hash
+  my $messages_h = $validation->messages_to_hash;
 
 See also L<Validator::Custom::Validation>.
 
-=head2 2. Check and filter functions
+=head2 2. Add check function
 
-=head3 Add check function
-
-L<Validator::Custom> has various check functions.
-You can see check functions added by default
-L<Validator::Custom/"CHECKS">.
-
-and you can add your check function if you need.
+You can add your check function if you need.
 
   $vc->add_check(
     telephone => sub {
