@@ -25,4 +25,8 @@ sub DESTROY { }
 
 =head1 NAME
 
-Validator::Custom::Constraints - DEPRECATED
+Validator::Custom::Constraints -  - the class for Version 0.xx
+
+=head2 DESCRIPTION
+
+See L<Validator::Custom::Document::Version0>.

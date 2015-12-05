@@ -183,4 +183,8 @@ sub remove_error_info {
 
 =head1 NAME
 
-Validator::Custom::Result - DEPRECATED
+Validator::Custom::Result  - the class for Version 0.xx
+
+=head2 DESCRIPTION
+
+See L<Validator::Custom::Document::Version0>.

@@ -354,8 +354,12 @@ sub trim_uni_trail {
   return [1, $value];
 }
 
+1;
+
 =head1 NAME
 
-Validator::Custom::Constraint - DEPRECATED
+Validator::Custom::Constraint - the class for Version 0.xx
 
-1;
+=head2 DESCRIPTION
+
+See L<Validator::Custom::Document::Version0>.

@@ -205,5 +205,9 @@ sub check_or {
 
 =head1 NAME
 
-Validator::Custom::Rule - DEPRECATED
+Validator::Custom::Rule -  - the class for Version 0.xx
+
+=head2 DESCRIPTION
+
+See L<Validator::Custom::Document::Version0>.
 
