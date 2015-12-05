@@ -1208,6 +1208,8 @@ Run filter all elements of array reference.
 
 =head1 EXAMPLES
 
+Show you some examples to do some validation.
+
 Password checking.
   
   my $password = 'abc';
