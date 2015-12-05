@@ -5,8 +5,6 @@ use warnings;
 
 use Carp 'croak';
 
-my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
-
 sub ascii_graphic {
   my ($vc, $value, $arg) = @_;
   
