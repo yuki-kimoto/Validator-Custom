@@ -1287,6 +1287,22 @@ C<decimal> check is renamed to C<number> and simplified.
 
 =head2 How to create the corresponding checking functions of Version 0.xx
 
+space
+
+  $vc->add_check(space => sub {
+    my ($vc, $value, $arg) = @_;
+    defined $value && $value =~ '^[ \t\n\r\f]*$' ? 1 : 0;
+  });
+
+http_url
+
+  $vc->add_check(http_url => sub {
+    my ($vc, $value, $arg) = @_;
+    return defined $value && $value =~ /^s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/ ? 1 : 0;
+  });
+
+decimal
+
   $vc->add_check(decimal => sub {
     my ($vc, $value, $arg) = @_;
 
@@ -1334,6 +1350,8 @@ C<decimal> check is renamed to C<number> and simplified.
 
 =head2 How to create the corresponding filtering functions of Version 0.xx.
 
+trim_collapse
+
   $vc->add_filter(trim_collapse => sub {
     my ($vc, $value, $arg) = @_;
     
@@ -1345,6 +1363,8 @@ C<decimal> check is renamed to C<number> and simplified.
     return $value;
   });
 
+trim_lead
+
   $vc->add_filter(trim_lead => sub {
     my ($vc, $value, $arg) = @_;
     
@@ -1354,6 +1374,8 @@ C<decimal> check is renamed to C<number> and simplified.
 
     return $value;
   });
+
+trim_trail
 
   $vc->add_filter(trim_trail => sub {
     my ($vc, $value, $arg) = @_;
@@ -1365,6 +1387,8 @@ C<decimal> check is renamed to C<number> and simplified.
     return $value;
   });
 
+trim_uni
+
   $vc->add_filter(trim_uni => sub {
     my ($vc, $value, $arg) = @_;
     
@@ -1374,6 +1398,8 @@ C<decimal> check is renamed to C<number> and simplified.
 
     return $value;
   });
+
+trim_uni_collapse
 
   $vc->add_filter(trim_uni_collapse => sub {
     my ($vc, $value, $arg) = @_;
@@ -1386,6 +1412,8 @@ C<decimal> check is renamed to C<number> and simplified.
     return $value;
   });
 
+trim_uni_lead
+
   $vc->add_filter(trim_uni_lead => sub {
     my ($vc, $value, $arg) = @_;
     
@@ -1395,6 +1423,8 @@ C<decimal> check is renamed to C<number> and simplified.
     
     return $value;
   });
+
+trim_uni_trail
 
   $vc->add_filter(trim_uni_trail => sub {
     my ($vc, $value, $arg) = @_;
