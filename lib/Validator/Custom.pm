@@ -21,7 +21,7 @@ sub new {
   
   # Add checks
   $self->add_check(
-    ascii             => \&Validator::Custom::CheckFunction::ascii,
+    ascii_graphic     => \&Validator::Custom::CheckFunction::ascii_graphic,
     decimal           => \&Validator::Custom::CheckFunction::decimal,
     int               => \&Validator::Custom::CheckFunction::int,
     in                => \&Validator::Custom::CheckFunction::in,
@@ -1038,15 +1038,16 @@ You must return the result of filtering.
 L<Validator::Custom> have the following default checking functions.
 You can call any checking function by C<check> method.
 
-=head2 ascii
+=head2 ascii_graphic
   
   my $is_valid = $vc->check($value, 'ascii');
   
-Ascii graphic characters(hex 21-7e).
+Ascii graphic characters(hex 21-7e). Generally, you can use C<ascii_graphic> function
+for checking the characters of a password.
 
 Valid example:
 
-  "Ken"
+  "Ken!@-"
 
 Invalid example:
   
@@ -1056,9 +1057,23 @@ Invalid example:
 =head2 int
 
   my $value = 19;
-  $vc->check($value, 'int');
+  my $is_valid = $vc->check($value, 'int');
 
-Integer.
+Integer value.
+
+Valid example:
+
+  "-10"
+  "234"
+
+Invalid example:
+
+  "10.11"
+  "abc"
+
+If you need to check the range of value, you can write the following way.
+
+  my $is_valid =  $vc->check($value, 'int') && $value > 0;
 
 =head2 in
   

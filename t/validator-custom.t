@@ -75,7 +75,7 @@ use Validator::Custom;
     is_deeply($validation->failed, ['k2', 'k3', 'k4', 'k5']);
   }
 
-  # check - ascii
+  # check - ascii_graphic
   {
     my $vc = Validator::Custom->new;
     my $k1 = '!~';
@@ -83,13 +83,13 @@ use Validator::Custom;
     my $k3 = "\0x7f";
       
     my $validation = $vc->validation;
-    if (!$vc->check($k1, 'ascii')) {
+    if (!$vc->check($k1, 'ascii_graphic')) {
       $validation->add_failed('k1');
     }
-    if (!$vc->check($k2, 'ascii')) {
+    if (!$vc->check($k2, 'ascii_graphic')) {
       $validation->add_failed('k2');
     }
-    if (!$vc->check($k3, 'ascii')) {
+    if (!$vc->check($k3, 'ascii_graphic')) {
       $validation->add_failed('k3');
     }
     

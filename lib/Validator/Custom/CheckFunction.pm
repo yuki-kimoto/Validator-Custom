@@ -7,12 +7,22 @@ use Carp 'croak';
 
 my $NUM_RE = qr/^[-+]?[0-9]+(:?\.[0-9]+)?$/;
 
-sub ascii {
+sub ascii_graphic {
   my ($vc, $value, $arg) = @_;
   
   return undef unless defined $value;
   
   my $is_valid = $value =~ /^[\x21-\x7E]+$/;
+  
+  return $is_valid;
+}
+
+sub int {
+  my ($vc, $value, $arg) = @_;
+
+  return undef unless defined $value;
+  
+  my $is_valid = $value =~ /^\-?[0-9]+$/;
   
   return $is_valid;
 }
@@ -60,16 +70,6 @@ sub decimal {
   else {
     return 0;
   }
-}
-
-sub int {
-  my ($vc, $value, $arg) = @_;
-
-  return undef unless defined $value;
-  
-  my $is_valid = $value =~ /^\-?[0-9]+$/;
-  
-  return $is_valid;
 }
 
 sub in {
