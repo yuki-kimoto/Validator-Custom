@@ -1276,6 +1276,23 @@ Convert date string to Time::Piece object.
     }
   }
 
+Convert datetime string to Time::Piece object.
+
+  my $datetime = '2014/05/16 12:30:40';
+  
+  my $validation = $vc->validation;
+  
+  my $datetime_tp;
+  if (!length $datetime) {
+    $validation->add_failed(datetime => 'datetime must have length');
+  }
+  else {
+    eval { $datetime_tp = Time::Piece->strptime($datetime_tp, '%Y/%m/%d %H:%M:%S') };
+    if (!$datetime_tp) {
+      $validation->add_failed(datetime => 'datetime value is invalid');
+    }
+  }
+
 =head1 FAQ
 
 =head2 I use Validator::Custom 0.xx yet. I want to see documentation of Version 0.xx.
@@ -1290,7 +1307,13 @@ C<trim> filter become triming unicode space characters, not only C<[ \t\n\r\f]>.
 
 C<decimal> check is renamed to C<number> and simplified.
 
-=head2 How to create the corresponding checking functions of Version 0.xx
+C<date_to_timepiece> checking function is removed.
+About alternative way, see "EXAMPLES" "Convert date string to Time::Piece object".
+
+C<datetime_to_timepiece> checking function is removed.
+About alternative way, see "EXAMPLES" "Convert datetime string to Time::Piece object".
+
+=head2 How to create the corresponding checking functions in Version 0.xx
 
 space
 
@@ -1353,7 +1376,7 @@ decimal
     }
   }
 
-=head2 How to create the corresponding filtering functions of Version 0.xx.
+=head2 How to create the corresponding filtering functions in Version 0.xx.
 
 trim_collapse
 
