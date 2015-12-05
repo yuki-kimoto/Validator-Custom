@@ -218,43 +218,14 @@ use Validator::Custom;
     like($@, qr/must be array reference/);
   }
 
-  # filter - trim;
+  # filter - trim
   {
     my $vc = Validator::Custom->new;
-    
-    my $k1 = ' 123 ';
-    my $k2 = "  \n a \r\n b\nc  \t";
-    my $k3 = '  abc  ';
-    my $k4 = '  def  ';
+    my $k1 = ' 　　123　　 ';
     
     $k1 = $vc->filter($k1, 'trim');
-    $k2 = $vc->filter($k2, 'trim_collapse');
-    $k3 = $vc->filter($k3, 'trim_lead');
-    $k4 = $vc->filter($k4, 'trim_trail');
     
     is($k1, '123');
-    is($k2, "a b c");
-    is($k3, "abc  ");
-    is($k4, '  def');
-  }
-
-  # filter - trim_uni
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = '　　123　　';
-    my $k2 = "　　\n a \r\n b\nc  \t　　";
-    my $k3 = '　　abc　　';
-    my $k4 = '　　def　　';
-    
-    $k1 = $vc->filter($k1, 'trim_uni');
-    $k2 = $vc->filter($k2, 'trim_uni_collapse');
-    $k3 = $vc->filter($k3, 'trim_uni_lead');
-    $k4 = $vc->filter($k4, 'trim_uni_trail');
-    
-    is($k1, '123');
-    is($k2, "a b c");
-    is($k3, "abc　　");
-    is($k4, '　　def');
   }
 }
 

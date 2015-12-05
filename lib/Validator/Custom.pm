@@ -24,22 +24,13 @@ sub new {
     ascii_graphic     => \&Validator::Custom::CheckFunction::ascii_graphic,
     decimal           => \&Validator::Custom::CheckFunction::decimal,
     int               => \&Validator::Custom::CheckFunction::int,
-    in                => \&Validator::Custom::CheckFunction::in,
-    uint              => \&Validator::Custom::CheckFunction::uint,
-    regex             => \&Validator::Custom::CheckFunction::regex,
+    in                => \&Validator::Custom::CheckFunction::in
   );
   
   # Add filters
   $self->add_filter(
     remove_blank      => \&Validator::Custom::FilterFunction::remove_blank,
     trim              => \&Validator::Custom::FilterFunction::trim,
-    trim_collapse     => \&Validator::Custom::FilterFunction::trim_collapse,
-    trim_lead         => \&Validator::Custom::FilterFunction::trim_lead,
-    trim_trail        => \&Validator::Custom::FilterFunction::trim_trail,
-    trim_uni          => \&Validator::Custom::FilterFunction::trim_uni,
-    trim_uni_collapse => \&Validator::Custom::FilterFunction::trim_uni_collapse,
-    trim_uni_lead     => \&Validator::Custom::FilterFunction::trim_uni_lead,
-    trim_uni_trail    => \&Validator::Custom::FilterFunction::trim_uni_trail
   );
   
   # Version 0 constraints
@@ -946,7 +937,7 @@ You can use C<filter_each> method to filter each value of favorite.
 You can use C<check_each> method to check each value of favorite.
 
 If you see default checks and filter,
-see L<Validator::Custom/"CHECKS"> and L<Validator::Custom/"FILTERS">.
+see L<Validator::Custom/"CHECKING FUNCTIONS"> and L<Validator::Custom/"FILTERING FUNCTIONS">.
 
 B<5. Manipulate validation object>
 
@@ -1109,78 +1100,33 @@ If you set undef value or don't set any value, that means there is no maximum li
         $vc->check($value, 'decimal', [undef, 2])
         $vc->check($value, 'decimal', [2, undef])
   
-=head1 FILTERS
+=head1 FILTERING FUNCTIONS
 
-You can use the following filter by default.
+L<Validator::Custom> have the following default filtering functions.
+You can call any filtering function by C<filter> method.
 
 =head2 trim
 
-  my $value = '  Ken  ';
-  $vc->filter($value, 'trim')
-  Output:{name => 'Ken'}
+  my $new_value = $vc->filter($value, 'trim');
 
 Trim leading and trailing white space.
-Not that trim only C<[ \t\n\r\f]>
-which don't contain unicode space character.
+Trim unicode space character, not only C<[ \t\n\r\f]>.
 
-=head2 trim_collapse
+Example:
 
-  my $value = '  Ken   Takagi  ';
-  $vc->filter($value, 'trim_collapse') # 
-  Output:{name => 'Ken Takagi'}
+  Input  '  　Ken  '
+  Output 'Ken'
 
-Trim leading and trailing white space,
-and collapse all whitespace characters into a single space.
-Not that trim only C<[ \t\n\r\f]>
-which don't contain unicode space character.
+=head2 remove_blank
 
-=head2 trim_lead
+  my $new_values = $vc->filter($values, 'remove_blank');
 
-  my $value = '  Ken  ';
-  $vc->filter($value, 'trim_lead')
-  Output:{name => 'Ken  '}
+Remove blank character and undefined value from array reference.
 
-Trim leading white space.
-Not that trim only C<[ \t\n\r\f]>
-which don't contain unicode space character.
+Example:
 
-=head2 trim_trail
-
-  my $value = '  Ken  ';
-  $vc->filter($value, 'trim_trail'); # '  Ken'
-
-Trim trailing white space.
-Not that trim only C<[ \t\n\r\f]>
-which don't contain unicode space character.
-
-=head2 trim_uni
-
-  my $value = '  Ken  ';
-  $vc->filter($value, 'trim_uni')
-  Output:{name => 'Ken'}
-
-Trim leading and trailing white space, which contain unicode space character.
-
-=head2 trim_uni_collapse
-
-  # Convert "  Ken   Takagi  " to "Ken Takagi"
-  my $new_value = $vc->filter($value, 'trim_uni_collapse');
-  
-Trim leading and trailing white space, which contain unicode space character.
-
-=head2 trim_uni_lead
-
-  my $value = '  Ken  ';
-  my $new_value = $vc->filter($value, 'trim_uni_lead'); #'Ken  '
-
-Trim leading white space, which contain unicode space character.
-
-=head2 trim_uni_trail
-  
-  my $value = '  Ken  ';
-  $vc->filter($value, 'trim_uni_trail'); # '  Ken'
-
-Trim trailing white space, which contain unicode space character.
+  Input  [1, 2, '', undef, 4]
+  Output [1, 2, 4]
 
 =head1 METHODS
 
@@ -1328,6 +1274,86 @@ Convert date string to Time::Piece object.
 =head2 I use Validator::Custom 0.xx yet. I want to see documentation of Version 0.xx.
 
 See L<Validator::Custom::Document::Version0>.
+
+=head2 What point I take care of in Version 1.00.
+
+C<in_array> checking function is renamed to C<in>.
+
+C<trim> filter become triming unicode space characters, not only C<[ \t\n\r\f]>.
+
+=head2 How to do the corresponding filtering of Version 0.xx.
+
+  $vc->add_filter(trim_collapse => sub {
+    my ($vc, $value, $arg) = @_;
+    
+    return undef unless defined $value;
+    
+    $value =~ s/[ \t\n\r\f]+/ /g;
+    $value =~ s/^[ \t\n\r\f]*(.*?)[ \t\n\r\f]*$/$1/ms;
+
+    return $value;
+  });
+
+  $vc->add_filter(trim_lead => sub {
+    my ($vc, $value, $arg) = @_;
+    
+    return undef unless defined $value;
+
+    $value =~ s/^[ \t\n\r\f]+(.*)$/$1/ms;
+
+    return $value;
+  });
+
+  $vc->add_filter(trim_trail => sub {
+    my ($vc, $value, $arg) = @_;
+    
+    return undef unless defined $value;
+
+    $value =~ s/^(.*?)[ \t\n\r\f]+$/$1/ms;
+
+    return $value;
+  });
+
+  $vc->add_filter(trim_uni => sub {
+    my ($vc, $value, $arg) = @_;
+    
+    return undef unless defined $value;
+
+    $value =~ s/^\s*(.*?)\s*$/$1/ms;
+
+    return $value;
+  });
+
+  $vc->add_filter(trim_uni_collapse => sub {
+    my ($vc, $value, $arg) = @_;
+
+    return undef unless defined $value;
+    
+    $value =~ s/\s+/ /g;
+    $value =~ s/^\s*(.*?)\s*$/$1/ms;
+
+    return $value;
+  });
+
+  $vc->add_filter(trim_uni_lead => sub {
+    my ($vc, $value, $arg) = @_;
+    
+    return undef unless defined $value;
+    
+    $value =~ s/^\s+(.*)$/$1/ms;
+    
+    return $value;
+  });
+
+  $vc->add_filter(trim_uni_trail => sub {
+    my ($vc, $value, $arg) = @_;
+    
+    return undef unless defined $value;
+
+    $value =~ s/^(.*?)\s+$/$1/ms;
+
+    return $value;
+  });
 
 =head1 AUTHOR
 
