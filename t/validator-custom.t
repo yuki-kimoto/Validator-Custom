@@ -96,82 +96,58 @@ use Validator::Custom;
     is_deeply($validation->failed, ['k2', 'k3']);
   }
 
-  # check - regex
+  # check - number
   {
     my $vc = Validator::Custom->new;
-    my $k1 = 'aaa';
-    my $k2 = 'aa';
-      
+    my $k1 = '1';
+    my $k2 = '100';
+    my $k3 = '100.100';
+    my $k4 = '-1';
+    my $k5 = '-100';
+    my $k6 = '-100.100';
+    
+    my $k7 = 'a';
+    my $k8 = '1.a';
+    my $k9 = 'a.1';
+    my $k10 = '';
+    my $k11;
+    
     my $validation = $vc->validation;
-    if (!($k1 =~ qr/a{3}/)) {
+    if (!$vc->check($k1, 'number')) {
       $validation->add_failed('k1');
     }
-    if (!($k2 =~ qr/a{4}/)) {
+    if (!$vc->check($k2, 'number')) {
       $validation->add_failed('k2');
     }
-
-    is_deeply($validation->failed, ['k2']);
-  }
-
-  # check - decimal
-  {
-    my $vc = Validator::Custom->new;
-    my $k1 = '12.123';
-    my $k2 = '12.123';
-    my $k3 = '12.123';
-    my $k4 =  '12';
-    my $k5 = '123';
-    my $k6 = '123.a';
-    my $k7 = '1234.1234';
-    my $k8 = '';
-    my $k9 = 'a';
-    my $k10 = '1111111.12';
-    my $k11 = '1111111.123';
-    my $k12 = '12.1111111';
-    my $k13 = '123.1111111';
-      
-    my $validation = $vc->validation;
-    if (!$vc->check($k1, 'decimal', [2,3])) {
-      $validation->add_failed('k1');
-    }
-    if (!$vc->check($k2, 'decimal', [1,3])) {
-      $validation->add_failed('k2');
-    }
-    if (!$vc->check($k3, 'decimal', [2,2])) {
+    if (!$vc->check($k3, 'number')) {
       $validation->add_failed('k3');
     }
-    if (!$vc->check($k4, 'decimal', [2])) {
+    if (!$vc->check($k4, 'number')) {
       $validation->add_failed('k4');
     }
-    if (!$vc->check($k5, 'decimal', 2)) {
+    if (!$vc->check($k5, 'number')) {
       $validation->add_failed('k5');
     }
-    if (!$vc->check($k6, 'decimal', 2)) {
+    if (!$vc->check($k6, 'number')) {
       $validation->add_failed('k6');
     }
-    if (!$vc->check($k7, 'decimal')) {
+    if (!$vc->check($k7, 'number')) {
       $validation->add_failed('k7');
     }
-    if (!$vc->check($k8, 'decimal')) {
+    if (!$vc->check($k8, 'number')) {
       $validation->add_failed('k8');
     }
-    if (!$vc->check($k9, 'decimal')) {
+    if (!$vc->check($k9, 'number')) {
       $validation->add_failed('k9');
     }
-    if (!$vc->check($k10, 'decimal', [undef, 2])) {
+    if (!$vc->check($k10, 'number')) {
       $validation->add_failed('k10');
     }
-    if (!$vc->check($k11, 'decimal', [undef, 2])) {
+    if (!$vc->check($k11, 'number')) {
       $validation->add_failed('k11');
     }
-    if (!$vc->check($k12, 'decimal', [2, undef])) {
-      $validation->add_failed('k12');
-    }
-    if (!$vc->check($k13, 'decimal', [2, undef])) {
-      $validation->add_failed('k13');
-    }
 
-    is_deeply($validation->failed, [qw/k2 k3 k5 k6 k8 k9 k11 k13/]);
+    is_deeply($validation->failed, [qw/k7 k8 k9 k10 k11/]);
   }
 
   # check - in

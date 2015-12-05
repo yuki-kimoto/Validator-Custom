@@ -17,6 +17,19 @@ sub ascii_graphic {
   return $is_valid;
 }
 
+sub number {
+  my ($vc, $value, $arg) = @_;
+
+  return undef unless defined $value;
+  
+  if ($value =~ /^-?[0-9]+(\.[0-9]*)?$/) {
+    return 1;
+  }
+  else {
+    return undef;
+  }
+}
+
 sub int {
   my ($vc, $value, $arg) = @_;
 
@@ -25,51 +38,6 @@ sub int {
   my $is_valid = $value =~ /^\-?[0-9]+$/;
   
   return $is_valid;
-}
-
-sub decimal {
-  my ($vc, $value, $arg) = @_;
-
-  return undef unless defined $value;
-  
-  my $digits_tmp = $arg;
-  
-  # Digit
-  my $digits;
-  if (defined $digits_tmp) {
-    if (ref $digits_tmp eq 'ARRAY') {
-      $digits = $digits_tmp;
-    }
-    else {
-      $digits = [$digits_tmp, undef];
-    }
-  }
-  else {
-    $digits = [undef, undef];
-  }
-  
-  # Regex
-  my $re;
-  if (defined $digits->[0] && defined $digits->[1]) {
-    $re = qr/^[0-9]{1,$digits->[0]}(\.[0-9]{0,$digits->[1]})?$/;
-  }
-  elsif (defined $digits->[0]) {
-    $re = qr/^[0-9]{1,$digits->[0]}(\.[0-9]*)?$/;
-  }
-  elsif (defined $digits->[1]) {
-    $re = qr/^[0-9]+(\.[0-9]{0,$digits->[1]})?$/;
-  }
-  else {
-    $re = qr/^[0-9]+(\.[0-9]*)?$/;
-  }
-  
-  # Check value
-  if ($value =~ /$re/) {
-    return 1;
-  }
-  else {
-    return 0;
-  }
 }
 
 sub in {

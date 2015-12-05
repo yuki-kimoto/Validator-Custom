@@ -22,7 +22,7 @@ sub new {
   # Add checks
   $self->add_check(
     ascii_graphic     => \&Validator::Custom::CheckFunction::ascii_graphic,
-    decimal           => \&Validator::Custom::CheckFunction::decimal,
+    number           => \&Validator::Custom::CheckFunction::number,
     int               => \&Validator::Custom::CheckFunction::int,
     in                => \&Validator::Custom::CheckFunction::in
   );
@@ -1283,7 +1283,56 @@ C<in_array> checking function is renamed to C<in>.
 
 C<trim> filter become triming unicode space characters, not only C<[ \t\n\r\f]>.
 
-=head2 How to do the corresponding filtering of Version 0.xx.
+C<decimal> check is renamed to C<number> and simplified.
+
+=head2 How to create the corresponding checking functions of Version 0.xx
+
+  $vc->add_check(decimal => sub {
+    my ($vc, $value, $arg) = @_;
+
+    return undef unless defined $value;
+    
+    my $digits_tmp = $arg;
+    
+    # Digit
+    my $digits;
+    if (defined $digits_tmp) {
+      if (ref $digits_tmp eq 'ARRAY') {
+        $digits = $digits_tmp;
+      }
+      else {
+        $digits = [$digits_tmp, undef];
+      }
+    }
+    else {
+      $digits = [undef, undef];
+    }
+    
+    # Regex
+    my $re;
+    if (defined $digits->[0] && defined $digits->[1]) {
+      $re = qr/^[0-9]{1,$digits->[0]}(\.[0-9]{0,$digits->[1]})?$/;
+    }
+    elsif (defined $digits->[0]) {
+      $re = qr/^[0-9]{1,$digits->[0]}(\.[0-9]*)?$/;
+    }
+    elsif (defined $digits->[1]) {
+      $re = qr/^[0-9]+(\.[0-9]{0,$digits->[1]})?$/;
+    }
+    else {
+      $re = qr/^[0-9]+(\.[0-9]*)?$/;
+    }
+    
+    # Check value
+    if ($value =~ /$re/) {
+      return 1;
+    }
+    else {
+      return 0;
+    }
+  }
+
+=head2 How to create the corresponding filtering functions of Version 0.xx.
 
   $vc->add_filter(trim_collapse => sub {
     my ($vc, $value, $arg) = @_;
