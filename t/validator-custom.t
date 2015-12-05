@@ -46,7 +46,7 @@ use Validator::Custom;
     is_deeply($validation->failed, ['k3', 'k4', 'k5']);
   }
   
-  # check - uint
+  # check - unsigned int
   {
     my $vc = Validator::Custom->new;
     my $k1 = '19';
@@ -56,19 +56,19 @@ use Validator::Custom;
     my $k5 ='２';
       
     my $validation = $vc->validation;
-    if (!$vc->check($k1, 'uint')) {
+    if (!($vc->check($k1, 'int') && $k1 > 0)) {
         $validation->add_failed('k1');
     }
-    if (!$vc->check($k2, 'uint')) {
+    if (!($vc->check($k2, 'int') && $k2 > 0)) {
       $validation->add_failed('k2');
     }
-    if (!$vc->check($k3, 'uint')) {
+    if (!($vc->check($k3, 'int') && $k3 > 0)) {
       $validation->add_failed('k3');
     }
-    if (!$vc->check($k4, 'uint')) {
+    if (!($vc->check($k4, 'int') && $k4 > 0)) {
       $validation->add_failed('k4');
     }
-    if (!$vc->check($k5, 'uint')) {
+    if (!($vc->check($k5, 'int') && $k5 > 0)) {
       $validation->add_failed('k5');
     }
 

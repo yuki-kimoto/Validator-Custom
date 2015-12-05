@@ -72,16 +72,6 @@ sub int {
   return $is_valid;
 }
 
-sub uint {
-  my ($vc, $value, $arg) = @_;
-  
-  return undef unless defined $value;
-
-  my $is_valid = $value =~ /^[0-9]+$/;
-  
-  return $is_valid;
-}
-
 sub in {
   my ($vc, $value, $arg) = @_;
   

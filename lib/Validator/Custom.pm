@@ -989,9 +989,9 @@ You can get all failed names and the messages as hash.
 
 See also L<Validator::Custom::Validation>.
 
-=head2 2. Add check function
+=head2 2. Add checking function
 
-You can add your check function if you need.
+You can add your check function by C<add_check> method if you need.
 
   $vc->add_check(
     telephone => sub {
@@ -1005,16 +1005,16 @@ You can add your check function if you need.
     }
   );
 
-Check function for telephone number is added.
-
-Check function receive a value as first argument,
-argument as second argument.
+Checking function receives three arguments,
+L<Validator::Custom> object as first argument,
+the value as second argument,
+the argument as third argument.
 
 You must return the result of validation, true or false value.
 
-=head3 Add filter function
+=head3 Add filtering function
 
-Filter function is added by C<add_filter> method.
+You can add your filtering function by C<add_filter> method if you need.
 
   $vc->add_filter(
     to_upper_case => sub {
@@ -1026,12 +1026,17 @@ Filter function is added by C<add_filter> method.
     }
   );
 
-Check function receive a value as first argument,
-argument as second argument.
+Filtering function receives three arguments,
+L<Validator::Custom> object as first argument,
+the value as second argument,
+the argument as third argument.
 
 You must return the result of filtering.
 
-=head1 CHECKS
+=head1 CHECKING FUNCTIONS
+
+L<Validator::Custom> have the following default checking functions.
+You can call any checking function by C<check> method.
 
 =head2 ascii
   
@@ -1047,22 +1052,6 @@ Invalid example:
   
   "aa aa"
   "\taaa"
-
-=head2 decimal
-  
-  my $value = {num1 => '123', num2 => '1.45'};
-  Rule: $vc->check($value, 'decimal', 3)
-        $vc->check($value, 'decimal', [1, 2])
-
-Decimal. You can specify maximum digits number at before
-and after '.'.
-
-If you set undef value or don't set any value, that means there is no maximum limit.
-  
-  my $value = {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'};
-  Rule: $vc->->check($value, 'decimal')
-        $vc->check($value, 'decimal', [undef, 2])
-        $vc->check($value, 'decimal', [2, undef])
 
 =head2 int
 
@@ -1084,6 +1073,22 @@ Check if the values is in array.
   $vc->check($value, 'uint');
 
 Unsigned integer(contain zero).
+
+=head2 decimal
+  
+  my $value = {num1 => '123', num2 => '1.45'};
+  Rule: $vc->check($value, 'decimal', 3)
+        $vc->check($value, 'decimal', [1, 2])
+
+Decimal. You can specify maximum digits number at before
+and after '.'.
+
+If you set undef value or don't set any value, that means there is no maximum limit.
+  
+  my $value = {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'};
+  Rule: $vc->->check($value, 'decimal')
+        $vc->check($value, 'decimal', [undef, 2])
+        $vc->check($value, 'decimal', [2, undef])
   
 =head1 FILTERS
 
