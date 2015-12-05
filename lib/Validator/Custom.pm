@@ -1077,17 +1077,21 @@ If you need to check the range of value, you can write the following way.
 
 =head2 in
   
-  my $value = 'sushi';
-  my $is_valid = $vc->check($value, 'in', [qw/sushi bread apple/]);
+  my $value = '001';
+  my $is_valid = $vc->check($value, 'in', ['001', '002', '003']);
 
-Check if the values is in array.
+Check if the value is one of the values of the array.
 
-=head2 uint
+Valid example:
 
-  my $value = 19
-  $vc->check($value, 'uint');
+  '001'
+  '002'
+  '003'
 
-Unsigned integer(contain zero).
+Invalid example:
+
+  '004'
+  '005'
 
 =head2 decimal
   
