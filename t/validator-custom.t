@@ -49,7 +49,7 @@ use Validator::Custom;
   # check - unsigned int
   {
     my $vc = Validator::Custom->new;
-    my $k1 = '19';
+    my $k1 = '123456789';
     my $k2 = '-10';
     my $k3 = 'a';
     my $k4 =  '10.0';
@@ -100,17 +100,18 @@ use Validator::Custom;
   {
     my $vc = Validator::Custom->new;
     my $k1 = '1';
-    my $k2 = '100';
-    my $k3 = '100.100';
+    my $k2 = '123';
+    my $k3 = '456.123';
     my $k4 = '-1';
-    my $k5 = '-100';
-    my $k6 = '-100.100';
+    my $k5 = '-789';
+    my $k6 = '-100.456';
+    my $k7 = '-100.789';
     
-    my $k7 = 'a';
-    my $k8 = '1.a';
-    my $k9 = 'a.1';
-    my $k10 = '';
-    my $k11;
+    my $k8 = 'a';
+    my $k9 = '1.a';
+    my $k10 = 'a.1';
+    my $k11 = '';
+    my $k12;
     
     my $validation = $vc->validation;
     if (!$vc->check($k1, 'number')) {
@@ -146,8 +147,10 @@ use Validator::Custom;
     if (!$vc->check($k11, 'number')) {
       $validation->add_failed('k11');
     }
-
-    is_deeply($validation->failed, [qw/k7 k8 k9 k10 k11/]);
+    if (!$vc->check($k12, 'number')) {
+      $validation->add_failed('k12');
+    }
+    is_deeply($validation->failed, [qw/k8 k9 k10 k11 k12/]);
   }
 
   # check - in

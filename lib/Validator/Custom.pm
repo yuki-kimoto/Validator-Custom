@@ -1084,22 +1084,27 @@ Invalid example:
   '004'
   '005'
 
-=head2 decimal
+=head2 number
   
-  my $value = {num1 => '123', num2 => '1.45'};
-  Rule: $vc->check($value, 'decimal', 3)
-        $vc->check($value, 'decimal', [1, 2])
+  my $is_valid = $vc->check($value, 'number');
 
-Decimal. You can specify maximum digits number at before
-and after '.'.
+Number. Number means integer or floating point number.
 
-If you set undef value or don't set any value, that means there is no maximum limit.
-  
-  my $value = {num1 => '1233555.89345', num2 => '1121111.45', num3 => '12.555555555'};
-  Rule: $vc->->check($value, 'decimal')
-        $vc->check($value, 'decimal', [undef, 2])
-        $vc->check($value, 'decimal', [2, undef])
-  
+Valid example:
+
+  '1'
+  '123'
+  '123.456'
+  '-1'
+  '-100'
+  '-100.789'
+
+Invalid example:
+
+  'a';
+  '1.a';
+  'a.1';
+
 =head1 FILTERING FUNCTIONS
 
 L<Validator::Custom> have the following default filtering functions.
