@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '1.00';
+our $VERSION = '1.00_01';
 
 use Carp 'croak';
 use Validator::Custom::Validation;
