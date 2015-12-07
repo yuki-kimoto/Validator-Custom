@@ -1,4 +1,4 @@
-# Version 0 module(Not used now)
+# Version 0 module
 package Validator::Custom::Constraint;
 
 use strict;
@@ -358,8 +358,4 @@ sub trim_uni_trail {
 
 =head1 NAME
 
-Validator::Custom::Constraint - the class for Version 0.xx
-
-=head2 DESCRIPTION
-
-See L<Validator::Custom::Document::Version0>.
+Validator::Custom::Constraint - Constrint functions

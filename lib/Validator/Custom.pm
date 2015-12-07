@@ -8,7 +8,7 @@ use Validator::Custom::Validation;
 use Validator::Custom::FilterFunction;
 use Validator::Custom::CheckFunction;
 
-# Version 0 modules(Not used now)
+# Version 0 modules
 use Validator::Custom::Constraints;
 use Validator::Custom::Constraint;
 use Validator::Custom::Result;
@@ -177,7 +177,7 @@ sub add_filter {
   return $self;
 }
 
-# Version 0 method(Not used now)
+# Version 0 method
 our %VALID_OPTIONS = map {$_ => 1} qw/message default copy require optional/;
 sub _parse_constraint {
   my ($self, $c) = @_;
@@ -272,10 +272,10 @@ has shared_rule => sub { [] };
 __PACKAGE__->dual_attr('constraints',
   default => sub { {} }, inherit => 'hash_copy');
 
-# Version method(Not used now)
+# Version 0 method
 sub create_rule { Validator::Custom::Rule->new(validator => shift) }
 
-# Version 0 method(Not used now)
+# Version 0 method
 sub register_constraint {
   my $self = shift;
   
@@ -286,7 +286,7 @@ sub register_constraint {
   return $self;
 }
 
-# Version 0 method(Not used now)
+# Version 0 method
 sub _parse_random_string_rule {
   my $self = shift;
   
@@ -354,7 +354,7 @@ sub _parse_random_string_rule {
   return $result;
 }
 
-# Version 0 method(Not used now)
+# Version 0 method
 sub validate {
   my ($self, $input, $rule) = @_;
   
@@ -644,13 +644,13 @@ sub validate {
   return $result;
 }
 
-# Version 0 attributes(Not used now)
+# Version 0 attributes
 has 'data_filter';
 has 'rule';
 has 'rule_obj';
 has error_stock => 1;
 
-# Version 0 method(Not used now)
+# Version 0 method
 sub js_fill_form_button {
   my ($self, $rule) = @_;
   

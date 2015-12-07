@@ -1,5 +1,4 @@
-# Validator::Custom::Rule is removed at Version 1.00
-
+# Version 0 module
 package Validator::Custom::Rule;
 use Object::Simple -base;
 use Carp 'croak';
@@ -205,9 +204,118 @@ sub check_or {
 
 =head1 NAME
 
-Validator::Custom::Rule -  - the class for Version 0.xx
+Validator::Custom::Rule - Rule object
 
-=head2 DESCRIPTION
+=head1 SYNOPSYS
+  
+  use Validator::Custom;
+  my $vc = Validator::Custom->new;
+  
+  # Create rule object
+  my $rule = $vc->create_rule;
+  $rule->require('id')->check(
+    'ascii'
+  );
+  $rule->optional('name')->check(
+   'not_blank'
+  );
+  
+  # Validate
+  my $data = {id => '001', name => 'kimoto'};
+  my $result = $vc->validate($data, $rule);
+  
+  # Option
+  $rule->require('id')->default(4)->copy(0)->message('Error')->check(
+    'not_blank'
+  );
 
-See L<Validator::Custom::Document::Version0>.
+=head1 DESCRIPTION
 
+Validator::Custom::Rule is the class to parse rule and store it as object.
+
+=head1 ATTRIBUTES
+
+=head2 rule
+
+  my $content = $rule_obj->rule;
+  $rule_obj = $rule->rule($content);
+
+Content of rule object.
+
+=head1 METHODS
+
+=head2 each
+
+  $rule->each(1);
+
+Tell checke each element.
+
+=head2 check
+
+  $rule->check('not_blank')->check('ascii');
+
+Add constraints to current topic.
+
+=head2 check_or
+
+  $rule->check_or('not_blank', 'ascii');
+
+Add "or" condition constraints to current topic.
+
+=head2 copy
+
+  $rule->copy(0);
+
+Set copy option
+
+=head2 default
+
+  $rule->default(0);
+
+Set default option
+
+=head2 filter
+
+  $rule->filter('trim');
+
+This is C<check> method alias for readability.
+
+=head2 message
+
+  $rule->require('name')
+    ->check('not_blank')->message('should be not blank')
+    ->check('int')->message('should be int');
+
+Set message for each check.
+
+Message is fallback to before check
+so you can write the following way.
+
+  $rule->require('name')
+    ->check('not_blank')
+    ->check('int')->message('should be not blank and int');
+
+=head2 name
+
+  $rule->name('key1');
+
+Set result key name
+
+=head2 optional
+
+  $rule->optional('id');
+
+Set key and set require option to 0.
+
+=head2 require
+
+  $rule->require('id');
+  $rule->require(['id1', 'id2']);
+
+Set key.
+
+=head2 parse
+
+  $rule_obj = $rule_obj->parse($rule);
+
+Parse rule and store it to C<rule> attribute.

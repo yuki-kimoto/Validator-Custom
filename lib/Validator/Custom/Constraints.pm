@@ -1,4 +1,4 @@
-# Version 0 module(Not used now)
+# Version 0 module
 package Validator::Custom::Constraints;
 use Object::Simple -base;
 
@@ -25,8 +25,4 @@ sub DESTROY { }
 
 =head1 NAME
 
-Validator::Custom::Constraints -  - the class for Version 0.xx
-
-=head2 DESCRIPTION
-
-See L<Validator::Custom::Document::Version0>.
+Validator::Custom::Constraints -  Constraint autoloading system
