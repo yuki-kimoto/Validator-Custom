@@ -1301,19 +1301,19 @@ See L<Validator::Custom::Document::Version0>.
 
 =head2 What point I take care of in Version 1.00.
 
-C<in_array> checking function is renamed to C<in>.
+C<in_array> constraint function is renamed to C<in> checking function.
 
 C<trim> filter become triming unicode space characters, not only C<[ \t\n\r\f]>.
 
-C<decimal> check is renamed to C<number> and simplified.
+C<decimal> constraint is renamed to C<number> checking function and simplified.
 
-C<date_to_timepiece> checking function is removed.
+C<date_to_timepiece> checking function dosen't exist.
 About alternative way, see "EXAMPLES" "Convert date string to Time::Piece object".
 
-C<datetime_to_timepiece> checking function is removed.
+C<datetime_to_timepiece> checking function dosen't exists.
 About alternative way, see "EXAMPLES" "Convert datetime string to Time::Piece object".
 
-=head2 How to create the corresponding checking functions in Version 0.xx
+=head2 How to create the corresponding checking functions in Version 0.xx constraint functions.
 
 space
 

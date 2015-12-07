@@ -1,48 +1,22 @@
-1.00 2015-xx-xx
-  --- Version 1.00 is major version up -------------
-  Version 1.00 is major version up.
-  Version 1.00 usages is drastically change
-  in order to simplify Validator::Custom and increase its flexibility.
-  
-  Version 0.xx has increased the complexity after a lot of change,
-  and many problems has been found.
-  It is important to change some syntax for Validator::Csutom future.
-  
-  I keep backword compatibilyty of 0.xx completely.
-  Validator::Custom 0.xx syntax work well after major version up.
-  You can rewrite your code guradually.
-  
-  I list the changes in the version 1.00 bellow.
-  If you want to know all features, it is good to see t/validator-custom.t.
-  
-  --- Changes --------------------------------------
-  - add $vc->validation and Validator::Custom::Validation class.
-  - add $vc->add_check, $vc->add_filter.
-  - add $vc->check, $vc->check_each, $vc->filter, $vc->filter_each.
-
-  - $vc->validate($param, $rule) is removed. You must do validation by yourself.
-  - $vc->create_rule is removed
-  - Validator::Custom::Rule is removed.
-  - Validator::Custom::Result is removed. You must use Validator::Custom::Validation.
-  - $vc->register_constraint(...) is removed.
-    You must use $vc->add_check(...) and $vc->add_filter(...).
-
-  - Many methods is removed.
-      Validator::Custom
-        validate
-        error_stock
-        js_fill_form_button
-        data_filter
-
-  --- Why version up was needed? ---------------------
-  - Constraint function is mixed with check function and filter function.
-    It should be separated each feature.
-  - 0.xx can't process not existing value properly.
-  - 0.xx can't create output properly.
-  - I originaly create Validator::Custom for Mojolicious, recently Mojolicious
-    has own validator which name is Mojoliciou::Validator.
-    I wanted to create similar interface of Mojolicious::Validator.
-
+1.00_01 2015-12-07
+  - add more simple interface for validation.
+    Documentation is rewrited completely.
+    I recommend this style.
+  - add Validator::Custom::Validation object.
+  - add add_check method.
+  - add check method.
+  - add check_each method.
+  - add add_filter method.
+  - add filter method.
+  - add filter_each method.
+  - add the following checking functions.
+      ascii_graphic
+      number
+      int
+      in
+  - add the following filter functions.
+      remove_blank
+      trim
 0.28
   - improve decimal check. you can specify undef value which mean unlimit muximanu digits
     Example:
