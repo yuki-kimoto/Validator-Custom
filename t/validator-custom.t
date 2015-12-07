@@ -197,8 +197,13 @@ use Validator::Custom;
 # add_check
 {
   my $vc = Validator::Custom->new;
+  my $is_first_arg_object;
   $vc->add_check('equal' => sub {
-    my ($vc, $value, $arg) = @_;
+    my ($vc2, $value, $arg) = @_;
+    
+    if ($vc eq $vc2) {
+      $is_first_arg_object = 1;
+    }
     
     if ($value eq $arg) {
       return 1;
@@ -222,13 +227,19 @@ use Validator::Custom;
   }
   
   is_deeply($validation->failed, ['k2']);
+  ok($is_first_arg_object);
 }
 
 # add_filter
 {
   my $vc = Validator::Custom->new;
+  my $is_first_arg_object;
   $vc->add_filter('cat' => sub {
-    my ($vc, $value, $arg) = @_;
+    my ($vc2, $value, $arg) = @_;
+    
+    if ($vc eq $vc2) {
+      $is_first_arg_object = 1;
+    }
     
     return "$value$arg";
   });
@@ -240,6 +251,7 @@ use Validator::Custom;
   $k1 = $vc->filter($k1, 'cat', 'b');
   
   is($k1, 'ab');
+  ok($is_first_arg_object);
 }
 
 # check_each
@@ -252,12 +264,47 @@ use Validator::Custom;
       
     my $validation = $vc->validation;
     if (!$vc->check_each($k1, 'int')) {
-        $validation->add_failed('k1');
+      $validation->add_failed('k1');
     }
     if (!$vc->check_each($k2, 'int')) {
       $validation->add_failed('k2');
     }
     is_deeply($validation->failed, ['k2']);
+  }
+  
+  # check_each - arguments
+  {
+    my $vc = Validator::Custom->new;
+    my $is_first_arg_object;
+    my $validation = $vc->validation;
+    $vc->add_check('equal' => sub {
+      my ($vc2, $value, $arg) = @_;
+      
+      if ($vc eq $vc2) {
+        $is_first_arg_object = 1;
+      }
+      
+      if ($value eq $arg) {
+        return 1;
+      }
+      else {
+        return 0;
+      }
+    });
+    
+    my $k1 = ['a', 'a'];
+    my $k2 = ['a', 'b'];
+    
+    if (!$vc->check_each($k1, 'equal', 'a')) {
+      $validation->add_failed('k1');
+    }
+
+    if (!$vc->check_each($k2, 'equal', 'a')) {
+      $validation->add_failed('k2');
+    }
+    
+    is_deeply($validation->failed, ['k2']);
+    ok($is_first_arg_object);
   }
 }
 
@@ -272,5 +319,29 @@ use Validator::Custom;
     $k1 = $vc->filter_each($k1, 'trim');
 
     is_deeply($k1, ['a', 'b']);
+  }
+  
+  # filter_each - arguments
+  {
+    my $vc = Validator::Custom->new;
+    my $is_first_arg_object;
+    $vc->add_filter('cat' => sub {
+      my ($vc2, $value, $arg) = @_;
+      
+      if ($vc eq $vc2) {
+        $is_first_arg_object = 1;
+      }
+      
+      return "$value$arg";
+    });
+    
+    my $k1 = ['a', 'c'];
+    
+    my $validation = $vc->validation;
+    
+    $k1 = $vc->filter_each($k1, 'cat', 'b');
+    
+    is_deeply($k1, ['ab', 'cb']);
+    ok($is_first_arg_object);
   }
 }
