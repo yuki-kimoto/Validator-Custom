@@ -789,7 +789,7 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   my $validation = $vc->validation;
   
   # Check id
-  if (!(length $id && $vc->check($id, 'int'))) {
+  if (!$vc->check($id, 'int')) {
     # Add failed message
     $validation->add_failed(id => 'id must be integer');
   }
@@ -806,7 +806,7 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   $age = $vc->filter($age, 'trim');
 
   # Check age
-  if (!(length $id && $vc->check($age, 'int'))) {
+  if (!$vc->check($age, 'int')) {
     # Set default value if validation fail
     $age = 20;
   
@@ -907,7 +907,7 @@ to store failed parameter names and the messages.
 B<4. Validate input data>
 
   # Check id
-  if (!(length $id && $vc->check($id, 'int'))) {
+  if (!$vc->check($id, 'int')) {
     # Add failed message
     $validation->add_failed(id => 'id must be integer');
   }
