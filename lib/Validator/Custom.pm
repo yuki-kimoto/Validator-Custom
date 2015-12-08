@@ -908,7 +908,7 @@ to store failed parameter names and the messages.
 
 =head3 4. Validate input data
 
-  # Check id
+  # Check if id is integer
   if (!$vc->check($id, 'int')) {
     # Add failed message
     $validation->add_failed(id => 'id must be integer');
@@ -921,21 +921,21 @@ Any checking function is available through C<check> method.
 If the check fail, you can add failed parameter name and that message
 using C<add_failed> method.
   
-  # Filter price
+  # Filter price to remove left-rigth space
   $price = $vc->filter($price, 'trim');
 
 You can use C<trim> filter function to trim left-rigth spaces.
   
-  # Filter each value of favorite
+  # Filter each value of favorite using "trim" filtering function
   $favorite = $vc->filter_each($favorite, 'trim');
 
 You can use C<filter_each> method to filter each value of favorite.
   
-  # Check each value of favorite
-  if (@$favorite == 0) {
+  # Check if favorite has at least one values
+  if (@$favorite > 0) {
     $validation->add_failed(favorite => 'favorite must be selected more than one');
   }
-  elsif (!($vc->check_each($favorite, 'in',  ['001', '002', '003']))) {
+  elsif (!($vc->check_each($favorite, 'in',  ['001', '002', 'peach']))) {
     $validation->add_failed(favorite => 'favorite is invalid');
   }
 
