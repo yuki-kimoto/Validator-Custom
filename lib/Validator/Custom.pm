@@ -782,7 +782,7 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   # Input data
   my $id = 1;
   my $name = 'Ken Suzuki';
-  my $age = ' 19 ';
+  my $price = ' 19.23 ';
   my $favorite = ['apple', 'orange'];
   
   # Create validation object
@@ -802,13 +802,13 @@ Validator::Custom - HTML form Validation, simple and good flexibility
     $validation->add_failed(name => 'name is too long');
   }
   
-  # Filter age
-  $age = $vc->filter($age, 'trim');
+  # Filter price
+  $price = $vc->filter($price, 'trim');
 
-  # Check age
-  if (!$vc->check($age, 'int')) {
+  # Check price
+  if (!$vc->check($price, 'number', {decimal_part_max => 2})) {
     # Set default value if validation fail
-    $age = 20;
+    $price = 20.25;
   
   # Filter each value of favorite
   $favorite = $vc->filter_each($favorite, 'trim');
@@ -841,7 +841,7 @@ Validator::Custom - HTML form Validation, simple and good flexibility
     # Get all failed parameter messages
     my $messages = $validation->messages;
     
-    # Get all failed parameter names and the messages as hash
+    # Get all failed parameter names and the messages as hash reference
     my $messages_h = $validation->messages_to_hash;
   }
   
@@ -856,16 +856,16 @@ The features are the following ones.
 
 =item *
 
-Sevral check functions are available by default, C<ascii>,
-C<int>, C<decimal>, C<uint> C<in>.
+Sevral checking functions are available by default, C<ascii_graphic>,
+C<int>, C<number>, C<in>.
 
 =item *
 
-Several filter functions are available by default, such as C<trim>.
+Several filtering functions are available by default, such as C<trim>, C<remove_blank>.
 
 =item *
 
-You can add your check and filter function.
+You can add your own checking and filtering function.
 
 =item *
 
@@ -879,32 +879,32 @@ and the messages keeping the order of validation.
 
 =head2 1. Basic
 
-B<1. Create a new Validator::Custom object>
+=head3 1. Create a new Validator::Custom object
 
-At first, create L<Validator::Custom> object.
+At first, create L<Validator::Custom> object using C<new> method.
 
   use Validator::Custom;
   my $vc = Validator::Custom->new;
 
-B<2. Prepare input data for validation>
+=head3 2. Prepare input data for validation
 
 Next, prepare input data.
 
   my $id = 1;
   my $name = 'Ken Suzuki';
-  my $age = ' 19 ';
+  my $price = ' 19.23 ';
   my $favorite = ['apple', 'orange'];
 
-B<3. Create validation object>
+=head3 3. Create a new validation object
 
-Next, create validation object.
+Next, create a new validation object using C<validation> method.
 
   my $validation = $vc->validation;
 
 This is L<Validator::Custom::Validation> object
 to store failed parameter names and the messages.
 
-B<4. Validate input data>
+=head3 4. Validate input data
 
   # Check id
   if (!$vc->check($id, 'int')) {
@@ -912,12 +912,15 @@ B<4. Validate input data>
     $validation->add_failed(id => 'id must be integer');
   }
 
-You can use C<int> check function to check the value is integer.
+You can use C<int> checking function to check the value is integer.
+C<int> checking function is default one.
+Any checking function is available through C<check> method.
+
 If the check fail, you can add failed parameter name and that message
 using C<add_failed> method.
   
-  # Filter age
-  $age = $vc->filter($age, 'trim');
+  # Filter price
+  $price = $vc->filter($price, 'trim');
 
 You can use C<trim> filter function to trim left-rigth spaces.
   
@@ -939,7 +942,7 @@ You can use C<check_each> method to check each value of favorite.
 If you see default checks and filter,
 see L<Validator::Custom/"CHECKING FUNCTIONS"> and L<Validator::Custom/"FILTERING FUNCTIONS">.
 
-B<5. Manipulate validation object>
+=head3 5. Manipulate validation object
 
 If you check all input data is valid, use C<is_valid> method.
   
