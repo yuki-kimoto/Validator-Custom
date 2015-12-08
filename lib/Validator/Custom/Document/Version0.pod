@@ -1,6 +1,6 @@
 =head1 NAME
 
-Validator::Custom - HTML form Validation, easy and flexibly
+Validator::Custom::Document::Version0 - Documentation in Version 0.xx
 
 =head1 SYNOPSYS
 

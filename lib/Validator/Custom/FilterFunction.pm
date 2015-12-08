@@ -31,5 +31,3 @@ sub trim {
 =head1 NAME
 
 Validator::Custom::FilterFunction - Filtering functions
-
-1;
