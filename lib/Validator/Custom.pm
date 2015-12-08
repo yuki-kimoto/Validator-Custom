@@ -783,41 +783,43 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   my $id = 1;
   my $name = 'Ken Suzuki';
   my $price = ' 19.23 ';
-  my $favorite = ['apple', 'orange'];
+  my $favorite = ['001', '002'];
   
   # Create validation object
   my $validation = $vc->validation;
   
-  # Check id
+  # Check if id is integer
   if (!$vc->check($id, 'int')) {
     # Add failed message
     $validation->add_failed(id => 'id must be integer');
   }
   
-  # Check name
+  # Check if name has length
   if (!(length $name)) {
     $validation->add_failed(name => 'name must have length');
   }
+  # Check if name's length is less than 30
   elsif (!(length $name < 30)) {
     $validation->add_failed(name => 'name is too long');
   }
   
-  # Filter price
+  # Filter price to remove left-rigth space
   $price = $vc->filter($price, 'trim');
 
-  # Check price
+  # Check price is number and the digits of the decimal part is less than or eaqual to 2
   if (!$vc->check($price, 'number', {decimal_part_max => 2})) {
     # Set default value if validation fail
     $price = 20.25;
+  }
   
-  # Filter each value of favorite
+  # Filter each value of favorite using "trim" filtering function
   $favorite = $vc->filter_each($favorite, 'trim');
   
-  # Check each value of favorite
-  if (@$favorite == 0) {
+  # Check if favorite has at least one values
+  if (@$favorite > 0) {
     $validation->add_failed(favorite => 'favorite must be selected more than one');
   }
-  elsif (!($vc->check_each($favorite, 'in',  ['apple', 'ornge', 'peach']))) {
+  elsif (!($vc->check_each($favorite, 'in',  ['001', '002', 'peach']))) {
     $validation->add_failed(favorite => 'favorite is invalid');
   }
   
@@ -893,7 +895,7 @@ Next, prepare input data.
   my $id = 1;
   my $name = 'Ken Suzuki';
   my $price = ' 19.23 ';
-  my $favorite = ['apple', 'orange'];
+  my $favorite = ['001', '002'];
 
 =head3 3. Create a new validation object
 
@@ -933,7 +935,7 @@ You can use C<filter_each> method to filter each value of favorite.
   if (@$favorite == 0) {
     $validation->add_failed(favorite => 'favorite must be selected more than one');
   }
-  elsif (!($vc->check_each($favorite, 'in',  ['apple', 'ornge', 'peach']))) {
+  elsif (!($vc->check_each($favorite, 'in',  ['001', '002', '003']))) {
     $validation->add_failed(favorite => 'favorite is invalid');
   }
 
@@ -1259,14 +1261,14 @@ Password checking.
 
 Check box, selected at least 1.
 
-  my $favorite = ['apple', 'orange'];
+  my $favorite = ['001', '002'];
 
   my $validation = $vc->validation;
   
   if (@$favorite == 0) {
     $validation->add_failed(favorite => 'favorite must be selected at least 1');
   }
-  elsif (!$vc->check($favorite, 'in', ['apple', 'orange', 'melon'])) {
+  elsif (!$vc->check($favorite, 'in', ['001', '002', '003'])) {
     $validation->add_failed(favorite => 'favorite have invalid value');
   }
   
