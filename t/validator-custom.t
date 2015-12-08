@@ -132,6 +132,73 @@ use Validator::Custom;
     is_deeply($validation->failed, [qw/k8 k9 k10 k11 k12/]);
   }
 
+  # check - number, decimal_part_max
+  {
+    my $vc = Validator::Custom->new;
+    my $k1 = '1';
+    my $k2 = '123';
+    my $k3 = '456.123';
+    my $k4 = '-1';
+    my $k5 = '-789';
+    my $k6 = '-100.456';
+    my $k7 = '-100.789';
+    
+    my $k8 = 'a';
+    my $k9 = '1.a';
+    my $k10 = 'a.1';
+    my $k11 = '';
+    my $k12;
+    
+    my $k13 = '456.1234';
+    my $k14 = '-100.7894';
+    
+    my $validation = $vc->validation;
+    if (!$vc->check($k1, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k1');
+    }
+    if (!$vc->check($k2, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k2');
+    }
+    if (!$vc->check($k3, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k3');
+    }
+    if (!$vc->check($k4, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k4');
+    }
+    if (!$vc->check($k5, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k5');
+    }
+    if (!$vc->check($k6, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k6');
+    }
+    if (!$vc->check($k7, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k7');
+    }
+    if (!$vc->check($k8, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k8');
+    }
+    if (!$vc->check($k9, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k9');
+    }
+    if (!$vc->check($k10, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k10');
+    }
+    if (!$vc->check($k11, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k11');
+    }
+    if (!$vc->check($k12, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k12');
+    }
+    if (!$vc->check($k13, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k13');
+    }
+    if (!$vc->check($k14, 'number', {decimal_part_max => 3})) {
+      $validation->add_failed('k14');
+    }
+
+    is_deeply($validation->failed, [qw/k8 k9 k10 k11 k12 k13 k14/]);
+  }
+  
   # check - in
   {
     my $vc = Validator::Custom->new;

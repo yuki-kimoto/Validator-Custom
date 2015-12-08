@@ -20,11 +20,35 @@ sub number {
 
   return undef unless defined $value;
   
-  if ($value =~ /^-?[0-9]+(\.[0-9]*)?$/) {
-    return 1;
+  my $decimal_part_max;
+  if ($arg) {
+    croak "The argument of number checking function must be a hash reference"
+      unless ref $arg eq 'HASH';
+    
+    $decimal_part_max = delete $arg->{decimal_part_max};
+    
+    croak "decimal_part_max must be more than 0"
+      unless $decimal_part_max > 0;
+    
+    croak "The argument of number checking function allow only decimal_part_max"
+      if keys %$arg;
+  }
+
+  if (defined $decimal_part_max) {
+    if ($value =~ /^-?[0-9]+(\.[0-9]{0,$decimal_part_max})?$/) {
+      return 1;
+    }
+    else {
+      return undef;
+    }
   }
   else {
-    return undef;
+    if ($value =~ /^-?[0-9]+(\.[0-9]*)?$/) {
+      return 1;
+    }
+    else {
+      return undef;
+    }
   }
 }
 

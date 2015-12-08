@@ -1,3 +1,7 @@
+1.00_03 2015-12-8
+  - add decimal_part_max option to number checking function
+1.00_02 2015-12-08
+  - fix documentation bug
 1.00_01 2015-12-07
   - add more simple interface for validation.
     Documentation is rewrited completely.

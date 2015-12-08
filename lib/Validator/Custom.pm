@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '1.00_02';
+our $VERSION = '1.00_03';
 
 use Carp 'croak';
 use Validator::Custom::Validation;
@@ -1104,6 +1104,21 @@ Invalid example:
   'a';
   '1.a';
   'a.1';
+
+You can specify decimal part max digits with C<decimal_part_max> option.
+
+  my $is_valid = $vc->check($value, 'number', {decimal_part_max => 3});
+
+Valid example:
+
+  '123'
+  '123.456'
+  '-100.789'
+
+Invalid example:
+
+  '123.4567'
+  '-100.7891'
 
 =head1 FILTERING FUNCTIONS
 
