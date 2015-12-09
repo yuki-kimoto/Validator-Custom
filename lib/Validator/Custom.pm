@@ -1321,19 +1321,33 @@ Convert datetime string to Time::Piece object.
 
 See L<Validator::Custom::Document::Version0>.
 
-=head2 What point I take care of in Version 1.00.
+=head2 What point I take care of in Version 1.xx.
+
+=over 4
+
+=item *
 
 C<in_array> constraint function is renamed to C<in> checking function.
 
+=item *
+
 C<trim> filter become triming unicode space characters, not only C<[ \t\n\r\f]>.
+
+=item *
 
 C<decimal> constraint is renamed to C<number> checking function and simplified.
 
+=item *
+
 C<date_to_timepiece> checking function dosen't exist.
-About alternative way, see "EXAMPLES" "Convert date string to Time::Piece object".
+About alternative way, see the topic "Convert date string to Time::Piece object" in "EXAMPLES".
+
+=item *
 
 C<datetime_to_timepiece> checking function dosen't exists.
-About alternative way, see "EXAMPLES" "Convert datetime string to Time::Piece object".
+About alternative way, see the topic "Convert datetime string to Time::Piece object" in "EXAMPLES".
+
+=back
 
 =head2 How to create the corresponding checking functions in Version 0.xx constraint functions.
 
@@ -1398,7 +1412,7 @@ decimal
     }
   }
 
-=head2 How to create the corresponding filtering functions in Version 0.xx.
+=head2 How to create the corresponding filtering functions in Version 0.xx constraint functions.
 
 trim_collapse
 
