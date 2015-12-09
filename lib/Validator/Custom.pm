@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '1.00_03';
+our $VERSION = '1.00_04';
 
 use Carp 'croak';
 use Validator::Custom::Validation;
@@ -806,7 +806,7 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   # Filter price to remove left-rigth space
   $price = $vc->filter($price, 'trim');
 
-  # Check price is number and the digits of the decimal part is less than or eaqual to 2
+  # Check price is number and the digits of the decimal part is two or less than two
   if (!$vc->check($price, 'number', {decimal_part_max => 2})) {
     # Set default value if validation fail
     $price = 20.25;
@@ -879,7 +879,7 @@ and the messages keeping the order of validation.
 
 =head1 GUIDE
 
-=head2 1. Basic
+=head2 1. Basic usage
 
 =head3 1. Create a new Validator::Custom object
 
@@ -944,7 +944,7 @@ You can use C<check_each> method to check each value of favorite.
 If you see default checks and filter,
 see L<Validator::Custom/"CHECKING FUNCTIONS"> and L<Validator::Custom/"FILTERING FUNCTIONS">.
 
-=head3 5. Manipulate validation object
+=head2 2. Manipulate validation object
 
 If you check all input data is valid, use C<is_valid> method.
   
@@ -985,7 +985,9 @@ You can get all failed names and the messages as hash.
 
 See also L<Validator::Custom::Validation>.
 
-=head2 2. Add checking function
+=head2 Advanced tequnique
+
+=head3 1. Add checking function
 
 You can add your check function by C<add_check> method if you need.
 
@@ -1008,7 +1010,7 @@ the argument as third argument.
 
 You must return the result of validation, true or false value.
 
-=head3 Add filtering function
+=head3 2. Add filtering function
 
 You can add your filtering function by C<add_filter> method if you need.
 
@@ -1034,22 +1036,6 @@ You must return the result of filtering.
 L<Validator::Custom> have the following default checking functions.
 You can call any checking function by C<check> method.
 
-=head2 ascii_graphic
-  
-  my $is_valid = $vc->check($value, 'ascii');
-  
-Ascii graphic characters(hex 21-7e). Generally, you can use C<ascii_graphic> function
-for checking the characters of a password.
-
-Valid example:
-
-  "Ken!@-"
-
-Invalid example:
-  
-  "aa aa"
-  "\taaa"
-
 =head2 int
 
   my $value = 19;
@@ -1070,24 +1056,6 @@ Invalid example:
 If you need to check the range of value, you can write the following way.
 
   my $is_valid =  $vc->check($value, 'int') && $value > 0;
-
-=head2 in
-  
-  my $value = '001';
-  my $is_valid = $vc->check($value, 'in', ['001', '002', '003']);
-
-Check if the value is one of the values of the array.
-
-Valid example:
-
-  '001'
-  '002'
-  '003'
-
-Invalid example:
-
-  '004'
-  '005'
 
 =head2 number
   
@@ -1124,6 +1092,40 @@ Invalid example:
 
   '123.4567'
   '-100.7891'
+
+=head2 ascii_graphic
+  
+  my $is_valid = $vc->check($value, 'ascii');
+  
+Ascii graphic characters(hex 21-7e). Generally, you can use C<ascii_graphic> function
+for checking the characters of a password.
+
+Valid example:
+
+  "Ken!@-"
+
+Invalid example:
+  
+  "aa aa"
+  "\taaa"
+
+=head2 in
+  
+  my $value = '001';
+  my $is_valid = $vc->check($value, 'in', ['001', '002', '003']);
+
+Check if the value is one of the values of the array.
+
+Valid example:
+
+  '001'
+  '002'
+  '003'
+
+Invalid example:
+
+  '004'
+  '005'
 
 =head1 FILTERING FUNCTIONS
 
