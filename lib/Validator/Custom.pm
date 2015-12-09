@@ -819,7 +819,8 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   if (@$favorite > 0) {
     $validation->add_failed(favorite => 'favorite must be selected more than one');
   }
-  elsif (!($vc->check_each($favorite, 'in',  ['001', '002', 'peach']))) {
+  # Check if favorite is one of the specified values
+  elsif (!($vc->check_each($favorite, 'in',  ['001', '002', '003']))) {
     $validation->add_failed(favorite => 'favorite is invalid');
   }
   
@@ -918,13 +919,13 @@ You can use C<int> checking function to check the value is integer.
 C<int> checking function is default one.
 Any checking function is available through C<check> method.
 
-If the check fail, you can add failed parameter name and that message
-using C<add_failed> method.
+When the check dosen't success, you can add failed parameter name and the message
+using C<add_failed> method of L<Validator::Custom::Validation> class.
   
   # Filter price to remove left-rigth space
   $price = $vc->filter($price, 'trim');
 
-You can use C<trim> filter function to trim left-rigth spaces.
+You can use C<trim> filtering function to trim left-rigth spaces.
   
   # Filter each value of favorite using "trim" filtering function
   $favorite = $vc->filter_each($favorite, 'trim');
@@ -935,7 +936,8 @@ You can use C<filter_each> method to filter each value of favorite.
   if (@$favorite > 0) {
     $validation->add_failed(favorite => 'favorite must be selected more than one');
   }
-  elsif (!($vc->check_each($favorite, 'in',  ['001', '002', 'peach']))) {
+  # Check if favorite is one of the specified values
+  elsif (!($vc->check_each($favorite, 'in',  ['001', '002', '003']))) {
     $validation->add_failed(favorite => 'favorite is invalid');
   }
 
@@ -948,7 +950,7 @@ see L<Validator::Custom/"CHECKING FUNCTIONS"> and L<Validator::Custom/"FILTERING
 
 If you check all input data is valid, use C<is_valid> method.
   
-  # Get result
+  # Check if validation result is valid
   if ($validation->is_valid) {
     # Success
   }
@@ -958,7 +960,7 @@ If you check all input data is valid, use C<is_valid> method.
 
 If you can check a input data is valid, use C<is_valid> method with parameter name.
   
-  # Know what is failed
+  # Check what parameter fail
   unless ($validation->is_valid('name')) {
     # ...
   }
@@ -968,19 +970,19 @@ You can get all failed parameter names using C<failed> method.
   # Get all failed parameter names
   my $failed = $validation->failed;
 
-You can get a failed parameter message using C<message>.
+You can get a failed parameter message using C<message> method.
 
   # Get a failed parameter message
   my $name_message = $validation->message('name');
 
-You can get all failed parameter messages.
+You can get all failed parameter messages using C<messages> method.
 
   # Get all failed parameter messages
   my $messages = $validation->messages;
 
-You can get all failed names and the messages as hash.
+You can get all failed names and the messages as hash reference using C<messages_to_hash> method.
 
-  # Get all failed parameter names and messages as hash
+  # Get all failed parameter names and the messages as hash reference
   my $messages_h = $validation->messages_to_hash;
 
 See also L<Validator::Custom::Validation>.
@@ -989,7 +991,7 @@ See also L<Validator::Custom::Validation>.
 
 =head3 1. Add checking function
 
-You can add your check function by C<add_check> method if you need.
+You can add your own checking function using C<add_check> method if you need.
 
   $vc->add_check(
     telephone => sub {
@@ -1004,11 +1006,11 @@ You can add your check function by C<add_check> method if you need.
   );
 
 Checking function receives three arguments,
-L<Validator::Custom> object as first argument,
-the value as second argument,
-the argument as third argument.
+First argument is L<Validator::Custom> object,
+Second argument is the value for checking,
+Third argument is the argument of checking function.
 
-You must return the result of validation, true or false value.
+Your Checking function must return true or false value.
 
 =head3 2. Add filtering function
 
@@ -1029,7 +1031,7 @@ L<Validator::Custom> object as first argument,
 the value as second argument,
 the argument as third argument.
 
-You must return the result of filtering.
+Your filtering function must return the result of filtering.
 
 =head1 CHECKING FUNCTIONS
 
@@ -1041,19 +1043,19 @@ You can call any checking function by C<check> method.
   my $value = 19;
   my $is_valid = $vc->check($value, 'int');
 
-Integer value.
+Check if the value is integer value.
 
-Valid example:
+Example of valid values:
 
   "-10"
   "234"
 
-Invalid example:
+Example of invalid values:
 
   "10.11"
   "abc"
 
-If you need to check the range of value, you can write the following way.
+If you also need to check the range of value, you can write the following way.
 
   my $is_valid =  $vc->check($value, 'int') && $value > 0;
 
@@ -1061,9 +1063,10 @@ If you need to check the range of value, you can write the following way.
   
   my $is_valid = $vc->check($value, 'number');
 
-Number. Number means integer or floating point number.
+Check if the value is number.
+Number means integer or decimal.
 
-Valid example:
+Example of valid values:
 
   '1'
   '123'
@@ -1072,23 +1075,23 @@ Valid example:
   '-100'
   '-100.789'
 
-Invalid example:
+Example of invalid values:
 
   'a';
   '1.a';
   'a.1';
 
-You can specify decimal part max digits with C<decimal_part_max> option.
+You can also specify decimal part max digits using C<decimal_part_max> option.
 
   my $is_valid = $vc->check($value, 'number', {decimal_part_max => 3});
 
-Valid example:
+Example of valid values:
 
   '123'
   '123.456'
   '-100.789'
 
-Invalid example:
+Example of invalid values:
 
   '123.4567'
   '-100.7891'
@@ -1097,14 +1100,15 @@ Invalid example:
   
   my $is_valid = $vc->check($value, 'ascii');
   
-Ascii graphic characters(hex 21-7e). Generally, you can use C<ascii_graphic> function
-for checking the characters of a password.
+Check if the value is Ascii graphic characters(hex 21-7e).
+Generally, C<ascii_graphic> function is used to
+check the characters of a password.
 
-Valid example:
+Example of valid values:
 
   "Ken!@-"
 
-Invalid example:
+Example of invalid values:
   
   "aa aa"
   "\taaa"
@@ -1114,15 +1118,15 @@ Invalid example:
   my $value = '001';
   my $is_valid = $vc->check($value, 'in', ['001', '002', '003']);
 
-Check if the value is one of the values of the array.
+Check if the value is one of the given values.
 
-Valid example:
+Example of valid values:
 
   '001'
   '002'
   '003'
 
-Invalid example:
+Example of invalid values:
 
   '004'
   '005'
@@ -1171,9 +1175,9 @@ Create a new L<Validator::Custom> object.
   $vc->add_check(%check);
   $vc->add_check(\%check);
 
-Add check function.
+Add checking function.
 It receives four arguments,
-Validator::Custom::Rule object, arguments of check function,
+Validator::Custom::Rule object, arguments of checking function,
 current key name, and parameters
   
   $vc->add_check(
@@ -1188,9 +1192,9 @@ current key name, and parameters
 
 =head2 add_filter
 
-Add filter function. 
+Add filtering function. 
 It receives four arguments,
-Validator::Custom::Rule object, arguments of check function,
+Validator::Custom::Rule object, arguments of checking function,
 current key name, and parameters,
 
   $vc->add_filter(
