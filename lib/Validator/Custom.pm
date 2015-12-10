@@ -88,7 +88,7 @@ sub check_each {
   croak "Can't call \"$name\" check"
     unless $checks->{$name};
   
-  croak "values must be array refernce"
+  croak "values must be array reference"
     unless ref $values eq 'ARRAY';
   
   my $is_invalid;
@@ -115,7 +115,7 @@ sub filter_each {
   croak "Can't call \"$name\" filter"
     unless $filters->{$name};
   
-  croak "values must be array refernce"
+  croak "values must be array reference"
     unless ref $values eq 'ARRAY';
   
   my $new_values = [];
@@ -1027,9 +1027,9 @@ You can add your filtering function by C<add_filter> method if you need.
   );
 
 Filtering function receives three arguments,
-L<Validator::Custom> object as first argument,
-the value as second argument,
-the argument as third argument.
+First argument is L<Validator::Custom> object,
+Second argument is the value for filtering.
+Third argument is the argument of filtering function.
 
 Your filtering function must return the result of filtering.
 
@@ -1134,19 +1134,19 @@ Example of invalid values:
 =head1 FILTERING FUNCTIONS
 
 L<Validator::Custom> have the following default filtering functions.
-You can call any filtering function by C<filter> method.
+You can call any filtering function using C<filter> method.
 
 =head2 trim
 
   my $new_value = $vc->filter($value, 'trim');
 
 Trim leading and trailing white space.
-Trim unicode space character, not only C<[ \t\n\r\f]>.
+Note that trim function remove unicode space character, not only C<[ \t\n\r\f]>.
 
-Example:
+Filtering example:
 
-  Input  '  　Ken  '
-  Output 'Ken'
+  Input : '  　Ken  '
+  Output: 'Ken'
 
 =head2 remove_blank
 
@@ -1154,10 +1154,10 @@ Example:
 
 Remove blank character and undefined value from array reference.
 
-Example:
+Filtering example:
 
-  Input  [1, 2, '', undef, 4]
-  Output [1, 2, 4]
+  Input : [1, 2, '', undef, 4]
+  Output: [1, 2, 4]
 
 =head1 METHODS
 
@@ -1172,17 +1172,15 @@ Create a new L<Validator::Custom> object.
 
 =head2 add_check
 
-  $vc->add_check(%check);
-  $vc->add_check(\%check);
+  $vc->add_check(int => sub { ... });
 
-Add checking function.
-It receives four arguments,
-Validator::Custom::Rule object, arguments of checking function,
-current key name, and parameters
+Add a checking function.
+
+Example:
   
   $vc->add_check(
     int => sub {
-      my ($vc, $value, $args) = @_;
+      my ($vc, $value, $arg) = @_;
       
       my $is_valid = $value =~ /^\-?[\d]+$/;
       
@@ -1190,16 +1188,24 @@ current key name, and parameters
     }
   );
 
+Checking function receives three arguments,
+First argument is L<Validator::Custom> object,
+Second argument is the value for checking,
+Third argument is the argument of checking function.
+
+Your Checking function must return true or false value.
+
 =head2 add_filter
 
-Add filtering function. 
-It receives four arguments,
-Validator::Custom::Rule object, arguments of checking function,
-current key name, and parameters,
+  $vc->add_filter(trim => sub { ... });
+
+Add a filtering function. 
+
+Example:
 
   $vc->add_filter(
     trim => sub {
-      my ($vc, $value, $args) = @_;
+      my ($vc, $value, $arg) = @_;
       
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
@@ -1213,35 +1219,51 @@ current key name, and parameters,
   my $is_valid = $vc->check($value, 'int');
   my $is_valid = $vc->check($value, 'int', $arg);
 
-Run check.
+Execute a checking function.
+
+First argument is the value for checking.
+Second argument is the name of the checking funcion.
+Third argument is the argument of the checking function.
 
 =head2 check_each
 
   my $is_valid = $vc->check_each($values, 'int');
   my $is_valid = $vc->check_each($values, 'int', $arg);
 
-Run check all elements of array refernce.
-If more than one element is invalid, check_each reterun false.
+Execute a checking function to all elements of array reference.
+If more than one element is invalid, C<check_each> method return false.
+
+First argument is the values for checking, which must be array reference.
+Second argument is the name of the checking funcion.
+Third argument is the argument of the checking function.
 
 =head2 filter
 
   my $new_value = $vc->filter($value, 'trim');
   my $new_value = $vc->filter($value, 'trim', $arg);
 
-Run filter.
+Execute a filtering function.
+
+First argument is the value for filtering.
+Second argument is the name of the filtering funcion.
+Third argument is the argument of the filtering function.
 
 =head2 filter_each
 
   my $new_values = $vc->filter_each($values, 'trim');
   my $new_values = $vc->filter_each($values, 'trim', $arg);
 
-Run filter all elements of array reference.
+Execute a filtering function to all elements of array reference.
+
+First argument is the values for filtering, which must be array reference.
+Second argument is the name of the filtering funcion.
+Third argument is the argument of the filtering function.
 
 =head1 EXAMPLES
 
 Show you some examples to do some validation.
 
-Password checking.
+Password checking:
   
   my $password = 'abc';
   my $password2 = 'abc';
@@ -1265,7 +1287,7 @@ Password checking.
     # ...
   }
 
-Check box, selected at least 1.
+Check box, selected at least 1, one of the given values:
 
   my $favorite = ['001', '002'];
 
@@ -1285,24 +1307,24 @@ Check box, selected at least 1.
     # ...
   }
 
-Convert date string to Time::Piece object.
+Convert date string to L<Time::Piece> object.
 
   my $date = '2014/05/16';
   
   my $validation = $vc->validation;
   
   my $date_tp;
-  if (!length $datetime) {
+  if (!length $date) {
     $validation->add_failed(date => 'date must have length');
   }
   else {
-    eval { $date_tp = Time::Piece->strptime($datetime_tp, '%Y/%m/%d') };
+    eval { $date_tp = Time::Piece->strptime($date, '%Y/%m/%d') };
     if (!$date_tp) {
       $validation->add_failed(date => 'date value is invalid');
     }
   }
 
-Convert datetime string to Time::Piece object.
+Convert datetime string to L<Time::Piece> object.
 
   my $datetime = '2014/05/16 12:30:40';
   
@@ -1313,7 +1335,7 @@ Convert datetime string to Time::Piece object.
     $validation->add_failed(datetime => 'datetime must have length');
   }
   else {
-    eval { $datetime_tp = Time::Piece->strptime($datetime_tp, '%Y/%m/%d %H:%M:%S') };
+    eval { $datetime_tp = Time::Piece->strptime($datetime, '%Y/%m/%d %H:%M:%S') };
     if (!$datetime_tp) {
       $validation->add_failed(datetime => 'datetime value is invalid');
     }
@@ -1324,6 +1346,7 @@ Convert datetime string to Time::Piece object.
 =head2 I use Validator::Custom 0.xx yet. I want to see documentation of Version 0.xx.
 
 See L<Validator::Custom::Document::Version0>.
+This is complete document for L<Validator::Custom> version 0.xx.
 
 =head2 What point I take care of in Version 1.xx.
 
@@ -1335,7 +1358,7 @@ C<in_array> constraint function is renamed to C<in> checking function.
 
 =item *
 
-C<trim> filter become triming unicode space characters, not only C<[ \t\n\r\f]>.
+C<trim> filtering function becomes triming unicode space characters, not only C<[ \t\n\r\f]>.
 
 =item *
 
@@ -1355,11 +1378,13 @@ About alternative way, see the topic "Convert datetime string to Time::Piece obj
 
 =head2 How to create the corresponding checking functions in Version 0.xx constraint functions.
 
+I show some examples.
+
 space
 
   $vc->add_check(space => sub {
     my ($vc, $value, $arg) = @_;
-    defined $value && $value =~ '^[ \t\n\r\f]*$' ? 1 : 0;
+    return defined $value && $value =~ '^[ \t\n\r\f]*$' ? 1 : 0;
   });
 
 http_url
@@ -1417,6 +1442,8 @@ decimal
   }
 
 =head2 How to create the corresponding filtering functions in Version 0.xx constraint functions.
+
+I show some examples.
 
 trim_collapse
 
