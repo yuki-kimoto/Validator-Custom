@@ -111,7 +111,7 @@ sub messages_to_hash {
 
 =head1 NAME
 
-Validator::Custom::Validation - Validation result
+Validator::Custom::Validation - a result of validation
 
 =head1 SYNOPSYS
 
@@ -141,10 +141,9 @@ and implements the following new ones.
 
   my $validation = Validator::Custom::Validation->new;
   
-Create Validator::Custom::Validation object.
+Create a L<Validator::Custom::Validation> object.
 
-Generally this method is not used. You should use validation method of Validator::Custom.
-
+Generally this method is not used. You should use C<validation> method of L<Validator::Custom>.
   my $validation = $vc->validation;
 
 =head2 is_valid
@@ -152,37 +151,37 @@ Generally this method is not used. You should use validation method of Validator
   my $is_valid = $validation->is_valid;
   my $is_valid = $validation->is_valid('title');
 
-Check all values is valid. If name is specified, check the value is valid.
+Check if the result of validation is valid.
+If name is specified, check if the parameter corresponding to the name is valid.
 
 =head2 add_failed
 
   $validation->add_failed('title' => 'title is invalid value');
   $validation->add_failed('title');
 
-Add failed name and message.
+Add a failed name and message.
 If message is omitted, default message is set automatically.
 
 =head2 failed
 
   my $failed = $validation->failed;
 
-Get failed names.
+Get all failed names.
 
 =head2 message
 
   my $message = $validation->message('title');
 
-Get a failed message.
+Get a failed message corresponding to the name.
 
 =head2 messages
 
   my $messgaes = $validation->messages;
 
-Get failed messages.
+Get all failed messages.
 
 =head2 messages_to_hash
 
   my $messages_h = $validation->messages_to_hash;
 
-Get failed names and messages as hash reference.
-
+Get all failed names and messages as hash reference.

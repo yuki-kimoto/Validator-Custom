@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '1.00_05';
+our $VERSION = '1.01';
 
 use Carp 'croak';
 use Validator::Custom::Validation;
@@ -987,7 +987,7 @@ You can get all failed names and the messages as hash reference using C<messages
 
 See also L<Validator::Custom::Validation>.
 
-=head2 Advanced tequnique
+=head2 3. Advanced tequnique
 
 =head3 1. Add checking function
 
