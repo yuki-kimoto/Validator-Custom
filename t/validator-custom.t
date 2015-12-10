@@ -219,6 +219,16 @@ use Validator::Custom;
     
     is_deeply($validation->failed, ['k2', 'k3']);
   }
+
+  # check - exception, few arguments
+  {
+    my $vc = Validator::Custom->new;
+    eval { $vc->check() };
+    like($@, qr/value and the name of a checking function must be passed/);
+    
+    eval { $vc->check([]) };
+    like($@, qr/value and the name of a checking function must be passed/);
+  }
 }
 
 # filter
@@ -258,6 +268,16 @@ use Validator::Custom;
     
     is($k1, '123');
     ok(!defined $k2);
+  }
+
+  # filter - exception, few arguments
+  {
+    my $vc = Validator::Custom->new;
+    eval { $vc->filter() };
+    like($@, qr/value and the name of a filtering function must be passed/);
+    
+    eval { $vc->filter([]) };
+    like($@, qr/value and the name of a filtering function must be passed/);
   }
 }
 
@@ -373,6 +393,16 @@ use Validator::Custom;
     is_deeply($validation->failed, ['k2']);
     ok($is_first_arg_object);
   }
+
+  # check_each - exception, few arguments
+  {
+    my $vc = Validator::Custom->new;
+    eval { $vc->check_each() };
+    like($@, qr/values and the name of a checking function must be passed/);
+    
+    eval { $vc->check_each([]) };
+    like($@, qr/values and the name of a checking function must be passed/);
+  }
 }
 
 # filter_each
@@ -410,5 +440,15 @@ use Validator::Custom;
     
     is_deeply($k1, ['ab', 'cb']);
     ok($is_first_arg_object);
+  }
+  
+  # filter_each - exception, few arguments
+  {
+    my $vc = Validator::Custom->new;
+    eval { $vc->filter_each() };
+    like($@, qr/values and the name of a filtering function must be passed/);
+    
+    eval { $vc->filter_each([]) };
+    like($@, qr/values and the name of a filtering function must be passed/);
   }
 }

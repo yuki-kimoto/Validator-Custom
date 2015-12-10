@@ -80,7 +80,7 @@ sub check_each {
   my ($self, $values, $name, $arg) = @_;
   
   if (@_ < 3) {
-    croak "value must be passed";
+    croak "values and the name of a checking function must be passed";
   }
   
   my $checks = $self->{checks} || {};
@@ -107,7 +107,7 @@ sub filter_each {
   my ($self, $values, $name, $arg) = @_;
   
   if (@_ < 3) {
-    croak "value must be passed";
+    croak "values and the name of a filtering function must be passed";
   }
   
   my $filters = $self->{filters} || {};
@@ -131,7 +131,7 @@ sub check {
   my ($self, $value, $name, $arg) = @_;
 
   if (@_ < 3) {
-    croak "value must be passed";
+    croak "value and the name of a checking function must be passed";
   }
   
   my $checks = $self->{checks} || {};
@@ -146,7 +146,7 @@ sub filter {
   my ($self, $value, $name, $arg) = @_;
   
   if (@_ < 3) {
-    croak "value must be passed";
+    croak "value and the name of a filtering function must be passed";
   }
   
   my $filters = $self->{filters} || {};
