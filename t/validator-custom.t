@@ -226,8 +226,15 @@ use Validator::Custom;
     eval { $vc->check() };
     like($@, qr/value and the name of a checking function must be passed/);
     
-    eval { $vc->check([]) };
+    eval { $vc->check(3) };
     like($@, qr/value and the name of a checking function must be passed/);
+  }
+
+  # check - exception, checking function not found
+  {
+    my $vc = Validator::Custom->new;
+    eval { $vc->check(1, 'foo') };
+    like($@, qr/Can't call "foo" checking function/);
   }
 }
 
@@ -276,8 +283,15 @@ use Validator::Custom;
     eval { $vc->filter() };
     like($@, qr/value and the name of a filtering function must be passed/);
     
-    eval { $vc->filter([]) };
+    eval { $vc->filter(3) };
     like($@, qr/value and the name of a filtering function must be passed/);
+  }
+
+  # filter - exception, filtering function not found
+  {
+    my $vc = Validator::Custom->new;
+    eval { $vc->filter(1, 'foo') };
+    like($@, qr/Can't call "foo" filtering function/);
   }
 }
 
@@ -403,6 +417,20 @@ use Validator::Custom;
     eval { $vc->check_each([]) };
     like($@, qr/values and the name of a checking function must be passed/);
   }
+
+  # check_each - exception, checking function not found
+  {
+    my $vc = Validator::Custom->new;
+    eval { $vc->check_each([1], 'foo') };
+    like($@, qr/Can't call "foo" checking function/);
+  }
+
+  # check - exception, values is not array reference
+  {
+    my $vc = Validator::Custom->new;
+    eval { $vc->check_each(1, 'int') };
+    like($@, qr/values must be array reference/);
+  }
 }
 
 # filter_each
@@ -450,5 +478,19 @@ use Validator::Custom;
     
     eval { $vc->filter_each([]) };
     like($@, qr/values and the name of a filtering function must be passed/);
+  }
+
+  # filter_each - exception, filtering function not found
+  {
+    my $vc = Validator::Custom->new;
+    eval { $vc->filter_each([1], 'foo') };
+    like($@, qr/Can't call "foo" filtering function/);
+  }
+
+  # filter - exception, values is not array reference
+  {
+    my $vc = Validator::Custom->new;
+    eval { $vc->filter_each(1, 'trim') };
+    like($@, qr/values must be array reference/);
   }
 }

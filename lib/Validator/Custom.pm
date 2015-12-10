@@ -85,7 +85,7 @@ sub check_each {
   
   my $checks = $self->{checks} || {};
   
-  croak "Can't call \"$name\" check"
+  croak "Can't call \"$name\" checking function"
     unless $checks->{$name};
   
   croak "values must be array reference"
@@ -112,7 +112,7 @@ sub filter_each {
   
   my $filters = $self->{filters} || {};
   
-  croak "Can't call \"$name\" filter"
+  croak "Can't call \"$name\" filtering function"
     unless $filters->{$name};
   
   croak "values must be array reference"
@@ -136,7 +136,7 @@ sub check {
   
   my $checks = $self->{checks} || {};
   
-  croak "Can't call \"$name\" check"
+  croak "Can't call \"$name\" checking function"
     unless $checks->{$name};
   
   return $checks->{$name}->($self, $value, $arg);
@@ -151,7 +151,7 @@ sub filter {
   
   my $filters = $self->{filters} || {};
   
-  croak "Can't call \"$name\" filter"
+  croak "Can't call \"$name\" filtering function"
     unless $filters->{$name};
   
   return $filters->{$name}->($self, $value, $arg);
