@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '1.00_04';
+our $VERSION = '1.00_05';
 
 use Carp 'croak';
 use Validator::Custom::Validation;
@@ -816,7 +816,7 @@ Validator::Custom - HTML form Validation, simple and good flexibility
   $favorite = $vc->filter_each($favorite, 'trim');
   
   # Check if favorite has at least one values
-  if (@$favorite > 0) {
+  if (@$favorite == 0) {
     $validation->add_failed(favorite => 'favorite must be selected more than one');
   }
   # Check if favorite is one of the specified values
@@ -933,7 +933,7 @@ You can use C<trim> filtering function to trim left-rigth spaces.
 You can use C<filter_each> method to filter each value of favorite.
   
   # Check if favorite has at least one values
-  if (@$favorite > 0) {
+  if (@$favorite == 0) {
     $validation->add_failed(favorite => 'favorite must be selected more than one');
   }
   # Check if favorite is one of the specified values
