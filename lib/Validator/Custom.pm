@@ -770,6 +770,8 @@ EOS
 
 1;
 
+=encoding utf8
+
 =head1 NAME
 
 Validator::Custom - HTML form Validation, simple and good flexibility
