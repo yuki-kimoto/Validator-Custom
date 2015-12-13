@@ -1,5 +1,8 @@
 Revision history for Perl module Validator::Custom
 
+1.02 2015-12-??
+    - Fixed typo: SYNOPSYS -> SYNOPSIS
+
 1.01 2015-12-10
   - add more simple interface for validation.
     Documentation is rewrited completely.

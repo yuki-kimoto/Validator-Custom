@@ -774,7 +774,7 @@ EOS
 
 Validator::Custom - HTML form Validation, simple and good flexibility
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
   use Validator::Custom;
   my $vc = Validator::Custom->new;
