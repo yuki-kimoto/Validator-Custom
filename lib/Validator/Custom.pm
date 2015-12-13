@@ -921,7 +921,7 @@ You can use C<int> checking function to check the value is integer.
 C<int> checking function is default one.
 Any checking function is available through C<check> method.
 
-When the check dosen't success, you can add failed parameter name and the message
+When the check doesn't succeed, you can add the failed parameter name and the message
 using C<add_failed> method of L<Validator::Custom::Validation> class.
   
   # Filter price to remove left-rigth space
@@ -1368,12 +1368,12 @@ C<decimal> constraint is renamed to C<number> checking function and simplified.
 
 =item *
 
-C<date_to_timepiece> checking function dosen't exist.
+C<date_to_timepiece> checking function doesn't exist.
 About alternative way, see the topic "Convert date string to Time::Piece object" in "EXAMPLES".
 
 =item *
 
-C<datetime_to_timepiece> checking function dosen't exists.
+C<datetime_to_timepiece> checking function doesn't exists.
 About alternative way, see the topic "Convert datetime string to Time::Piece object" in "EXAMPLES".
 
 =back
