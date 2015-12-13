@@ -1,3 +1,5 @@
+Revision history for Perl module Validator::Custom
+
 1.01 2015-12-10
   - add more simple interface for validation.
     Documentation is rewrited completely.
