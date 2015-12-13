@@ -2,6 +2,7 @@ Revision history for Perl module Validator::Custom
 
 1.02 2015-12-??
     - Fixed typo: SYNOPSYS -> SYNOPSIS
+    - Fixed pod warning - multibyte unicode character requires "=encoding UTF-8"
 
 1.01 2015-12-10
   - add more simple interface for validation.
