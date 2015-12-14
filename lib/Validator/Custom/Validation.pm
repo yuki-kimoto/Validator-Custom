@@ -124,7 +124,7 @@ Validator::Custom::Validation - a result of validation
   my $is_valid = $validation->is_valid;
   my $title_is_valid = $validation->is_valid('title');
   
-  # Failed key names
+  # Get all failed parameter names
   my $failed = $validation->failed;
   
   # Message
@@ -144,6 +144,7 @@ and implements the following new ones.
 Create a L<Validator::Custom::Validation> object.
 
 Generally this method is not used. You should use C<validation> method of L<Validator::Custom>.
+
   my $validation = $vc->validation;
 
 =head2 is_valid
@@ -159,14 +160,14 @@ If name is specified, check if the parameter corresponding to the name is valid.
   $validation->add_failed('title' => 'title is invalid value');
   $validation->add_failed('title');
 
-Add a failed name and message.
+Add a failed parameter name and message.
 If message is omitted, default message is set automatically.
 
 =head2 failed
 
   my $failed = $validation->failed;
 
-Get all failed names.
+Get all failed parameter names.
 
 =head2 message
 
@@ -184,4 +185,4 @@ Get all failed messages.
 
   my $messages_h = $validation->messages_to_hash;
 
-Get all failed names and messages as hash reference.
+Get all failed parameter names and messages as hash reference.
