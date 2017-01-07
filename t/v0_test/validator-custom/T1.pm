@@ -1,7 +1,10 @@
 package T1;
 use base 'Validator::Custom';
 
-__PACKAGE__->register_constraint(
+sub new {
+  my $self = shift->SUPER::new(@_);
+  
+  $self->register_constraint(
     Int => sub{$_[0] =~ /^\d+$/},
     Num => sub{
         require Scalar::Util;
@@ -13,6 +16,9 @@ __PACKAGE__->register_constraint(
     },
     aaa => sub {$_[0] eq 'aaa'},
     bbb => sub {$_[0] eq 'bbb'}
-);
+  );
+  
+  return $self;
+}
 
 1;

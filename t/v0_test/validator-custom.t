@@ -176,7 +176,7 @@ use T1;
   is_deeply([$result->invalid_keys], [qw/k2 k4/], 'invalid keys hash');  
   ok(!$result->is_ok, 'is_ok');
   
-  my $constraints = T1->constraints;
+  my $constraints = $vc->constraints;
   ok(exists($constraints->{Int}), 'get constraints');
   ok(exists($constraints->{Num}), 'get constraints');
 }
@@ -235,10 +235,11 @@ use T1;
       ['Num', "k4Error1"],
     ],
   ];    
-  my $errors = T2->new->validate($data, $rule)->errors;
+  my $vc = T2->new;
+  my $errors = $vc->new->validate($data, $rule)->errors;
   is_deeply($errors, [qw/k2Error1 k4Error1/], 'mearge Custom validator');
   
-  my $constraints = T2->constraints;
+  my $constraints = $vc->constraints;
   ok(exists($constraints->{Int}), 'merge get constraints');
   ok(exists($constraints->{Num}), 'merge get constraints');
   

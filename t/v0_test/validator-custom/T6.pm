@@ -1,7 +1,10 @@
 package T6;
 use base 'Validator::Custom';
 
-__PACKAGE__->register_constraint(
+sub new {
+  my $self = shift;
+  
+  $self->register_constraint(
     length => sub {
         my ($value, $args) = @_;
         
@@ -12,6 +15,9 @@ __PACKAGE__->register_constraint(
         my $length  = length $value;
         return $min <= $length && $length <= $max ? 1 : 0;
     }
-);
+  );
+  
+  return $self;
+}
 
 1;

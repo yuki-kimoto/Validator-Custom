@@ -1,7 +1,10 @@
 package T5;
 use base 'Validator::Custom';
 
-__PACKAGE__->register_constraint(
+sub new {
+  my $self = shift;
+  
+  $self->register_constraint(
     C1 => sub {
         my ($value, $args) = @_;
         
@@ -55,6 +58,9 @@ __PACKAGE__->register_constraint(
         my $self = $_[2];
         return [1, $self];
     }
-);
+  );
+  
+  return $self;
+}
 
-
+1;

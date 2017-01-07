@@ -1,7 +1,7 @@
 package Validator::Custom;
 use Object::Simple -base;
 use 5.008001;
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 use Carp 'croak';
 use Validator::Custom::Validation;
@@ -269,8 +269,7 @@ sub _parse_constraint {
 # DEPRECATED!
 has shared_rule => sub { [] };
 # DEPRECATED!
-__PACKAGE__->dual_attr('constraints',
-  default => sub { {} }, inherit => 'hash_copy');
+__PACKAGE__->attr('constraints' => sub { {} });
 
 # Version 0 method
 sub create_rule { Validator::Custom::Rule->new(validator => shift) }
