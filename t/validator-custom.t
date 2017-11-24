@@ -20,31 +20,19 @@ use Validator::Custom;
   # check - int
   {
     my $vc = Validator::Custom->new;
-    my $k1 = '19';
-    my $k2 = '-10';
-    my $k3 = 'a';
-    my $k4 =  '10.0';
-    my $k5 ='２';
-    my $k6;
-      
+    my %values = (
+      k1 => '19',
+      k2 => '-10',
+      k3 => 'a',
+      k4 => '10.0',
+      k5 => '２',
+      k6 => undef);
+
     my $validation = $vc->validation;
-    if (!$vc->check($k1, 'int')) {
-        $validation->add_failed('k1');
-    }
-    if (!$vc->check($k2, 'int')) {
-      $validation->add_failed('k2');
-    }
-    if (!$vc->check($k3, 'int')) {
-      $validation->add_failed('k3');
-    }
-    if (!$vc->check($k4, 'int')) {
-      $validation->add_failed('k4');
-    }
-    if (!$vc->check($k5, 'int')) {
-      $validation->add_failed('k5');
-    }
-    if (!$vc->check($k6, 'int')) {
-      $validation->add_failed('k6');
+    for my $case (sort keys %values) {
+      if (!$vc->check($values{$case}, 'int')) {
+        $validation->add_failed($case);
+      }
     }
     
     is_deeply($validation->failed, ['k3', 'k4', 'k5', 'k6']);
@@ -53,23 +41,17 @@ use Validator::Custom;
   # check - ascii_graphic
   {
     my $vc = Validator::Custom->new;
-    my $k1 = '!~';
-    my $k2 = ' ';
-    my $k3 = "\0x7f";
-    my $k4;
-      
+    my %values = (
+      k1 => '!~',
+      k2 => ' ',
+      k3 => "\0x7f",
+      k4 => undef);
+
     my $validation = $vc->validation;
-    if (!$vc->check($k1, 'ascii_graphic')) {
-      $validation->add_failed('k1');
-    }
-    if (!$vc->check($k2, 'ascii_graphic')) {
-      $validation->add_failed('k2');
-    }
-    if (!$vc->check($k3, 'ascii_graphic')) {
-      $validation->add_failed('k3');
-    }
-    if (!$vc->check($k4, 'ascii_graphic')) {
-      $validation->add_failed('k4');
+    for my $case (sort keys %values) {
+        if (!$vc->check($values{$case}, 'ascii_graphic')) {
+          $validation->add_failed($case);
+        }
     }
     
     is_deeply($validation->failed, ['k2', 'k3', 'k4']);
@@ -78,143 +60,73 @@ use Validator::Custom;
   # check - number
   {
     my $vc = Validator::Custom->new;
-    my $k1 = '1';
-    my $k2 = '123';
-    my $k3 = '456.123';
-    my $k4 = '-1';
-    my $k5 = '-789';
-    my $k6 = '-100.456';
-    my $k7 = '-100.789';
+    my %values = (
+      k01 => '1',
+      k02 => '123',
+      k03 => '456.123',
+      k04 => '-1',
+      k05 => '-789',
+      k06 => '-100.456',
+      k07 => '-100.789',
     
-    my $k8 = 'a';
-    my $k9 = '1.a';
-    my $k10 = 'a.1';
-    my $k11 = '';
-    my $k12;
-    
+      k08 => 'a',
+      k09 => '1.a',
+      k10 => 'a.1',
+      k11 => '',
+      k12 => undef);
+
     my $validation = $vc->validation;
-    if (!$vc->check($k1, 'number')) {
-      $validation->add_failed('k1');
+    for my $case (sort keys %values) {
+      if (!$vc->check($values{$case}, 'number')) {
+        $validation->add_failed($case);
+      }
     }
-    if (!$vc->check($k2, 'number')) {
-      $validation->add_failed('k2');
-    }
-    if (!$vc->check($k3, 'number')) {
-      $validation->add_failed('k3');
-    }
-    if (!$vc->check($k4, 'number')) {
-      $validation->add_failed('k4');
-    }
-    if (!$vc->check($k5, 'number')) {
-      $validation->add_failed('k5');
-    }
-    if (!$vc->check($k6, 'number')) {
-      $validation->add_failed('k6');
-    }
-    if (!$vc->check($k7, 'number')) {
-      $validation->add_failed('k7');
-    }
-    if (!$vc->check($k8, 'number')) {
-      $validation->add_failed('k8');
-    }
-    if (!$vc->check($k9, 'number')) {
-      $validation->add_failed('k9');
-    }
-    if (!$vc->check($k10, 'number')) {
-      $validation->add_failed('k10');
-    }
-    if (!$vc->check($k11, 'number')) {
-      $validation->add_failed('k11');
-    }
-    if (!$vc->check($k12, 'number')) {
-      $validation->add_failed('k12');
-    }
-    is_deeply($validation->failed, [qw/k8 k9 k10 k11 k12/]);
+    is_deeply($validation->failed, [qw/k08 k09 k10 k11 k12/]);
   }
 
   # check - number, decimal_part_max
   {
     my $vc = Validator::Custom->new;
-    my $k1 = '1';
-    my $k2 = '123';
-    my $k3 = '456.123';
-    my $k4 = '-1';
-    my $k5 = '-789';
-    my $k6 = '-100.456';
-    my $k7 = '-100.789';
+    my %values = (
+      k01 => '1',
+      k02 => '123',
+      k03 => '456.123',
+      k04 => '-1',
+      k05 => '-789',
+      k06 => '-100.456',
+      k07 => '-100.789',
     
-    my $k8 = 'a';
-    my $k9 = '1.a';
-    my $k10 = 'a.1';
-    my $k11 = '';
-    my $k12;
-    
-    my $k13 = '456.1234';
-    my $k14 = '-100.7894';
+      k08 => 'a',
+      k09 => '1.a',
+      k10 => 'a.1',
+      k11 => '',
+      k12 => undef,
+      k13 => '456.1234',
+      k14 => '-100.7894');
     
     my $validation = $vc->validation;
-    if (!$vc->check($k1, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k1');
+    for my $case (sort keys %values) {
+      if (!$vc->check($values{$case}, 'number', {decimal_part_max => 3})) {
+        $validation->add_failed($case);
+      }
     }
-    if (!$vc->check($k2, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k2');
-    }
-    if (!$vc->check($k3, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k3');
-    }
-    if (!$vc->check($k4, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k4');
-    }
-    if (!$vc->check($k5, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k5');
-    }
-    if (!$vc->check($k6, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k6');
-    }
-    if (!$vc->check($k7, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k7');
-    }
-    if (!$vc->check($k8, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k8');
-    }
-    if (!$vc->check($k9, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k9');
-    }
-    if (!$vc->check($k10, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k10');
-    }
-    if (!$vc->check($k11, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k11');
-    }
-    if (!$vc->check($k12, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k12');
-    }
-    if (!$vc->check($k13, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k13');
-    }
-    if (!$vc->check($k14, 'number', {decimal_part_max => 3})) {
-      $validation->add_failed('k14');
-    }
-
-    is_deeply($validation->failed, [qw/k8 k9 k10 k11 k12 k13 k14/]);
+    is_deeply($validation->failed, [qw/k08 k09 k10 k11 k12 k13 k14/]);
   }
   
   # check - in
   {
     my $vc = Validator::Custom->new;
-    my $k1 = 'a';
-    my $k2 = 'a';
-    my $k3;
+    my %values = (
+      k1 => ['a', ['a', 'b']],
+      k2 => ['a', ['b', 'c']],
+      k3 => [undef, ['b', 'c']],
+      k4 => [undef, [undef]]);
     
     my $validation = $vc->validation;
-    if (!($vc->check($k1, 'in', ['a', 'b']))) {
-      $validation->add_failed('k1');
-    }
-    if (!($vc->check($k2, 'in', ['b', 'c']))) {
-      $validation->add_failed('k2');
-    }
-    if (!($vc->check($k3, 'in', ['b', 'c']))) {
-      $validation->add_failed('k3');
+    for my $case (sort keys %values) {
+      if (!($vc->check($values{$case}[0], 'in', $values{$case}[1]))) {
+        $validation->add_failed($case);
+      }
     }
     
     is_deeply($validation->failed, ['k2', 'k3']);

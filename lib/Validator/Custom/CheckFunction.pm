@@ -65,14 +65,16 @@ sub int {
 sub in {
   my ($vc, $value, $arg) = @_;
   
-  return undef unless defined $value;
-  
   my $valid_values = $arg;
   
   croak "\"in\" check argument must be array reference"
     unless ref $valid_values eq 'ARRAY';
   
-  my $match = grep { $_ eq $value } @$valid_values;
+  my $match = grep {
+    defined $_
+      ? defined $value && $_ eq $value
+      : !defined $value
+  } @$valid_values;
   return $match > 0 ? 1 : 0;
 }
 
