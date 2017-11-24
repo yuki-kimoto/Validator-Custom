@@ -119,7 +119,8 @@ use Validator::Custom;
     my %values = (
       k1 => ['a', ['a', 'b']],
       k2 => ['a', ['b', 'c']],
-      k3 => [undef, ['b', 'c']]);
+      k3 => [undef, ['b', 'c']],
+      k4 => [undef, [undef]]);
     
     my $validation = $vc->validation;
     for my $case (sort keys %values) {
